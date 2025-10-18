@@ -1,75 +1,228 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./Planner.css";
 
-const samplePlan = [
-  {
-    day: "Thứ 2",
-    meals: { sáng: "Ức gà + cơm gạo lứt", trưa: "Salad cá ngừ", tối: "Sữa chua Hy Lạp" },
-    workouts: { sáng: "Chạy interval 4x5 phút", tối: "Hít đất 3x15" },
-  },
-  {
-    day: "Thứ 3",
-    meals: { sáng: "Trứng + yến mạch", trưa: "Thịt bò + khoai lang", tối: "Sinh tố protein" },
-    workouts: { sáng: "Gym: Squat 4x8", tối: "Deadlift 4x6" },
-  },
-  {
-    day: "Thứ 4",
-    meals: { sáng: "Cơm + cá hồi", trưa: "Salad ức gà", tối: "Sữa ít béo" },
-    workouts: { sáng: "Bơi 30 phút", tối: "Plank 3x60s" },
-  },
-  {
-    day: "Thứ 5",
-    meals: { sáng: "Ngũ cốc nguyên hạt", trưa: "Ức gà + khoai tây", tối: "Trái cây" },
-    workouts: { sáng: "Cầu lông 1h", tối: "Jumping jack 3x50" },
-  },
-  {
-    day: "Thứ 6",
-    meals: { sáng: "Phở bò ít béo", trưa: "Cơm gạo lứt + thịt heo nạc", tối: "Rau củ luộc" },
-    workouts: { sáng: "Bóng đá 90 phút", tối: "Stretching 15 phút" },
-  },
-  {
-    day: "Thứ 7",
-    meals: { sáng: "Trứng ốp + bánh mì đen", trưa: "Thịt gà + khoai lang", tối: "Chuối + whey" },
-    workouts: { sáng: "Gym: Bench press 4x8", tối: "Pull up 3x10" },
-  },
-  {
-    day: "Chủ nhật",
-    meals: { sáng: "Bún chả ít mỡ", trưa: "Cơm cá thu", tối: "Súp rau củ" },
-    workouts: { sáng: "Yoga 45 phút", tối: "Đi bộ 30 phút" },
-  },
-];
-
 export default function Planner() {
-  const [plan] = useState(samplePlan);
+  // === STATE ===
+  const [weeklyPlan, setWeeklyPlan] = useState({}); // { "2025-10-18": [...], ... }
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [showDetail, setShowDetail] = useState(false);
+  const [detailItem, setDetailItem] = useState(null);
+
+  // === USER INFO (sẽ lấy từ auth sau) ===
+  const currentUser = { id: 1 }; // ← thay bằng user thực tế
+
+  // === HÀM TIỆN ÍCH ===
+  const getDates = (startDate, days) => {
+    const dates = [];
+    const date = new Date(startDate);
+    for (let i = 0; i < days; i++) {
+      dates.push(new Date(date).toISOString().split("T")[0]);
+      date.setDate(date.getDate() + 1);
+    }
+    return dates;
+  };
+
+  const dayNames = [
+    "Thứ 2",
+    "Thứ 3",
+    "Thứ 4",
+    "Thứ 5",
+    "Thứ 6",
+    "Thứ 7",
+    "Chủ nhật",
+  ];
+  const mealTimes = ["Sáng", "Trưa", "Tối"];
+  const workoutTimes = ["Sáng", "Tối"];
+
+  // === LẤY LỊCH 7 NGÀY TỪ AI COACH ===
+  const fetchWeeklyPlan = async () => {
+    setLoading(true);
+    setError("");
+    const dates = getDates(new Date(), 7);
+    const plan = {};
+
+    try {
+      for (const date of dates) {
+        const res = await fetch(
+          `http://localhost:5000/api/ai/schedule?user_id=${currentUser.id}&date=${date}`,
+          {
+            credentials: "include", // Đảm bảo cookie được gửi
+          }
+        );
+        if (!res.ok) throw new Error(`Lỗi ngày ${date}`);
+
+        const data = await res.json();
+        console.log("✅ Dữ liệu AI Coach trả về:", data); // Log dữ liệu để debug
+
+        // Lưu dữ liệu vào kế hoạch cho từng ngày
+        plan[date] = data.schedule || [];
+      }
+
+      console.log("✅ Dữ liệu kế hoạch:", plan);
+       // Log dữ liệu kế hoạch trước khi cập nhật state
+      setWeeklyPlan(plan); // Cập nhật weeklyPlan
+    } catch (err) {
+      console.error("❌ Lỗi tải lịch:", err);
+      setError("Không thể tải lịch từ AI Coach. Vui lòng thử lại.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // === GỬI FEEDBACK ===
+  const sendFeedback = async (itemId, type, rating) => {
+    try {
+      const payload = {
+        user_id: currentUser.id,
+        rating,
+      };
+      if (type === "meal") payload.meal_id = itemId;
+      else payload.workout_id = itemId;
+
+      await fetch("/api/ai/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        credentials: "include",
+      });
+
+      // Tải lại lịch để cập nhật đề xuất mới
+      fetchWeeklyPlan();
+    } catch (err) {
+      alert("Gửi phản hồi thất bại. Vui lòng thử lại.");
+    }
+  };
+
+  // === HIỆN CHI TIẾT ===
+  const showItemDetail = (item) => {
+    if (item.type === "meal") {
+      setDetailItem({
+        title: item.data.Name,
+        content: `Calo: ${item.data.Kcal || 0} kcal\nProtein: ${
+          item.data.Protein || 0
+        }g\nCarb: ${item.data.Carb || 0}g\nFat: ${item.data.Fat || 0}g`,
+      });
+    } else {
+      setDetailItem({
+        title: item.data.Name,
+        // Trong showItemDetail
+        content: `Môn: ${item.data.Sport || "N/A"}\nNhóm cơ: ${
+          item.data.MuscleGroups || "N/A"
+        }\nThời gian: ${item.data.Duration_min || 0} phút\nCường độ: ${
+          item.data.Intensity || "N/A" // ← giờ là "thấp", "trung bình"
+        }\nDụng cụ: ${item.data.Equipment || "N/A"}`,
+      });
+    }
+    setShowDetail(true);
+  };
+
+  // === KHỞI TẠO ===
+  useEffect(() => {
+    fetchWeeklyPlan();
+  }, []);
+
+  // === RENDER ===
+  if (loading)
+    return <p className="text-center mt-10">⏳ Đang tải lịch từ AI Coach...</p>;
+  if (error) return <p className="text-center text-red-600 mt-10">{error}</p>;
+
+  const dates = getDates(new Date(), 7);
 
   return (
-    <div className="p-6 space-y-10">
-      <h1 className="text-3xl font-bold text-center text-cyan-700 animate-fadeIn">
-        🗓️ Weekly Planner
-      </h1>
+    <div className="planner-wrap">
+      <h1 className="planner-title">🗓️ Lịch Trình Cá Nhân Hóa từ AI Coach</h1>
 
-      {/* Meal Plan */}
-      <div className="animate-slideUp">
-        <h2 className="text-xl font-semibold mb-4 text-cyan-600">🍽 Meal Plan</h2>
+      <div className="user-actions mb-6">
+        <button className="btn-primary" onClick={fetchWeeklyPlan}>
+          🔄 Tải lại lịch
+        </button>
+        {/* Sau này thêm: nút chỉnh sửa sở thích */}
+      </div>
+
+      {/* === MEAL PLAN === */}
+      <div className="section">
+        <h2>🍽 Kế Hoạch Ăn Uống</h2>
         <div className="overflow-x-auto">
           <table className="planner-table w-full border-collapse shadow-md">
             <thead>
               <tr>
-                <th>Buổi</th>
-                {plan.map((d, i) => (
-                  <th key={i}>{d.day}</th>
+                <th>Bữa</th>
+                {dates.map((date, i) => (
+                  <th key={date}>{dayNames[i]}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {["sáng", "trưa", "tối"].map((mealKey, i) => (
-                <tr key={i}>
-                  <td className="font-semibold capitalize">{mealKey}</td>
-                  {plan.map((d, j) => (
-                    <td key={j} className="hover-cell">
-                      {d.meals[mealKey]}
-                    </td>
-                  ))}
+              {mealTimes.map((time) => (
+                <tr key={time}>
+                  <td className="font-semibold">{time}</td>
+                  {dates.map((date) => {
+                    const schedule = weeklyPlan[date] || [];
+                    // Thay thế mealTypeMap
+                    const mealTypeMap = {
+                      Sáng: "sáng", // Cập nhật từ bảng MealType trong CSDL
+                      Trưa: "trưa",
+                      Tối: "tối",
+                      "Ăn vặt": "ăn vặt",
+                    };
+
+                    const targetMealType = mealTypeMap[time];
+
+                    // Tìm mealItem từ schedule với đúng MealType
+                    // Trong phần Meal Plan
+                    const mealItem = schedule.find(
+                      (item) =>
+                        item.type === "meal" &&
+                        item.data.MealType === time.toLowerCase()
+                    );
+
+                    return (
+                      <td key={date} className="hover-cell p-2">
+                        {mealItem ? (
+                          <>
+                            <div className="meal-title font-medium">
+                              {mealItem.data?.Name || "Không có tên"}{" "}
+                              {/* Kiểm tra nếu tên có */}
+                            </div>
+                            <div className="small-meta text-sm text-gray-600">
+                              {mealItem.data?.Kcal || "-"} kcal{" "}
+                              {/* Kiểm tra số calo */}
+                            </div>
+                            <div className="actions-inline mt-1">
+                              <button
+                                className="btn-mini bg-green-500 hover:bg-green-600 text-white"
+                                onClick={() =>
+                                  sendFeedback(mealItem.data?.Id, "meal", 5)
+                                }
+                                title="Thích"
+                              >
+                                👍
+                              </button>
+                              <button
+                                className="btn-mini bg-red-500 hover:bg-red-600 text-white ml-1"
+                                onClick={() =>
+                                  sendFeedback(mealItem.data?.Id, "meal", 2)
+                                }
+                                title="Không thích"
+                              >
+                                👎
+                              </button>
+                              <button
+                                className="btn-mini bg-blue-500 hover:bg-blue-600 text-white ml-1"
+                                onClick={() => showItemDetail(mealItem)}
+                                title="Chi tiết"
+                              >
+                                ℹ️
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
             </tbody>
@@ -77,34 +230,111 @@ export default function Planner() {
         </div>
       </div>
 
-      {/* Workout Plan */}
-      <div className="animate-slideUp delay-200">
-        <h2 className="text-xl font-semibold mb-4 text-indigo-600">🏋️ Workout Plan</h2>
+      {/* === WORKOUT PLAN === */}
+      <div className="section mt-8">
+        <h2>🏋️ Kế Hoạch Tập Luyện</h2>
         <div className="overflow-x-auto">
           <table className="planner-table w-full border-collapse shadow-md">
             <thead>
               <tr>
                 <th>Buổi</th>
-                {plan.map((d, i) => (
-                  <th key={i}>{d.day}</th>
+                {dates.map((date, i) => (
+                  <th key={date}>{dayNames[i]}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {["sáng", "tối"].map((workKey, i) => (
-                <tr key={i}>
-                  <td className="font-semibold capitalize">{workKey}</td>
-                  {plan.map((d, j) => (
-                    <td key={j} className="hover-cell">
-                      {d.workouts[workKey]}
-                    </td>
-                  ))}
+              {workoutTimes.map((time) => (
+                <tr key={time}>
+                  <td className="font-semibold">{time}</td>
+                  {dates.map((date) => {
+                    const schedule = weeklyPlan[date] || [];
+                    const workoutItem = schedule.find(
+                      (item) => item.type === "workout"
+                    );
+
+                    const alreadyShown = dates
+                      .slice(0, dates.indexOf(date))
+                      .some((d) =>
+                        (weeklyPlan[d] || []).some((i) => i.type === "workout")
+                      );
+
+                    return (
+                      <td key={date} className="hover-cell p-2">
+                        {workoutItem && !alreadyShown ? (
+                          <>
+                            <div className="meal-title font-medium">
+                              {workoutItem.data.Name}
+                            </div>
+                            <div className="small-meta text-sm text-gray-600">
+                              {workoutItem.data.Duration_min} phút
+                            </div>
+                            <div className="actions-inline mt-1">
+                              <button
+                                className="btn-mini bg-green-500 hover:bg-green-600 text-white"
+                                onClick={() =>
+                                  sendFeedback(
+                                    workoutItem.data.Id,
+                                    "workout",
+                                    5
+                                  )
+                                }
+                                title="Thích"
+                              >
+                                👍
+                              </button>
+                              <button
+                                className="btn-mini bg-red-500 hover:bg-red-600 text-white ml-1"
+                                onClick={() =>
+                                  sendFeedback(
+                                    workoutItem.data.Id,
+                                    "workout",
+                                    2
+                                  )
+                                }
+                                title="Không thích"
+                              >
+                                👎
+                              </button>
+                              <button
+                                className="btn-mini bg-blue-500 hover:bg-blue-600 text-white ml-1"
+                                onClick={() => showItemDetail(workoutItem)}
+                                title="Chi tiết"
+                              >
+                                ℹ️
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* === MODAL CHI TIẾT === */}
+      {showDetail && (
+        <div className="modal-overlay" onClick={() => setShowDetail(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-xl font-bold mb-2">{detailItem?.title}</h3>
+            <pre className="bg-gray-100 p-3 rounded whitespace-pre-wrap">
+              {detailItem?.content}
+            </pre>
+            <button
+              className="btn-close mt-3 px-4 py-2 bg-gray-500 text-white rounded"
+              onClick={() => setShowDetail(false)}
+            >
+              Đóng
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

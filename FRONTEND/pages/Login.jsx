@@ -9,55 +9,38 @@ export default function Login() {
   const [loading, setLoading] = useState(false); // Trạng thái đang tải
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!email || !pw) {
-      setMessage("Vui lòng điền đầy đủ thông tin!");
-      return;
-    }
+  e.preventDefault();
+  if (!email || !pw) {
+    setMessage("Vui lòng điền đầy đủ thông tin!");
+    return;
+  }
 
-    setLoading(true); // Bắt đầu tải
-    setMessage(""); // Reset message
+  setLoading(true);
+  setMessage("");
 
+  try {
     const response = await fetch("http://localhost:5000/api/auth/login", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, password: pw }),
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",                      // 🔑 bắt buộc để nhận cookie
+      body: JSON.stringify({ email, password: pw })// 🔧 dùng đúng biến pw
     });
 
     const result = await response.json();
+    setLoading(false);
 
-    setLoading(false); // Kết thúc trạng thái tải
-
-    if (response.ok) {
-      // Nếu đăng nhập thành công, bạn có thể điều hướng hoặc làm gì đó
+    if (response.ok && result.user_id) {
       setMessage("Đăng nhập thành công!");
-      // Redirect đến trang chủ sau khi đăng nhập thành công
-      window.location.href = "/home"; // Thay đổi trang sau khi đăng nhập thành công
+      window.location.href = "/home";              // hoặc /profile nếu muốn
     } else {
-      setMessage(result.message || "Đăng nhập thất bại!"); // Hiển thị thông báo lỗi từ backend
+      setMessage(result.error || result.message || "Đăng nhập thất bại!");
     }
-    // Login.jsx
-    fetch("http://localhost:5000/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include", // ✅ Gửi và nhận cookie session
-      body: JSON.stringify({
-        email: email,
-        password: password,
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.user_id) {
-          alert("✅ Đăng nhập thành công!");
-          window.location.href = "/profile";
-        } else {
-          alert("❌ " + (data.error || "Sai thông tin đăng nhập"));
-        }
-      });
-  };
+  } catch (err) {
+    setLoading(false);
+    setMessage("Lỗi kết nối server");
+  }
+};
+
 
   return (
     <div className={styles.bg}>

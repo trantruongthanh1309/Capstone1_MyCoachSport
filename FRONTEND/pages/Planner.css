@@ -1,46 +1,377 @@
-/* Fade in + slide */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.animate-fadeIn {
-  animation: fadeIn 0.8s ease forwards;
+/* ====== Tổng thể ====== */
+.planner-wrap {
+  padding: 2.5rem;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e6f7ff 100%);
+  color: #1e293b;
+  min-height: 100vh;
 }
 
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.animate-slideUp {
-  animation: slideUp 0.8s ease forwards;
-}
-.delay-200 { animation-delay: 0.2s; }
-
-/* Table style */
-.planner-table {
-  background: #fff;
-  border-radius: 12px;
-  overflow: hidden;
+.planner-title {
   text-align: center;
+  font-size: 2.25rem;
+  font-weight: 800;
+  background: linear-gradient(90deg, #0284c7, #0ea5e9);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 2.25rem;
+  letter-spacing: -0.5px;
 }
+
+/* ====== Section ====== */
+.section {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 2rem;
+  margin-top: 2.25rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.section:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px -6px rgba(0, 0, 0, 0.12);
+}
+
+.section h2 {
+  color: #0284c7;
+  font-weight: 800;
+  font-size: 1.4rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section h2::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 24px;
+  background: linear-gradient(to bottom, #0ea5e9, #0284c7);
+  border-radius: 3px;
+}
+
+/* ====== Table ====== */
+.planner-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+  text-align: center;
+  margin-top: 1rem;
+}
+
 .planner-table th {
-  background: linear-gradient(90deg, #06b6d4, #3b82f6);
-  color: #fff;
-  padding: 12px;
+  background: linear-gradient(120deg, #0284c7, #0ea5e9);
+  color: white;
+  font-weight: 700;
+  padding: 14px 12px;
+  font-size: 0.95rem;
+  letter-spacing: 0.3px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.15);
+}
+
+.planner-table td {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  padding: 16px 10px;
+  vertical-align: top;
+  min-width: 140px;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.planner-table td::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(239, 246, 255, 0.6), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.planner-table td:hover {
+  background: #f0f9ff;
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.15);
+  z-index: 2;
+  border-color: #bae6fd;
+}
+
+.planner-table td:hover::before {
+  opacity: 1;
+}
+
+/* ====== Nội dung ô ====== */
+.meal-title {
+  font-weight: 700;
+  color: #0c4a6e;
+  font-size: 1rem;
+  margin-bottom: 0.35rem;
+  line-height: 1.3;
+}
+
+.small-meta {
+  color: #475569;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.actions-inline {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.btn-mini {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(145deg, #dbeafe, #bfdbfe);
+  color: #1e40af;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
   font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-mini:hover {
+  transform: scale(1.25) rotate(10deg);
+  background: linear-gradient(145deg, #3b82f6, #1d4ed8);
+  color: white;
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+}
+
+.btn-mini:active {
+  transform: scale(1.1) rotate(0);
+}
+
+/* ====== Biểu mẫu cá nhân ====== */
+.user-form, .prefs-box {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+  border: 1px solid #e2e8f0;
+}
+
+.user-form h2, .prefs-box h2 {
+  color: #0284c7;
+  font-weight: 800;
+  margin-bottom: 1.25rem;
+  font-size: 1.3rem;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 1.25rem;
+}
+
+.form-row label {
+  font-weight: 600;
+  color: #334155;
   font-size: 0.95rem;
 }
-.planner-table td {
-  border-top: 1px solid #eee;
-  padding: 12px;
-  font-size: 0.9rem;
-  transition: background 0.25s ease, transform 0.25s ease;
+
+input, select, textarea {
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: #f8fafc;
 }
-.hover-cell:hover {
-  background: #f0faff;
-  transform: scale(1.05);
+
+input:focus, select:focus, textarea:focus {
+  border-color: #3b82f6;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+  background: white;
+}
+
+textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* ====== Nút ====== */
+.btn-primary {
+  background: linear-gradient(120deg, #0284c7, #0ea5e9);
+  color: white;
+  padding: 10px 24px;
+  border: none;
+  border-radius: 12px;
   cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 6px rgba(2, 132, 199, 0.25);
 }
-.planner-table td {
-  width: 14.28%; /* 100% / 7 ngày */
+
+.btn-primary:hover {
+  background: linear-gradient(120deg, #0369a1, #0284c7);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(2, 132, 199, 0.35);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-outline {
+  border: 2px solid #3b82f6;
+  color: #3b82f6;
+  background: transparent;
+  border-radius: 12px;
+  padding: 8px 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  background: #eff6ff;
+}
+
+.btn-outline:hover {
+  background: #dbeafe;
+  color: #1e40af;
+  transform: translateY(-2px);
+}
+
+/* ====== Modal ====== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 2rem;
+  width: 450px;
+  max-width: 90%;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border: 1px solid #e2e8f0;
+}
+
+@keyframes popIn {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.modal h3 {
+  color: #0284c7;
+  font-size: 1.35rem;
+  font-weight: 800;
+  margin-bottom: 1.25rem;
+  text-align: center;
+}
+
+pre {
+  background: #f1f8ff;
+  border-radius: 12px;
+  padding: 1.25rem;
+  font-size: 0.95rem;
+  color: #1e40af;
+  white-space: pre-wrap;
+  line-height: 1.6;
+  border: 1px solid #dbeafe;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
+.btn-close {
+  background: linear-gradient(120deg, #ef4444, #f43f5e);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 20px;
+  margin-top: 1.25rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  width: 100%;
+  font-size: 1rem;
+}
+
+.btn-close:hover {
+  background: linear-gradient(120deg, #dc2626, #e11d48);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+}
+
+/* ====== Responsive ====== */
+@media (max-width: 768px) {
+  .planner-wrap {
+    padding: 1.5rem;
+  }
+
+  .planner-title {
+    font-size: 1.75rem;
+  }
+
+  .section {
+    padding: 1.5rem;
+  }
+
+  .planner-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .planner-table th,
+  .planner-table td {
+    min-width: 120px;
+    padding: 12px 8px;
+    font-size: 0.9rem;
+  }
+
+  .meal-title {
+    font-size: 0.95rem;
+  }
+
+  .modal {
+    padding: 1.5rem;
+  }
 }
