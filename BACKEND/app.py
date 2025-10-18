@@ -11,22 +11,27 @@ from api.auth import auth_bp
 from api.profile import profile_bp
 from datetime import timedelta
 from flask_session import Session
+from api.planner import planner_bp
+from api.ai_coach import ai_coach_bp
 
 # Khởi tạo Flask app
 app = Flask(__name__)
 
 # Cấu hình kết nối cơ sở dữ liệu SQL Server
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mssql+pyodbc://sa:123@MSI\\SQLEXPRESS01/MySportCoachAI?driver=ODBC+Driver+17+for+SQL+Server'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Tắt theo dõi thay đổi trong SQLAlchemy để tiết kiệm bộ nhớ
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'my_secret_key'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)
-app.config['SESSION_TYPE'] = 'filesystem'   # ✅ Lưu session trong server, không bị CORS block
+
+# ✅ Cấu hình session chuẩn cho dev (HTTP localhost)
+app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_PERMANENT'] = True
 app.config['SESSION_USE_SIGNER'] = True
-app.config['SESSION_COOKIE_SAMESITE'] = 'None'
-app.config['SESSION_COOKIE_SECURE'] = False
-app.config['SESSION_COOKIE_DOMAIN'] = 'localhost'
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'     # 👈 an toàn, không bị chặn cookie
+app.config['SESSION_COOKIE_SECURE'] = False       # 👈 vì đang dùng HTTP, không HTTPS
+app.config['SESSION_COOKIE_DOMAIN'] = None        # 👈 Flask tự nhận domain (localhost/127.0.0.1 đều được)
 app.config['SESSION_COOKIE_PATH'] = '/'
+
 
 Session(app)
 # Khởi tạo db với app
@@ -60,8 +65,11 @@ app.register_blueprint(logs_bp, url_prefix='/api/logs')  # Đăng ký logs API v
 app.register_blueprint(leaderboard_bp, url_prefix='/api/leaderboard')  # Đăng ký leaderboard API với tiền tố /api/leaderboard
 app.register_blueprint(chatbot_bp, url_prefix='/api/chatbot')  # Đăng ký chat API với tiền tố /api/chat
 app.register_blueprint(videos_bp, url_prefix='/api/videos')  # Đăng ký video API với tiền tố /api/video
-app.register_blueprint(auth_bp, url_prefix='/api/auth') 
+app.register_blueprint(auth_bp)  # bỏ url_prefix ở đây
 app.register_blueprint(profile_bp, url_prefix='/api/profile') 
+app.register_blueprint(planner_bp, url_prefix="/api/planner")
+app.register_blueprint(ai_coach_bp, url_prefix='/api/ai')
+
 
 
 GEMINI_API_KEY = "AIzaSyC5Dwwo6PYfKOS9RwUsaunIiyBNTevJy5U"  # Thay thế bằng API Key của bạn
@@ -112,12 +120,7 @@ def chat():
     except Exception as e:
         return jsonify({"reply": f"❌ Lỗi Backend: {e}"}), 500
 
-@app.before_request
-def show_session():
-    
-    print("📦 Session hiện tại: ", dict(session))  # Kiểm tra session có giá trị không
-    print("🍪 Cookies nhận từ client: ", request.cookies)  # Kiểm tra cookie gửi từ client
-
 if __name__ == "__main__":
-    app.run(debug=True, host="localhost", port=5000)
+    app.run(debug=True)
+
 
