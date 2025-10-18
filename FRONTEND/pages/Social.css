@@ -1,0 +1,81 @@
+/* Layout tổng giống FB */
+.fb-wrap { padding: 20px 12px; }
+.fb-grid {
+  max-width: 1100px; margin: 0 auto;
+  display: grid; grid-template-columns: 260px minmax(0, 1fr) 280px; gap: 16px;
+}
+@media (max-width: 1024px) { .fb-grid { grid-template-columns: 230px 1fr; } .fb-right { display:none; } }
+@media (max-width: 768px) { .fb-grid { grid-template-columns: 1fr; } .fb-left { display:none; } }
+
+/* Card chung */
+.fb-card {
+  background:#fff; border:1px solid #e5e7eb; border-radius:14px;
+  padding:12px; box-shadow:0 8px 18px rgba(0,0,0,.05);
+  animation: cardIn .25s ease both;
+}
+@keyframes cardIn { from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:translateY(0)} }
+
+/* Trái & Phải */
+.fb-left .fb-card + .fb-card, .fb-right .fb-card + .fb-card { margin-top:12px; }
+.fb-menu { display:flex; flex-direction:column; gap:6px; }
+.fb-menu-item { padding:10px 12px; border-radius:10px; text-decoration:none; color:#111; }
+.fb-menu-item:hover { background:#f3f4f6; }
+
+/* Trung tâm */
+.fb-center { display:flex; flex-direction:column; gap:12px; }
+
+/* Avatar */
+.fb-avatar { width:44px; height:44px; border-radius:999px; object-fit:cover; }
+.fb-avatar-s { width:28px; height:28px; border-radius:999px; object-fit:cover; }
+
+/* Input */
+.fb-input {
+  width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:10px; outline:none;
+  transition:border .15s ease, box-shadow .15s ease;
+}
+.fb-input:focus { border-color:#22d3ee; box-shadow:0 0 0 3px rgba(34,211,238,.25); }
+.fb-textarea {
+  width:100%; padding:12px 14px; border:1px solid #d1d5db; border-radius:12px; outline:none; resize:vertical;
+}
+.fb-textarea:focus { border-color:#22d3ee; box-shadow:0 0 0 3px rgba(34,211,238,.2); }
+
+/* Buttons */
+.fb-btn { background:#f3f4f6; border:1px solid #e5e7eb; padding:9px 12px; border-radius:10px; cursor:pointer; }
+.fb-btn:hover { background:#eef2ff; }
+.fb-btn-ghost { background:#fff; border:1px solid #e5e7eb; padding:8px 10px; border-radius:10px; cursor:pointer; }
+.fb-btn-ghost:hover { background:#f9fafb; }
+.fb-btn-primary { background:#0ea5e9; color:#fff; border:0; padding:10px 14px; border-radius:10px; cursor:pointer; }
+.fb-btn-primary:hover { background:#0284c7; }
+.fb-chip { background:#fff; border:1px dashed #cbd5e1; padding:8px 10px; border-radius:999px; cursor:pointer; }
+.fb-composer-actions { display:flex; gap:8px; margin-top:10px; }
+
+/* Post */
+.fb-post header { margin-bottom:8px; }
+.fb-post-text { padding:6px 2px 8px; color:#1f2937; }
+.fb-post-img { width:100%; border-radius:12px; object-fit:cover; background:#f3f4f6; }
+.fb-post-stats { display:flex; justify-content:space-between; color:#6b7280; font-size:.9rem; margin-top:8px; }
+.fb-post-actions { display:flex; gap:8px; border-top:1px solid #f1f5f9; padding-top:8px; margin-top:6px; }
+
+/* Comment */
+.fb-comment-box { margin-top:8px; }
+.fb-comments { margin-top:8px; display:flex; flex-direction:column; gap:8px; }
+.fb-comment { display:flex; gap:8px; align-items:flex-start; }
+.fb-comment-bubble { background:#f3f4f6; border-radius:14px; padding:8px 10px; }
+.fb-comment-author { font-weight:600; font-size:.9rem; margin-bottom:2px; }
+
+/* Contacts */
+.fb-contact { display:flex; align-items:center; gap:8px; padding:6px 4px; border-radius:8px; }
+.fb-contact:hover { background:#f8fafc; }
+.dot { width:8px; height:8px; border-radius:999px; background:#9ca3af; display:inline-block; }
+.dot.online { background:#22c55e; }
+.fb-wrap {
+  padding-top: 80px; /* đẩy xuống dưới header sticky */
+  background: #f0f2f5; /* giống fb */
+  min-height: 100vh;
+}
+.fb-wrap {
+  padding-top: 64px; /* bằng đúng chiều cao navbar (h-16 = 64px) */
+  background: #f0f2f5;
+  min-height: 100vh;
+}
+

@@ -1,0 +1,95 @@
+/* Profile.css */
+
+/* Định dạng chung cho trang */
+.profile-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 40px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  gap: 30px;
+}
+
+.profile-left {
+  flex: 1;
+}
+
+.profile-right {
+  flex: 1;
+  background-color: #f4f4f4;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.profile-left input,
+.profile-left select,
+.profile-left button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  margin-top: 10px;
+  font-size: 1rem;
+}
+
+.profile-left input,
+.profile-left select {
+  display: block;
+  margin-bottom: 15px;
+}
+
+button {
+  background-color: #00b4d8;
+  color: white;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #0099cc;
+}
+
+.profile-right .profile-info {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.profile-right .profile-info img {
+  border-radius: 50%;
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+}
+
+.profile-right .profile-info h3 {
+  font-size: 1.5rem;
+  color: #333;
+  margin-top: 10px;
+}
+
+.profile-right .stats {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.stats p {
+  font-size: 1rem;
+  color: #333;
+}
+
+.stats .bmi {
+  font-weight: bold;
+  color: #4caf50;
+}
+
+.stats .tdee {
+  color: #ff9800;
+}

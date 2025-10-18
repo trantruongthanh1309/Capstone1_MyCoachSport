@@ -1,0 +1,46 @@
+/* Fade in + slide */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.8s ease forwards;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slideUp {
+  animation: slideUp 0.8s ease forwards;
+}
+.delay-200 { animation-delay: 0.2s; }
+
+/* Table style */
+.planner-table {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  text-align: center;
+}
+.planner-table th {
+  background: linear-gradient(90deg, #06b6d4, #3b82f6);
+  color: #fff;
+  padding: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.planner-table td {
+  border-top: 1px solid #eee;
+  padding: 12px;
+  font-size: 0.9rem;
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+.hover-cell:hover {
+  background: #f0faff;
+  transform: scale(1.05);
+  cursor: pointer;
+}
+.planner-table td {
+  width: 14.28%; /* 100% / 7 ngày */
+}

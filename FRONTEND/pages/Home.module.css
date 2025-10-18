@@ -1,0 +1,126 @@
+.home {
+  min-height: calc(100vh - 60px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 40px 16px;
+}
+
+/* Clock */
+.clockWrap {
+  text-align: center;
+  margin-top: 40px;
+}
+.clock {
+  font-size: 4rem;
+  font-weight: 800;
+  color: #222;
+}
+.date {
+  font-size: 1.2rem;
+  color: #666;
+  margin-top: 8px;
+}
+
+/* Weather */
+.weatherWrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 100px; /* chừa chỗ cho chat */
+}
+.weatherBox {
+  background: #fff;
+  border-radius: 20px;
+  padding: 20px 30px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  max-width: 600px;
+  width: 100%;
+}
+.weatherBox img {
+  width: 80px;
+  height: 80px;
+}
+
+/* Floating chat */
+.chatFloat {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+}
+.openBtn {
+  background: #00b4d8;
+  color: #fff;
+  border: none;
+  padding: 14px;
+  border-radius: 50%;
+  font-size: 1.4rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.chatBox {
+  width: 300px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+}
+.chatHeader {
+  background: #0096c7;
+  color: #fff;
+  font-weight: 600;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 12px 12px 0 0;
+}
+.chatBody {
+  height: 200px;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #f9f9f9;
+}
+.msg {
+  max-width: 75%;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+}
+.you {
+  align-self: flex-end;
+  background: #00b4d8;
+  color: #fff;
+}
+.bot {
+  align-self: flex-start;
+  background: #eee;
+}
+.chatSend {
+  display: flex;
+  gap: 6px;
+  padding: 8px;
+  border-top: 1px solid #ddd;
+}
+.chatSend input {
+  flex: 1;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 6px;
+}
+.chatSend button {
+  background: #ffba08;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
