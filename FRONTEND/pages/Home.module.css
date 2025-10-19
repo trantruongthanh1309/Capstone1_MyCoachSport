@@ -7,16 +7,34 @@
   padding: 40px 16px;
 }
 
-/* Clock */
+.greeting {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.greeting h1 {
+  font-size: 36px;
+  font-weight: 800;
+  color: #4caf50; /* Thêm màu sắc cho tiêu đề */
+  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); /* Thêm hiệu ứng đổ bóng cho tiêu đề */
+}
+
+.greeting p {
+  font-size: 18px;
+  color: #555;
+}
+
 .clockWrap {
   text-align: center;
-  margin-top: 40px;
 }
+
 .clock {
   font-size: 4rem;
   font-weight: 800;
   color: #222;
+  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); /* Thêm hiệu ứng đổ bóng cho giờ */
 }
+
 .date {
   font-size: 1.2rem;
   color: #666;
@@ -28,30 +46,75 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  margin-bottom: 100px; /* chừa chỗ cho chat */
+  margin-bottom: 100px;
 }
 .weatherBox {
   background: #fff;
   border-radius: 20px;
   padding: 20px 30px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
   display: flex;
   gap: 16px;
   align-items: center;
   max-width: 600px;
   width: 100%;
+  transition: transform 0.3s ease-in-out; /* Thêm hiệu ứng cho weather */
 }
+
+.weatherBox:hover {
+  transform: translateY(-5px); /* Hiệu ứng khi hover vào phần weather */
+}
+
 .weatherBox img {
   width: 80px;
   height: 80px;
 }
 
-/* Floating chat */
+.cardsContainer {
+  display: flex;
+  justify-content: space-around;
+  gap: 20px;
+  margin-top: 40px;
+}
+
+.card {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  width: 30%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  transition: transform 0.3s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-10px); /* Hiệu ứng khi hover vào các thẻ */
+}
+
+.cardIcon {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 15px;
+}
+
+.card h3 {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #4caf50;
+}
+
+.card p {
+  font-size: 14px;
+  color: #666;
+}
+
 .chatFloat {
   position: fixed;
   bottom: 20px;
   right: 20px;
 }
+
 .openBtn {
   background: #00b4d8;
   color: #fff;
@@ -60,16 +123,23 @@
   border-radius: 50%;
   font-size: 1.4rem;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: background 0.3s ease; /* Thêm hiệu ứng khi hover */
 }
+
+.openBtn:hover {
+  background: #0096c7; /* Đổi màu khi hover */
+}
+
 .chatBox {
   width: 300px;
   background: #fff;
   border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
 }
+
 .chatHeader {
   background: #0096c7;
   color: #fff;
@@ -80,6 +150,7 @@
   align-items: center;
   border-radius: 12px 12px 0 0;
 }
+
 .chatBody {
   height: 200px;
   overflow-y: auto;
@@ -89,33 +160,39 @@
   gap: 6px;
   background: #f9f9f9;
 }
+
 .msg {
   max-width: 75%;
   padding: 6px 10px;
   border-radius: 10px;
   font-size: 0.9rem;
 }
+
 .you {
   align-self: flex-end;
   background: #00b4d8;
   color: #fff;
 }
+
 .bot {
   align-self: flex-start;
   background: #eee;
 }
+
 .chatSend {
   display: flex;
   gap: 6px;
   padding: 8px;
   border-top: 1px solid #ddd;
 }
+
 .chatSend input {
   flex: 1;
   border: 1px solid #ccc;
   border-radius: 8px;
   padding: 6px;
 }
+
 .chatSend button {
   background: #ffba08;
   border: none;
@@ -123,4 +200,8 @@
   border-radius: 8px;
   cursor: pointer;
   font-weight: bold;
+}
+
+.chatSend button:hover {
+  background: #e9a800; /* Đổi màu khi hover */
 }

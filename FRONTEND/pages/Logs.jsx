@@ -8,8 +8,7 @@ export default function Logs() {
   const [content, setContent] = useState("");
   const [feeling, setFeeling] = useState("");
   const [rpe, setRpe] = useState(5);
-  
-  // Thêm các trường user_id, meal_id, workout_id vào form
+
   const [userId, setUserId] = useState("");   // user_id
   const [mealId, setMealId] = useState("");   // meal_id
   const [workoutId, setWorkoutId] = useState("");  // workout_id

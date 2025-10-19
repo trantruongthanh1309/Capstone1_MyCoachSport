@@ -3,9 +3,11 @@ import "./Social.css";
 
 const LS_KEY = "msc_social_fb_v1";
 
+// Hàm tạo avatar ngẫu nhiên
 const avatar = (name = "U") =>
   `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0D8ABC&color=fff`;
 
+// Phần Left Sidebar
 function LeftSidebar() {
   return (
     <aside className="fb-left sticky top-16">
@@ -31,6 +33,7 @@ function LeftSidebar() {
   );
 }
 
+// Phần Composer - nơi người dùng tạo bài đăng mới
 function Composer({ onPost }) {
   const [name, setName] = useState("Bạn");
   const [text, setText] = useState("");
@@ -93,6 +96,7 @@ function Composer({ onPost }) {
   );
 }
 
+// Phần hiển thị bài đăng
 function Post({ post, onLike, onComment, onDelete }) {
   const time = useMemo(
     () => new Date(post.createdAt).toLocaleString("vi-VN"),
@@ -179,6 +183,7 @@ function Post({ post, onLike, onComment, onDelete }) {
   );
 }
 
+// Phần Right Sidebar
 function RightSidebar() {
   return (
     <aside className="fb-right sticky top-16">
@@ -202,6 +207,7 @@ function RightSidebar() {
   );
 }
 
+// Social Feed chính
 export default function Social() {
   const [posts, setPosts] = useState([]);
 
@@ -253,24 +259,23 @@ export default function Social() {
   const delPost = (id) => persist(posts.filter((p) => p.id !== id));
 
   return (
-  <main className="fb-wrap pt-20">   {/* thêm pt-20 */}
-    <div className="fb-grid">
-      <LeftSidebar />
-      <section className="fb-center">
-        <Composer onPost={addPost} />
-        {posts.map((p) => (
-          <Post
-            key={p.id}
-            post={p}
-            onLike={likePost}
-            onComment={addComment}
-            onDelete={delPost}
-          />
-        ))}
-      </section>
-      <RightSidebar />
-    </div>
-  </main>
-);
-
+    <main className="fb-wrap pt-20">
+      <div className="fb-grid">
+        <LeftSidebar />
+        <section className="fb-center">
+          <Composer onPost={addPost} />
+          {posts.map((p) => (
+            <Post
+              key={p.id}
+              post={p}
+              onLike={likePost}
+              onComment={addComment}
+              onDelete={delPost}
+            />
+          ))}
+        </section>
+        <RightSidebar />
+      </div>
+    </main>
+  );
 }

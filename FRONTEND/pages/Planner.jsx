@@ -32,7 +32,8 @@ export default function Planner() {
     "Thứ 7",
     "Chủ nhật",
   ];
-  const mealTimes = ["Sáng", "Trưa", "Tối"];
+  // Thêm "Ăn vặt" vào mealTimes
+  const mealTimes = ["Sáng", "Trưa", "Tối", "Ăn vặt"];
   const workoutTimes = ["Sáng", "Tối"];
 
   // === LẤY LỊCH 7 NGÀY TỪ AI COACH ===
@@ -60,7 +61,7 @@ export default function Planner() {
       }
 
       console.log("✅ Dữ liệu kế hoạch:", plan);
-       // Log dữ liệu kế hoạch trước khi cập nhật state
+      // Log dữ liệu kế hoạch trước khi cập nhật state
       setWeeklyPlan(plan); // Cập nhật weeklyPlan
     } catch (err) {
       console.error("❌ Lỗi tải lịch:", err);
