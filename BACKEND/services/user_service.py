@@ -6,19 +6,21 @@ def get_user_profile(user_id: int):
     user = db.session.query(User).filter(User.Id == user_id).first()
     if not user:
         raise ValueError("User not found")
-    
-    work_schedule = json.loads(user.WorkSchedule) if user.WorkSchedule else {}
-    disliked = json.loads(getattr(user, "DislikedIngredients", "[]") or "[]")
-    allergies = json.loads(user.Allergies) if user.Allergies else []   # ✅ an toàn, nếu thiếu cột sẽ trả []
 
+    # 👇 THÊM DÒNG NÀY ĐỂ DEBUG
+    print(f"🔍 User Sport: '{user.Sport}'")  # ← XEM GIÁ TRỊ CỦA user.Sport
+
+    work_schedule = json.loads(user.WorkSchedule) if user.WorkSchedule else {}
+    disliked = json.loads(user.DislikedIngredients) if user.DislikedIngredients else []
+    allergies = json.loads(user.Allergies) if user.Allergies else []
 
     return {
         "id": user.Id,
-        "sport": user.Sport,
+        "sport": user.Sport,  # ← Đây là giá trị được gửi đến AI Coach
         "goal": user.Goal,
         "work_schedule": work_schedule,
         "disliked_ingredients": disliked,
-        "allergies": allergies  # <-- thêm vào dict
+        "allergies": allergies
     }
 
 def get_user_feedback(user_id: int):

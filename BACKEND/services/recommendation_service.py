@@ -7,8 +7,7 @@ from models import Meal, Workout, Log
 from services.user_service import get_user_profile, get_user_feedback
 
 
-def recommend_meals(user_profile: Dict[str, Any], meal_ratings: Dict[int, float]) -> List[Tuple[Meal, float]]:
-    """Gợi ý món ăn dựa trên môn thể thao, nguyên liệu ghét, và feedback"""
+def recommend_meals(user_profile, meal_ratings):
     all_meals = db.session.query(Meal).all()
     scored_meals = []
 
@@ -20,72 +19,51 @@ def recommend_meals(user_profile: Dict[str, Any], meal_ratings: Dict[int, float]
         if not meal.IngredientTags:
             continue
 
-        # 1. Loại nếu có nguyên liệu ghét hoặc dị ứng
         ingredients = {ing.strip().lower() for ing in meal.IngredientTags.split(',') if ing.strip()}
         if ingredients & forbidden:
             continue
 
-        # 2. Tính điểm
         score = 0.0
 
-        # 3. Phù hợp môn thể thao?
+        # Phù hợp môn thể thao?
         sport_tags = set()
         if meal.SportTags:
             sport_tags = {s.strip().lower() for s in meal.SportTags.split(',') if s.strip()}
         
         user_sport = user_profile["sport"].lower() if user_profile["sport"] else ""
         if user_sport in sport_tags or "general" in sport_tags:
-            score += 1.0
+            score += 0.5
 
-        # 4. Phù hợp mục tiêu? (tạm thời: không xử lý sâu)
-        # → Có thể mở rộng sau
-
-        # 5. Feedback lịch sử (ưu tiên phản hồi gần đây)
+        # Feedback lịch sử
         score += meal_ratings.get(meal.Id, 3.0) - 3.0
-
-        # 6. Tránh lặp món gần đây (7 ngày)
-        recent_meals = get_recent_meal_ids(user_profile["id"], days=7)
-        if meal.Id in recent_meals:
-            score -= 0.5
 
         scored_meals.append((meal, score))
 
-    # Sắp xếp và trả về top 10
+    # --- THÊM: Nếu không có món ăn phù hợp → lấy tất cả món ---
+    if not scored_meals:
+        scored_meals = [(meal, 0.0) for meal in all_meals]
+
     return sorted(scored_meals, key=lambda x: x[1], reverse=True)[:10]
 
 
-def recommend_workouts(user_profile: Dict[str, Any], workout_ratings: Dict[int, float]) -> List[Tuple[Workout, float]]:
-    """Gợi ý bài tập dựa trên môn thể thao, nhóm cơ, thiết bị, và lịch sử"""
+def recommend_workouts(user_profile, workout_ratings):
     all_workouts = db.session.query(Workout).all()
     scored_workouts = []
 
-    # Lấy nhóm cơ đã tập trong 48h
-    recent_muscles = get_recent_muscle_groups(user_profile["id"], hours=48)
-
     for w in all_workouts:
-        # 1. Phù hợp môn thể thao?
-        if w.Sport and w.Sport.lower() != user_profile["sport"].lower():
+        # ✅ CHỈ LẤY BÀI TẬP PHÙ HỢP MÔN THỂ THAO
+        if w.Sport != user_profile["sport"]:
             continue
 
-        # 2. Tránh nhóm cơ đã tập gần đây
-        if w.MuscleGroups:
-            workout_muscles = {m.strip().lower() for m in w.MuscleGroups.split(',')}
-            if workout_muscles & recent_muscles:
-                continue  # Bỏ qua nếu trùng nhóm cơ
-
-        # 3. Tính điểm
-        score = 0.0
-
-        # 4. Phù hợp thiết bị? (tạm thời: giả sử user có bodyweight)
-        # → Sau này có thể thêm user.equipment
-
-        # 5. Feedback
-        score += workout_ratings.get(w.Id, 3.0) - 3.0
-
+        score = workout_ratings.get(w.Id, 3.0) - 3.0
         scored_workouts.append((w, score))
 
-    return sorted(scored_workouts, key=lambda x: x[1], reverse=True)[:10]
+    # --- ✅ NẾU KHÔNG CÓ BÀI TẬP PHÙ HỢP → LẤY TẤT CẢ BÀI TẬP ---
+    if not scored_workouts:
+        # Lấy tất cả bài tập (không lọc môn)
+        scored_workouts = [(w, 0.0) for w in all_workouts]
 
+    return sorted(scored_workouts, key=lambda x: x[1], reverse=True)[:10]
 
 def get_recent_meal_ids(user_id: int, days: int = 7) -> set:
     """Lấy ID món ăn đã dùng trong N ngày qua"""
@@ -117,66 +95,52 @@ def get_recent_muscle_groups(user_id: int, hours: int = 48) -> set:
 
 
 def build_daily_schedule(user_id: int, target_date: str):
-    
-    """Xây dựng lịch trình ăn uống & tập luyện cho 1 ngày"""
     from utils.scheduler import get_free_time_slots
-    
+
     user = get_user_profile(user_id)
     meal_ratings, workout_ratings = get_user_feedback(user_id)
 
-    # Lấy danh sách món & bài tập đã được sắp xếp theo điểm
-    meals = recommend_meals(user, meal_ratings)          # List[(Meal, score)]
-    workouts = recommend_workouts(user, workout_ratings) # List[(Workout, score)]
+    meals = recommend_meals(user, meal_ratings)
+    workouts = recommend_workouts(user, workout_ratings)  # ← Đây là danh sách bài tập
 
-    # Lấy các khung giờ rảnh trong ngày
     free_slots = get_free_time_slots(user["work_schedule"], target_date)
-    if not free_slots:
-        free_slots = ["06:00-07:00", "12:00-13:00", "19:00-20:00"]  # fallback
 
     schedule = []
-    used_meals = set()
-    used_workouts = set()
-
-    # --- 1. Gán món ăn theo thứ tự bữa: sáng → trưa → tối → snack ---
-    meal_type_order = ["breakfast", "lunch", "dinner", "snack"]
     slot_idx = 0
 
-    for meal_type in meal_type_order:
+    # --- 1. Gán món ăn ---
+    meal_types = ["sáng", "trưa", "tối", "ăn vặt"]
+    for meal_type in meal_types:
         if slot_idx >= len(free_slots):
             break
-
-        # Tìm món ăn phù hợp loại bữa và chưa dùng
-        selected_meal = None
-        for meal_obj, _ in meals:
-            if meal_obj.Id in used_meals:
-                continue
-            if getattr(meal_obj, 'MealType', None) == meal_type:
-                selected_meal = meal_obj
-                used_meals.add(meal_obj.Id)
+        suitable_meal = None
+        for meal, score in meals:
+            if hasattr(meal, 'MealType') and meal.MealType == meal_type:
+                suitable_meal = meal
                 break
-
-        if selected_meal:
+        if suitable_meal:
             schedule.append({
                 "time": free_slots[slot_idx],
                 "type": "meal",
-                "data": _serialize_meal(selected_meal)
+                "data": _serialize_meal(suitable_meal)
             })
             slot_idx += 1
 
-    # --- 2. Gán 1 bài tập (nếu còn slot) ---
-    if slot_idx < len(free_slots) and workouts:
-        selected_workout = None
-        for workout_obj, _ in workouts:
-            if workout_obj.Id not in used_workouts:
-                selected_workout = workout_obj
-                used_workouts.add(workout_obj.Id)
-                break
-
-        if selected_workout:
+    # --- 2. Gán bài tập (luôn có ít nhất 1 bài) ---
+    if workouts and slot_idx < len(free_slots):
+        schedule.append({
+            "time": free_slots[slot_idx],
+            "type": "workout",
+            "data": _serialize_workout(workouts[0][0])
+        })
+    else:
+        # Nếu không có bài tập phù hợp → lấy bài tập đầu tiên trong database
+        all_workouts = db.session.query(Workout).all()
+        if all_workouts:
             schedule.append({
-                "time": free_slots[slot_idx],
+                "time": free_slots[slot_idx] if slot_idx < len(free_slots) else "06:00-07:00",
                 "type": "workout",
-                "data": _serialize_workout(selected_workout)
+                "data": _serialize_workout(all_workouts[0])
             })
 
     return {
