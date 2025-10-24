@@ -8,6 +8,7 @@ import Profile from "./pages/Profile";
 import Leaderboard from "./pages/Leaderboard";
 import Social from "./pages/Social";
 import Videos from "./pages/Videos";
+import WorkScheduleManager from "./pages/WorkScheduleManager";
 
 export default function App() {
   const location = useLocation();
@@ -21,6 +22,7 @@ export default function App() {
           <Route path="/" element={<Login />} /> {/* Trang đăng nhập */}
           <Route path="/home" element={<Home />} />
           <Route path="/planner" element={<Planner />} />
+          <Route path="/schedule-manager" element={<WorkScheduleManager />} />
           <Route path="/logs" element={<Logs />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/leaderboard" element={<Leaderboard />} />

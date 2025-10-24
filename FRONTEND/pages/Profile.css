@@ -1,95 +1,186 @@
-/* Profile.css */
-
-/* Định dạng chung cho trang */
+/* Container chính */
 .profile-container {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 40px;
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
   display: flex;
   justify-content: space-between;
-  gap: 30px;
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 30px;
+  background-color: #f1f5f9;
+  border-radius: 20px;
+  box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease-in-out;
+}
+
+/* Phân chia 2 cột */
+.profile-left, .profile-right {
+  flex: 1;
+  margin-right: 20px;
 }
 
 .profile-left {
-  flex: 1;
+  margin-right: 40px;
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .profile-right {
-  flex: 1;
-  background-color: #f4f4f4;
+  margin-left: 40px;
+  background-color: #e0f7fa; /* Màu khác biệt cho phần thông tin thống kê */
   padding: 20px;
   border-radius: 12px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-.profile-left input,
-.profile-left select,
-.profile-left button {
-  width: 100%;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  margin-top: 10px;
-  font-size: 1rem;
-}
-
-.profile-left input,
-.profile-left select {
-  display: block;
-  margin-bottom: 15px;
-}
-
-button {
-  background-color: #00b4d8;
-  color: white;
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-button:hover {
-  background-color: #0099cc;
-}
-
-.profile-right .profile-info {
+/* Tiêu đề và ảnh đại diện */
+.profile-header {
   text-align: center;
   margin-bottom: 30px;
 }
 
-.profile-right .profile-info img {
+.profile-title {
+  font-size: 2.5rem;
+  color: #2c3e50;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: bold;
+  transition: color 0.3s;
+}
+
+.profile-title:hover {
+  color: #16a085;
+}
+
+.avatar-container {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.avatar {
   border-radius: 50%;
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  transition: transform 0.3s ease-in-out;
+}
+
+.avatar:hover {
+  transform: scale(1.1);
+  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Các trường nhập thông tin */
+.profile-details {
+  background-color: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Các trường input */
+.profile-field {
+  margin-bottom: 20px;
+}
+
+.profile-field label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.profile-field input,
+.profile-field select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #555;
+  background-color: #f9f9f9;
+  transition: border-color 0.3s, background-color 0.3s;
+}
+
+.profile-field input:focus,
+.profile-field select:focus {
+  border-color: #16a085;
+  background-color: white;
+  outline: none;
+}
+
+/* Các nút */
+.action-buttons button {
+  background-color: #1abc9c;
+  color: white;
+  padding: 12px 20px;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.action-buttons button:hover {
+  background-color: #16a085;
+  transform: scale(1.05);
+}
+
+.action-buttons button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Phần ảnh đại diện và thông tin */
+.profile-info {
+  text-align: center;
+}
+
+.profile-info img {
   width: 100px;
   height: 100px;
-  object-fit: cover;
+  border-radius: 50%;
+  margin-bottom: 10px;
 }
 
-.profile-right .profile-info h3 {
-  font-size: 1.5rem;
-  color: #333;
-  margin-top: 10px;
-}
-
-.profile-right .stats {
-  background-color: #fff;
+.stats {
+  background-color: #ffffff;
   padding: 20px;
   border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.bmi,
+.tdee {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #2c3e50;
+  transition: color 0.3s;
 }
 
 .stats p {
-  font-size: 1rem;
-  color: #333;
+  margin: 10px 0;
 }
 
-.stats .bmi {
-  font-weight: bold;
-  color: #4caf50;
+.bmi:hover,
+.tdee:hover {
+  color: #16a085;
+  cursor: pointer;
 }
 
-.stats .tdee {
-  color: #ff9800;
+/* Khi load trang, hiệu ứng fade-in */
+.profile-left, .profile-right {
+  animation: fadeIn 1s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
