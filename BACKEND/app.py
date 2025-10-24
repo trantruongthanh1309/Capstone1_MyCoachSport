@@ -13,7 +13,7 @@ from datetime import timedelta
 from flask_session import Session
 from api.planner import planner_bp
 from api.ai_coach import ai_coach_bp
-
+from api.schedule_manager import schedule_bp
 # Khởi tạo Flask app
 app = Flask(__name__)
 
@@ -31,13 +31,18 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'     # 👈 an toàn, không bị c
 app.config['SESSION_COOKIE_SECURE'] = False       # 👈 vì đang dùng HTTP, không HTTPS
 app.config['SESSION_COOKIE_DOMAIN'] = None        # 👈 Flask tự nhận domain (localhost/127.0.0.1 đều được)
 app.config['SESSION_COOKIE_PATH'] = '/'
-
+app.config['JSON_AS_ASCII'] = False  # ← Cho phép JSON có Unicode
+app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False 
 
 Session(app)
 # Khởi tạo db với app
 db.init_app(app)
 
-CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
+CORS(app, 
+     supports_credentials=True, 
+     origins=["http://localhost:5173"],  # ← địa chỉ frontend của bạn
+     allow_headers=["Content-Type"],
+     methods=["GET", "POST", "OPTIONS"])
 
 
 # Hàm kiểm tra kết nối cơ sở dữ liệu
@@ -69,7 +74,7 @@ app.register_blueprint(auth_bp)  # bỏ url_prefix ở đây
 app.register_blueprint(profile_bp, url_prefix='/api/profile') 
 app.register_blueprint(planner_bp, url_prefix="/api/planner")
 app.register_blueprint(ai_coach_bp, url_prefix='/api/ai')
-
+app.register_blueprint(schedule_bp, url_prefix="/api/schedule")
 
 
 GEMINI_API_KEY = "AIzaSyC5Dwwo6PYfKOS9RwUsaunIiyBNTevJy5U"  # Thay thế bằng API Key của bạn
@@ -121,6 +126,6 @@ def chat():
         return jsonify({"reply": f"❌ Lỗi Backend: {e}"}), 500
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False)
 
 

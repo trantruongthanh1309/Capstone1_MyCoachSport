@@ -7,18 +7,17 @@ def get_user_profile(user_id: int):
     if not user:
         raise ValueError("User not found")
 
-    # 👇 THÊM DÒNG NÀY ĐỂ DEBUG
-    print(f"🔍 User Sport: '{user.Sport}'")  # ← XEM GIÁ TRỊ CỦA user.Sport
+    # KHÔNG DÙNG WorkSchedule NỮA
+    work_schedule = {}  # ← LUÔN TRẢ VỀ RỖNG
 
-    work_schedule = json.loads(user.WorkSchedule) if user.WorkSchedule else {}
     disliked = json.loads(user.DislikedIngredients) if user.DislikedIngredients else []
     allergies = json.loads(user.Allergies) if user.Allergies else []
 
     return {
         "id": user.Id,
-        "sport": user.Sport,  # ← Đây là giá trị được gửi đến AI Coach
+        "sport": user.Sport,
         "goal": user.Goal,
-        "work_schedule": work_schedule,
+        "work_schedule": work_schedule,  # ← SẼ KHÔNG DÙNG ĐẾN
         "disliked_ingredients": disliked,
         "allergies": allergies
     }

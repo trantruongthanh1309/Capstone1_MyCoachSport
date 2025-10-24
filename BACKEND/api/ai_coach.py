@@ -9,24 +9,18 @@ ai_coach_bp = Blueprint('ai_coach', __name__)
 
 @ai_coach_bp.route('/schedule', methods=['GET'])
 def get_schedule():
-    print("🔍 TOÀN BỘ SESSION:", dict(session))  # ← DÒNG 1
-    
     if 'user_id' not in session:
-        print("❌ KHÔNG CÓ user_id TRONG SESSION")
         return jsonify({"error": "Chưa đăng nhập"}), 401
     
-    user_id = session['user_id']
-    print(f"✅ user_id = {user_id}")
+    user_id = session['user_id']  # ← LẤY TỪ SESSION
+    date = request.args.get('date', '2025-10-18')
     
     try:
-        date = request.args.get('date', '2025-10-18')
-        result = build_daily_schedule(user_id, date)
-        return jsonify(result)
+        schedule = build_daily_schedule(user_id, date)  # ← TRUYỀN user_id
+        return jsonify(schedule)
     except Exception as e:
-        print("💥 LỖI TRONG AI ENGINE:", str(e))
-        import traceback
-        traceback.print_exc()  # ← IN STACK TRACE ĐẦY ĐỦ
-        return jsonify({"error": "Lỗi hệ thống: " + str(e)}), 500
+        print("Lỗi AI:", str(e))
+        return jsonify({"error": "Lỗi hệ thống"}), 500
 
 
 @ai_coach_bp.route('/feedback', methods=['POST'])

@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify,session
 from db import db  # Giả sử bạn đã có `db = SQLAlchemy(app)` trong file `db.py` # Từ models.py chứa class User
 from models import User  
+import json
 profile_bp = Blueprint('profile', __name__, url_prefix='/api/profile')
 
 def to_dict(self):
@@ -42,22 +43,18 @@ def get_profile():
     })
 
 
-
 @profile_bp.route('/<int:user_id>', methods=['POST'])
 def update_profile(user_id):
     try:
-        print(f"📥 Nhận request cập nhật user_id = {user_id}")
-        data = request.get_json()
-        print("➡️ Dữ liệu nhận:", data)
+        data = request.get_json()  # Lấy dữ liệu từ body
+        print(f"Received data for user {user_id}: {data}")
 
-        # Ép kiểu về int chắc chắn
-        user = User.query.filter_by(Id=int(user_id)).first()
+        user = User.query.filter_by(Id=user_id).first()
         if not user:
-            print("⚠️ Không tìm thấy user, tạo mới...")
+            print("⚠️ User not found, creating new user...")
             user = User(Id=user_id)
             db.session.add(user)
 
-        # Cập nhật dữ liệu
         user.Name = data.get('name', user.Name)
         user.Age = data.get('age', user.Age)
         user.Sex = data.get('sex', user.Sex)
@@ -68,10 +65,44 @@ def update_profile(user_id):
         user.Sessions_per_week = data.get('sessions_per_week', user.Sessions_per_week)
 
         db.session.commit()
-        print("✅ Đã lưu thành công vào DB.")
+        print("✅ Hồ sơ đã được lưu vào cơ sở dữ liệu.")
         return jsonify({"message": "✅ Hồ sơ đã được lưu vào cơ sở dữ liệu"}), 200
-
-    except db as e:
+    except Exception as e:
         db.session.rollback()
-        print("❌ Lỗi SQLAlchemy:", e)
+        print(f"❌ Lỗi khi lưu vào DB: {e}")
         return jsonify({"error": str(e)}), 500
+
+
+    
+@profile_bp.route('/schedule', methods=['GET'])
+def get_work_schedule():
+    if 'user_id' not in session:
+        return jsonify({"error": "Chưa đăng nhập"}), 401
+    
+    user = User.query.get(session['user_id'])
+    if not user:
+        return jsonify({"error": "User không tồn tại"}), 404
+    
+    # Nếu WorkSchedule là NULL → gán mặc định
+    schedule = json.loads(user.WorkSchedule) if user.WorkSchedule else {
+        "mon": [], "tue": [], "wed": [], "thu": [], "fri": [], "sat": [], "sun": []
+    }
+    return jsonify(schedule)
+
+@profile_bp.route('/schedule', methods=['POST'])
+def update_work_schedule():
+    if 'user_id' not in session:
+        return jsonify({"error": "Chưa đăng nhập"}), 401
+    
+    data = request.json
+    user = User.query.get(session['user_id'])
+    if not user:
+        return jsonify({"error": "User không tồn tại"}), 404
+    
+    # Kiểm tra dữ liệu đầu vào
+    if not isinstance(data, dict):
+        return jsonify({"error": "Dữ liệu không hợp lệ"}), 400
+    
+    user.WorkSchedule = json.dumps(data)
+    db.session.commit()
+    return jsonify({"message": "Cập nhật lịch thành công!"})
