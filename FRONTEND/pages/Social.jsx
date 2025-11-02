@@ -1,21 +1,422 @@
 import { useEffect, useMemo, useState } from "react";
-import "./Social.css";
 
 const LS_KEY = "msc_social_fb_v1";
 
+// Styles CSS améliorés
+const styles = `
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slideInRight {
+    from {
+      opacity: 0;
+      transform: translateX(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -1000px 0;
+    }
+    100% {
+      background-position: 1000px 0;
+    }
+  }
+
+  .fb-wrap {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+  }
+
+  .fb-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr 280px;
+    gap: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .fb-left {
+    animation: slideInLeft 0.6s ease-out;
+  }
+
+  .fb-center {
+    animation: fadeInUp 0.6s ease-out 0.1s both;
+  }
+
+  .fb-right {
+    animation: slideInRight 0.6s ease-out;
+  }
+
+  .fb-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .fb-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  }
+
+  .fb-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 3px solid #667eea;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .fb-avatar:hover {
+    transform: scale(1.1) rotate(5deg);
+    border-color: #764ba2;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+
+  .fb-avatar-s {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid #667eea;
+  }
+
+  .fb-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .fb-menu-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    text-decoration: none;
+    color: #333;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .fb-menu-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    transition: width 0.3s ease;
+    z-index: -1;
+  }
+
+  .fb-menu-item:hover {
+    color: white;
+    transform: translateX(8px);
+  }
+
+  .fb-menu-item:hover::before {
+    width: 100%;
+  }
+
+  .fb-input, .fb-textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 2px solid #e0e0e0;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    background: white;
+  }
+
+  .fb-input:focus, .fb-textarea:focus {
+    border-color: #667eea;
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    transform: translateY(-2px);
+  }
+
+  .fb-textarea {
+    resize: none;
+    font-family: inherit;
+  }
+
+  .fb-btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  }
+
+  .fb-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  }
+
+  .fb-btn-primary:active {
+    transform: translateY(0);
+  }
+
+  .fb-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+
+  .fb-btn:hover {
+    background: #764ba2;
+    transform: scale(1.05);
+  }
+
+  .fb-btn-ghost {
+    background: transparent;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    color: #666;
+  }
+
+  .fb-btn-ghost:hover {
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+    transform: scale(1.05);
+  }
+
+  .fb-composer-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #f0f0f0;
+  }
+
+  .fb-chip {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+
+  .fb-chip:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+  }
+
+  .fb-post {
+    margin-bottom: 24px;
+    animation: fadeInUp 0.5s ease-out;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .fb-post::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: shimmer 2s infinite;
+  }
+
+  .fb-post-text {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #333;
+    margin: 16px 0;
+  }
+
+  .fb-post-img {
+    width: 100%;
+    border-radius: 12px;
+    margin-top: 16px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .fb-post-img:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  }
+
+  .fb-post-stats {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    margin: 12px 0;
+    border-top: 1px solid #f0f0f0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 14px;
+    color: #666;
+  }
+
+  .fb-post-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: space-around;
+    padding: 8px 0;
+  }
+
+  .fb-comment-box {
+    margin-top: 20px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    padding: 16px;
+    border-radius: 12px;
+    animation: fadeInUp 0.3s ease-out;
+  }
+
+  .fb-comments {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .fb-comment {
+    display: flex;
+    gap: 12px;
+    animation: fadeInUp 0.4s ease-out;
+  }
+
+  .fb-comment-bubble {
+    background: white;
+    padding: 12px 16px;
+    border-radius: 16px;
+    max-width: 70%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+  }
+
+  .fb-comment-bubble:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .fb-comment-author {
+    font-weight: 600;
+    color: #667eea;
+    margin-bottom: 4px;
+  }
+
+  .fb-contact {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    margin-bottom: 8px;
+  }
+
+  .fb-contact:hover {
+    background: rgba(102, 126, 234, 0.1);
+    transform: translateX(4px);
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ccc;
+    display: inline-block;
+  }
+
+  .dot.online {
+    background: #4caf50;
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
+    animation: pulse 2s infinite;
+  }
+
+  .sticky {
+    position: sticky;
+    top: 20px;
+  }
+
+  @media (max-width: 1024px) {
+    .fb-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .fb-left, .fb-right {
+      display: none;
+    }
+  }
+`;
+
 // Hàm tạo avatar ngẫu nhiên
 const avatar = (name = "U") =>
-  `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0D8ABC&color=fff`;
+  `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=667eea&color=fff&bold=true`;
 
 // Phần Left Sidebar
 function LeftSidebar() {
   return (
-    <aside className="fb-left sticky top-16">
+    <aside className="fb-left sticky">
       <div className="fb-card">
         <div className="flex items-center gap-3">
           <img className="fb-avatar" src={avatar("Bạn")} alt="" />
           <div>
-            <div className="font-semibold">Bạn</div>
+            <div className="font-semibold text-gray-800">Bạn</div>
             <div className="text-gray-500 text-sm">Xem trang cá nhân</div>
           </div>
         </div>
@@ -39,8 +440,7 @@ function Composer({ onPost }) {
   const [text, setText] = useState("");
   const [img, setImg] = useState("");
 
-  const submit = (e) => {
-    e.preventDefault();
+  const submit = () => {
     const t = text.trim();
     if (!t) return;
     onPost({
@@ -68,13 +468,18 @@ function Composer({ onPost }) {
         />
       </div>
 
-      <form onSubmit={submit}>
+      <div>
         <textarea
           className="fb-textarea"
           rows={3}
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Bạn đang nghĩ gì?"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && e.ctrlKey) {
+              submit();
+            }
+          }}
         />
         <div className="flex gap-2 mt-2">
           <input
@@ -83,9 +488,9 @@ function Composer({ onPost }) {
             onChange={(e) => setImg(e.target.value)}
             placeholder="Link ảnh (tuỳ chọn)"
           />
-          <button className="fb-btn-primary" type="submit">Đăng</button>
+          <button className="fb-btn-primary" onClick={submit}>Đăng</button>
         </div>
-      </form>
+      </div>
 
       <div className="fb-composer-actions">
         <button className="fb-chip">📷 Ảnh</button>
@@ -110,7 +515,7 @@ function Post({ post, onLike, onComment, onDelete }) {
       <header className="flex items-center gap-3">
         <img className="fb-avatar" src={post.avatar} alt="" />
         <div>
-          <div className="font-semibold">{post.author}</div>
+          <div className="font-semibold text-gray-800">{post.author}</div>
           <div className="text-xs text-gray-500">{time}</div>
         </div>
         <div className="ml-auto">
@@ -130,7 +535,7 @@ function Post({ post, onLike, onComment, onDelete }) {
 
       <div className="fb-post-stats">
         <span>👍 {post.likes}</span>
-        <span>{post.comments.length} bình luận</span>
+        <span>💬 {post.comments.length} bình luận</span>
       </div>
 
       <div className="fb-post-actions">
@@ -186,9 +591,9 @@ function Post({ post, onLike, onComment, onDelete }) {
 // Phần Right Sidebar
 function RightSidebar() {
   return (
-    <aside className="fb-right sticky top-16">
+    <aside className="fb-right sticky">
       <div className="fb-card">
-        <div className="font-semibold mb-2">Liên hệ</div>
+        <div className="font-semibold mb-3 text-gray-800">Liên hệ</div>
         <div className="fb-contact"><span className="dot online" /> Linh</div>
         <div className="fb-contact"><span className="dot online" /> Vũ</div>
         <div className="fb-contact"><span className="dot" /> Khang</div>
@@ -196,11 +601,11 @@ function RightSidebar() {
       </div>
 
       <div className="fb-card">
-        <div className="font-semibold mb-2">Đang thịnh hành</div>
-        <ul className="list-disc list-inside text-sm text-gray-700">
-          <li>#calisthenics</li>
-          <li>#football_drills</li>
-          <li>#lean_bulk_meal</li>
+        <div className="font-semibold mb-3 text-gray-800">Đang thịnh hành</div>
+        <ul className="list-none text-sm text-gray-700 space-y-2">
+          <li className="fb-contact">#calisthenics</li>
+          <li className="fb-contact">#football_drills</li>
+          <li className="fb-contact">#lean_bulk_meal</li>
         </ul>
       </div>
     </aside>
@@ -259,23 +664,26 @@ export default function Social() {
   const delPost = (id) => persist(posts.filter((p) => p.id !== id));
 
   return (
-    <main className="fb-wrap pt-20">
-      <div className="fb-grid">
-        <LeftSidebar />
-        <section className="fb-center">
-          <Composer onPost={addPost} />
-          {posts.map((p) => (
-            <Post
-              key={p.id}
-              post={p}
-              onLike={likePost}
-              onComment={addComment}
-              onDelete={delPost}
-            />
-          ))}
-        </section>
-        <RightSidebar />
-      </div>
-    </main>
+    <>
+      <style>{styles}</style>
+      <main className="fb-wrap">
+        <div className="fb-grid">
+          <LeftSidebar />
+          <section className="fb-center">
+            <Composer onPost={addPost} />
+            {posts.map((p) => (
+              <Post
+                key={p.id}
+                post={p}
+                onLike={likePost}
+                onComment={addComment}
+                onDelete={delPost}
+              />
+            ))}
+          </section>
+          <RightSidebar />
+        </div>
+      </main>
+    </>
   );
 }

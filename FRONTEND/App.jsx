@@ -9,7 +9,7 @@ import Leaderboard from "./pages/Leaderboard";
 import Social from "./pages/Social";
 import Videos from "./pages/Videos";
 import WorkScheduleManager from "./pages/WorkScheduleManager";
-
+import Settings from "./pages/Settings";
 export default function App() {
   const location = useLocation();
   const hideNavbar = location.pathname === "/"; // Kiểm tra nếu đang ở trang Login thì ẩn Navbar
@@ -28,6 +28,7 @@ export default function App() {
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/social" element={<Social />} />
           <Route path="/videos" element={<Videos />} />
+          <Route path="/settings" element={<Settings />} />
         </Routes>
       </div>
       

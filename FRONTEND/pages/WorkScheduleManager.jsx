@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import "./WorkScheduleManager.css";
 
 export default function WorkScheduleManager() {
@@ -13,25 +12,46 @@ export default function WorkScheduleManager() {
     sun: { morning: "", afternoon: "", evening: "" },
   });
 
-  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  
   const dayNames = {
-    
-    fri: "Thứ 2",
-    sat: "Thứ 3",
-    sun: "Thứ 4",
-    mon: "Thứ 5",
-    tue: "Thứ 6",
-    wed: "Thứ 7",
-    thu: "Chủ nhật",
+   sun: "Thứ 2",
+    mon: "Thứ 3",
+tue: "Thứ 4",
+wed: "Thứ 5",
+thu: "Thứ 6",
+fri: "Thứ 7",
+sat: "Chủ nhật",
+
+
   };
+  
+  const dayIcons = {
+    fri: "",
+    sat: "",
+    sun: "",
+    mon: "",
+    tue: "",
+    wed: "",
+    thu: "",
+  };
+  
   const periods = ["morning", "afternoon", "evening"];
   const periodLabels = {
     morning: "Buổi sáng",
     afternoon: "Buổi trưa",
     evening: "Buổi tối",
   };
+  
+  const periodIcons = {
+    morning: "🌅",
+    afternoon: "☀️",
+    evening: "🌙",
+  };
 
   useEffect(() => {
+    setIsLoading(true);
     fetch("http://localhost:5000/api/schedule/busy", {
       method: "GET",
       credentials: "include",
@@ -49,8 +69,12 @@ export default function WorkScheduleManager() {
           }
         }
         setSchedule(filled);
+        setIsLoading(false);
       })
-      .catch((err) => alert("Lỗi tải lịch"));
+      .catch((err) => {
+        alert("Lỗi tải lịch");
+        setIsLoading(false);
+      });
   }, []);
 
   const handleInputChange = (day, period, value) => {
@@ -61,6 +85,7 @@ export default function WorkScheduleManager() {
   };
 
   const handleSave = async () => {
+    setIsSaving(true);
     try {
       const res = await fetch("http://localhost:5000/api/schedule/busy", {
         method: "POST",
@@ -69,52 +94,125 @@ export default function WorkScheduleManager() {
         body: JSON.stringify(schedule),
       });
       if (res.ok) {
-        alert("✅ Lưu lịch thành công!");
-        navigate("/planner");
+        const btn = document.querySelector('.save-btn');
+        btn?.classList.add('success-pulse');
+        setTimeout(() => {
+          alert("✅ Lưu lịch thành công!");
+        }, 500);
       } else {
         alert("❌ Lỗi khi lưu lịch");
       }
     } catch (err) {
       alert("Không thể kết nối đến máy chủ");
+    } finally {
+      setIsSaving(false);
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="schedule-manager">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p className="loading-text">Đang tải lịch làm việc...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="schedule-manager">
-      <h1>📅 Quản Lý Lịch Làm Việc</h1>
-      <table className="schedule-table">
-        <thead>
-          <tr>
-            <th>Ngày</th>
-            <th>Buổi sáng</th>
-            <th>Buổi trưa</th>
-            <th>Buổi tối</th>
-          </tr>
-        </thead>
-        <tbody>
-          {Object.entries(dayNames).map(([dayKey, dayLabel]) => (
-            <tr key={dayKey}>
-              <td>{dayLabel}</td>
-              {periods.map((period) => (
-                <td key={period}>
-                  <input
-                    type="text"
-                    value={schedule[dayKey][period]}
-                    onChange={(e) =>
-                      handleInputChange(dayKey, period, e.target.value)
-                    }
-                    placeholder="Ghi chú nếu bận"
-                    className="schedule-input"
-                  />
-                </td>
+      <div className="animated-bg"></div>
+      
+      <div className="header-section">
+        <div className="header-icon-wrapper">
+          <span className="header-icon">📅</span>
+        </div>
+        <h1 className="gradient-title">Quản Lý Lịch Làm Việc</h1>
+        <p className="subtitle">Lập kế hoạch thời gian của bạn một cách thông minh</p>
+      </div>
+
+      <div className="schedule-card glass-effect">
+        <div className="table-wrapper">
+          <table className="schedule-table">
+            <thead>
+              <tr>
+                <th className="day-header">
+                  <span className="header-label">Ngày trong tuần</span>
+                </th>
+                {periods.map((period) => (
+                  <th key={period} className="period-header">
+                    <div className="header-content">
+                      <span className="period-icon">{periodIcons[period]}</span>
+                      <span className="period-label">{periodLabels[period]}</span>
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(dayNames).map(([dayKey, dayLabel], index) => (
+                <tr key={dayKey} className="day-row" style={{ animationDelay: `${index * 0.05}s` }}>
+                  <td className="day-cell">
+                    <div className="day-label-wrapper">
+                      <span className="day-icon">{dayIcons[dayKey]}</span>
+                      <span className="day-label">{dayLabel}</span>
+                    </div>
+                  </td>
+                  {periods.map((period) => (
+                    <td key={period} className="input-cell">
+                      <div className="input-wrapper">
+                        <input
+                          type="text"
+                          value={schedule[dayKey][period]}
+                          onChange={(e) =>
+                            handleInputChange(dayKey, period, e.target.value)
+                          }
+                          placeholder="Nhập ghi chú..."
+                          className="schedule-input"
+                        />
+                        {schedule[dayKey][period] && (
+                          <button
+                            className="clear-btn"
+                            onClick={() => handleInputChange(dayKey, period, "")}
+                            title="Xóa"
+                          >
+                            ×
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  ))}
+                </tr>
               ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <button onClick={handleSave} className="save-btn">
-        💾 Lưu Lịch Làm Việc
-      </button>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="action-section">
+        <button 
+          onClick={handleSave} 
+          className={`save-btn ${isSaving ? 'saving' : ''}`}
+          disabled={isSaving}
+        >
+          {isSaving ? (
+            <>
+              <span className="btn-spinner"></span>
+              <span>Đang lưu...</span>
+            </>
+          ) : (
+            <>
+              <svg className="btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16L21 8V19C21 20.1046 20.1046 21 19 21Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M17 21V13H7V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M7 3V8H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span>Lưu Lịch Làm Việc</span>
+            </>
+          )}
+        </button>
+      </div>
     </div>
   );
 }

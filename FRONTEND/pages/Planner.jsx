@@ -30,9 +30,9 @@ export default function Planner() {
     "Thứ 7",
     "Chủ nhật",
   ];
-  // ✅ CHỈ CÓ 3 BỮA: Sáng, Trưa, Tối — KHÔNG CÓ ĂN VẶT
-const mealTimes = ["morning", "afternoon", "evening"];
-const mealTimeLabels = ["Bữa sáng", "Bữa trưa", "Bữa tối"];
+
+  const mealTimes = ["morning", "afternoon", "evening"];
+  const mealTimeLabels = ["Bữa sáng", "Bữa trưa", "Bữa tối"];
 
   const fetchWeeklyPlan = async () => {
     setLoading(true);
@@ -102,38 +102,52 @@ const mealTimeLabels = ["Bữa sáng", "Bữa trưa", "Bữa tối"];
     fetchWeeklyPlan();
   }, []);
 
-  if (loading) return <p className="text-center mt-10">⏳ Đang tải...</p>;
-  if (error) return <p className="text-center text-red-600 mt-10">{error}</p>;
+  if (loading) return <div className="loading-screen"><div className="spinner"></div><p>⏳ Đang tải lịch trình...</p></div>;
+  if (error) return <div className="error-screen"><p>❌ {error}</p></div>;
 
   const dates = getDates(new Date(), 7);
 
   return (
     <div className="planner-wrap">
-      <h1 className="planner-title">🗓️ Lịch Trình Cá Nhân Hóa</h1>
+      <div className="planner-header">
+        <h1 className="planner-title">🗓️ Lịch Trình Cá Nhân Hóa</h1>
+        <p className="planner-subtitle">Kế hoạch ăn uống & tập luyện được AI tối ưu riêng cho bạn</p>
+      </div>
 
-      <div className="user-actions mb-6">
+      <div className="user-actions">
         <button className="btn-primary" onClick={fetchWeeklyPlan}>
-          🔄 Tải lại lịch
+          <span className="btn-icon">🔄</span>
+          <span>Tải lại lịch</span>
         </button>
       </div>
 
       {/* MEAL PLAN */}
-      <div className="section">
-        <h2>🍽 Kế Hoạch Ăn Uống</h2>
-        <div className="overflow-x-auto">
-          <table className="planner-table w-full border-collapse shadow-md">
+      <div className="section meal-section">
+        <div className="section-header">
+          <h2><span className="emoji">🍽</span> Kế Hoạch Ăn Uống</h2>
+        </div>
+        <div className="table-container">
+          <table className="planner-table">
             <thead>
               <tr>
-                <th>Bữa</th>
+                <th className="sticky-col">Bữa</th>
                 {dates.map((date, i) => (
-                  <th key={date}>{dayNames[i]}</th>
+                  <th key={date}>
+                    <div className="day-header">
+                      <span className="day-name">{dayNames[i]}</span>
+                      <span className="day-date">{new Date(date).getDate()}</span>
+                    </div>
+                  </th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {mealTimeLabels.map((label, idx) => (
                 <tr key={label}>
-                  <td className="font-semibold">{label}</td>
+                  <td className="sticky-col meal-time-label">
+                    <span className="time-icon">{idx === 0 ? '🌅' : idx === 1 ? '☀️' : '🌙'}</span>
+                    <span>{label}</span>
+                  </td>
                   {dates.map((date) => {
                     const schedule = weeklyPlan[date] || [];
                     const mealItem = schedule.find(
@@ -142,42 +156,42 @@ const mealTimeLabels = ["Bữa sáng", "Bữa trưa", "Bữa tối"];
                         item.data.MealType === mealTimes[idx]
                     );
                     return (
-                      <td key={date} className="hover-cell p-2">
+                      <td key={date} className="cell-content">
                         {mealItem ? (
-                          <>
-                            <div className="meal-title font-medium">
-                              {mealItem.data.Name}
+                          <div className="item-card meal-card">
+                            <div className="item-header">
+                              <h3 className="item-title">{mealItem.data.Name}</h3>
                             </div>
-                            <div className="small-meta text-sm text-gray-600">
-                              {mealItem.data.Kcal} kcal
+                            <div className="item-meta">
+                              <span className="meta-badge">🔥 {mealItem.data.Kcal} kcal</span>
+                              <span className="meta-badge">💪 {mealItem.data.Protein}g</span>
                             </div>
-                            <div className="actions-inline mt-1">
+                            <div className="item-actions">
                               <button
-                                className="btn-mini bg-green-500"
-                                onClick={() =>
-                                  sendFeedback(mealItem.data.Id, "meal", 5)
-                                }
+                                className="action-btn like-btn"
+                                onClick={() => sendFeedback(mealItem.data.Id, "meal", 5)}
+                                title="Thích"
                               >
                                 👍
                               </button>
                               <button
-                                className="btn-mini bg-red-500 ml-1"
-                                onClick={() =>
-                                  sendFeedback(mealItem.data.Id, "meal", 2)
-                                }
+                                className="action-btn dislike-btn"
+                                onClick={() => sendFeedback(mealItem.data.Id, "meal", 2)}
+                                title="Không thích"
                               >
                                 👎
                               </button>
                               <button
-                                className="btn-mini bg-blue-500 ml-1"
+                                className="action-btn info-btn"
                                 onClick={() => showItemDetail(mealItem)}
+                                title="Chi tiết"
                               >
                                 ℹ️
                               </button>
                             </div>
-                          </>
+                          </div>
                         ) : (
-                          <span className="text-gray-400">-</span>
+                          <div className="empty-cell">-</div>
                         )}
                       </td>
                     );
@@ -189,93 +203,152 @@ const mealTimeLabels = ["Bữa sáng", "Bữa trưa", "Bữa tối"];
         </div>
       </div>
 
-{/* WORKOUT PLAN — 2 BUỔI: SÁNG & TỐI */}
-<div className="section mt-8">
-  <h2>🏋️ Kế Hoạch Tập Luyện</h2>
-  <div className="overflow-x-auto">
-    <table className="planner-table w-full border-collapse shadow-md">
-      <thead>
-        <tr>
-          <th>Buổi</th>
-          {dates.map((date, i) => (
-            <th key={date}>{dayNames[i]}</th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td className="font-semibold">Buổi sáng</td>
-          {dates.map((date) => {
-            const schedule = weeklyPlan[date] || [];
-            // 🔥 SỬA: DÙNG "morning_slot" (TIẾNG ANH)
-            const workoutItem = schedule.find(
-              (item) => item.type === "workout" && item.time === "morning_slot"
-            );
-            return (
-              <td key={date} className="hover-cell p-2">
-                {workoutItem ? (
-                  <>
-                    <div className="meal-title font-medium">{workoutItem.data.Name}</div>
-                    <div className="small-meta text-sm text-gray-600">{workoutItem.data.Duration_min} phút</div>
-                    <div className="actions-inline mt-1">
-                      <button className="btn-mini bg-green-500" onClick={() => sendFeedback(workoutItem.data.Id, "workout", 5)}>👍</button>
-                      <button className="btn-mini bg-red-500 ml-1" onClick={() => sendFeedback(workoutItem.data.Id, "workout", 2)}>👎</button>
-                      <button className="btn-mini bg-blue-500 ml-1" onClick={() => showItemDetail(workoutItem)}>ℹ️</button>
+      {/* WORKOUT PLAN */}
+      <div className="section workout-section">
+        <div className="section-header">
+          <h2><span className="emoji">🏋️</span> Kế Hoạch Tập Luyện</h2>
+        </div>
+        <div className="table-container">
+          <table className="planner-table">
+            <thead>
+              <tr>
+                <th className="sticky-col">Buổi</th>
+                {dates.map((date, i) => (
+                  <th key={date}>
+                    <div className="day-header">
+                      <span className="day-name">{dayNames[i]}</span>
+                      <span className="day-date">{new Date(date).getDate()}</span>
                     </div>
-                  </>
-                ) : (
-                  <span className="text-gray-400">-</span>
-                )}
-              </td>
-            );
-          })}
-        </tr>
-        <tr>
-          <td className="font-semibold">Buổi tối</td>
-          {dates.map((date) => {
-            const schedule = weeklyPlan[date] || [];
-            // 🔥 SỬA: DÙNG "evening_slot" (TIẾNG ANH)
-            const workoutItem = schedule.find(
-              (item) => item.type === "workout" && item.time === "evening_slot"
-            );
-            return (
-              <td key={date} className="hover-cell p-2">
-                {workoutItem ? (
-                  <>
-                    <div className="meal-title font-medium">{workoutItem.data.Name}</div>
-                    <div className="small-meta text-sm text-gray-600">{workoutItem.data.Duration_min} phút</div>
-                    <div className="actions-inline mt-1">
-                      <button className="btn-mini bg-green-500" onClick={() => sendFeedback(workoutItem.data.Id, "workout", 5)}>👍</button>
-                      <button className="btn-mini bg-red-500 ml-1" onClick={() => sendFeedback(workoutItem.data.Id, "workout", 2)}>👎</button>
-                      <button className="btn-mini bg-blue-500 ml-1" onClick={() => showItemDetail(workoutItem)}>ℹ️</button>
-                    </div>
-                  </>
-                ) : (
-                  <span className="text-gray-400">-</span>
-                )}
-              </td>
-            );
-          })}
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="sticky-col meal-time-label">
+                  <span className="time-icon">🌅</span>
+                  <span>Buổi sáng</span>
+                </td>
+                {dates.map((date) => {
+                  const schedule = weeklyPlan[date] || [];
+                  const workoutItem = schedule.find(
+                    (item) => item.type === "workout" && item.time === "morning_slot"
+                  );
+                  return (
+                    <td key={date} className="cell-content">
+                      {workoutItem ? (
+                        <div className="item-card workout-card">
+                          <div className="item-header">
+                            <h3 className="item-title">{workoutItem.data.Name}</h3>
+                          </div>
+                          <div className="item-meta">
+                            <span className="meta-badge">⏱️ {workoutItem.data.Duration_min} phút</span>
+                            <span className="meta-badge">💪 {workoutItem.data.Intensity}</span>
+                          </div>
+                          <div className="item-actions">
+                            <button
+                              className="action-btn like-btn"
+                              onClick={() => sendFeedback(workoutItem.data.Id, "workout", 5)}
+                              title="Thích"
+                            >
+                              👍
+                            </button>
+                            <button
+                              className="action-btn dislike-btn"
+                              onClick={() => sendFeedback(workoutItem.data.Id, "workout", 2)}
+                              title="Không thích"
+                            >
+                              👎
+                            </button>
+                            <button
+                              className="action-btn info-btn"
+                              onClick={() => showItemDetail(workoutItem)}
+                              title="Chi tiết"
+                            >
+                              ℹ️
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="empty-cell">-</div>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+              <tr>
+                <td className="sticky-col meal-time-label">
+                  <span className="time-icon">🌙</span>
+                  <span>Buổi tối</span>
+                </td>
+                {dates.map((date) => {
+                  const schedule = weeklyPlan[date] || [];
+                  const workoutItem = schedule.find(
+                    (item) => item.type === "workout" && item.time === "evening_slot"
+                  );
+                  return (
+                    <td key={date} className="cell-content">
+                      {workoutItem ? (
+                        <div className="item-card workout-card">
+                          <div className="item-header">
+                            <h3 className="item-title">{workoutItem.data.Name}</h3>
+                          </div>
+                          <div className="item-meta">
+                            <span className="meta-badge">⏱️ {workoutItem.data.Duration_min} phút</span>
+                            <span className="meta-badge">💪 {workoutItem.data.Intensity}</span>
+                          </div>
+                          <div className="item-actions">
+                            <button
+                              className="action-btn like-btn"
+                              onClick={() => sendFeedback(workoutItem.data.Id, "workout", 5)}
+                              title="Thích"
+                            >
+                              👍
+                            </button>
+                            <button
+                              className="action-btn dislike-btn"
+                              onClick={() => sendFeedback(workoutItem.data.Id, "workout", 2)}
+                              title="Không thích"
+                            >
+                              👎
+                            </button>
+                            <button
+                              className="action-btn info-btn"
+                              onClick={() => showItemDetail(workoutItem)}
+                              title="Chi tiết"
+                            >
+                              ℹ️
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="empty-cell">-</div>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       {/* MODAL CHI TIẾT */}
       {showDetail && (
         <div className="modal-overlay" onClick={() => setShowDetail(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-xl font-bold mb-2">{detailItem?.title}</h3>
-            <pre className="bg-gray-100 p-3 rounded whitespace-pre-wrap">
-              {detailItem?.content}
-            </pre>
-            <button
-              className="btn-close mt-3 px-4 py-2 bg-gray-500 text-white rounded"
-              onClick={() => setShowDetail(false)}
-            >
-              Đóng
-            </button>
+          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">{detailItem?.title}</h3>
+              <button className="modal-close" onClick={() => setShowDetail(false)}>✕</button>
+            </div>
+            <div className="modal-content">
+              <pre className="detail-pre">{detailItem?.content}</pre>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-close" onClick={() => setShowDetail(false)}>
+                Đóng
+              </button>
+            </div>
           </div>
         </div>
       )}

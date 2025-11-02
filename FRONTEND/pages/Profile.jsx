@@ -14,12 +14,15 @@ export default function Profile() {
     sport: "Bóng đá",
   });
 
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Fetch profile từ API
   useEffect(() => {
-    if (!userId) return; // Không gọi API nếu không có userId
+    if (!userId) return;
 
     fetch("http://localhost:5000/api/profile", {
       method: "GET",
-      credentials: "include", // ✅ Phải có dòng này
+      credentials: "include",
     })
       .then((res) => res.json())
       .then((data) => {
@@ -32,17 +35,18 @@ export default function Profile() {
             weight: data.Weight_kg,
             sport: data.Sport,
             goal: data.Goal,
+            activity: data.Activity || "Vừa phải (3-5 ngày/tuần)",
           });
         } else {
           console.warn("Lỗi:", data.error);
         }
       })
       .catch((err) => console.warn("Error fetching profile:", err));
-  }, [userId]); // Chỉ gọi khi userId thay đổi
+  }, [userId]);
 
-  // Lưu hồ sơ khi bấm nút "Lưu hồ sơ"
+  // Lưu hồ sơ
   const saveProfile = () => {
-    console.log("Lưu hồ sơ đang được gọi..."); // Debugging line
+    console.log("Lưu hồ sơ đang được gọi...");
 
     if (!userId || userId === "null" || userId === "undefined") {
       alert("❌ Không tìm thấy user_id. Vui lòng nhập ID hoặc đăng nhập.");
@@ -55,7 +59,7 @@ export default function Profile() {
       ? 2
       : 4;
 
-    console.log("Saving profile with data:", profile); // Debugging line
+    console.log("Saving profile with data:", profile);
 
     fetch(`http://localhost:5000/api/profile/${userId}`, {
       method: "POST",
@@ -75,12 +79,13 @@ export default function Profile() {
       }),
     })
       .then((res) => {
-        console.log("Server response:", res); // Debugging line
+        console.log("Server response:", res);
         return res.json();
       })
       .then((data) => {
-        console.log("✅ Kết quả từ server:", data); // Debugging line
+        console.log("✅ Kết quả từ server:", data);
         alert(data.message || "✅ Hồ sơ đã được lưu!");
+        setIsEditing(false);
       })
       .catch((err) => {
         console.error("❌ Lỗi khi gửi request:", err);
@@ -88,6 +93,7 @@ export default function Profile() {
       });
   };
 
+  // Tính toán BMI và TDEE
   const bmi = (profile.weight / Math.pow(profile.height / 100, 2)).toFixed(1);
   const tdee = Math.round(
     (10 * profile.weight +
@@ -97,141 +103,323 @@ export default function Profile() {
       1.55
   );
 
+  const getBMICategory = (bmi) => {
+    if (bmi < 18.5) return { category: 'Thiếu cân', color: 'yellow' };
+    if (bmi < 25) return { category: 'Bình thường', color: 'green' };
+    if (bmi < 30) return { category: 'Thừa cân', color: 'orange' };
+    return { category: 'Béo phì', color: 'red' };
+  };
+
+  const bmiInfo = getBMICategory(parseFloat(bmi));
+
   return (
-    <div className="profile-container">
-      <div className="profile-left">
-        <h2>Hồ sơ cá nhân</h2>
+    <div className="profile-wrapper">
+      <div className="profile-container">
+        
+        {/* Cột trái - Form */}
+        <div className="profile-left">
+          <div className="profile-header">
+            <h1 className="profile-title">Hồ Sơ Cá Nhân</h1>
+            <div className="profile-subtitle">Quản lý thông tin của bạn</div>
+          </div>
 
-        {/* Nhập user_id */}
-        <div className="profile-field">
-          <label>User ID:</label>
-          <input
-            type="number"
-            value={userId}
-            onChange={(e) => {
-              setUserId(e.target.value);
-              localStorage.setItem("user_id", e.target.value);
-            }}
-            placeholder="User ID"
-          />
+          {/* Avatar */}
+          <div className="avatar-section">
+            <div className="avatar-box">
+              <img 
+                
+                src="https://scontent.fdad3-6.fna.fbcdn.net/v/t39.30808-6/502146546_1398928527897385_7313017022900260020_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeH4YsIHxcYTMqx2z1giIot1-wWF3OqloOX7BYXc6qWg5djHXbAsMzwKd7ZNYlGPlStCnZjUBYnvCCQAKtMEliqS&_nc_ohc=mDibpFMF-hAQ7kNvwFnj7gZ&_nc_oc=AdlrVnC7KepvDk-8dc3WSouO7dp_CvLKA3RnKOYiuJbv7yZdMKv0udKzHf7nRBK_jetdXBwOmAPmPQCzke3siUN1&_nc_zt=23&_nc_ht=scontent.fdad3-6.fna&_nc_gid=HVl7nfmhRBwnwoq09Z2-_g&oh=00_AfifDlVn8smWIsDLmmLqfZSBOBENrEVhVUM4NBwYcxAwKA&oe=690D6F68"
+                alt="Avatar" 
+                className="avatar" 
+              />
+              <div className="avatar-ring"></div>
+            </div>
+            <h3 className="avatar-name">{profile.name}</h3>
+            <p className="avatar-info">{profile.sex}, {profile.age} tuổi</p>
+          </div>
+
+          {/* Form */}
+          <div className="form-section">
+            
+            {/* User ID */}
+            <div className="form-group">
+              <label className="form-label">
+                <span className="label-icon">🆔</span>
+                User ID
+              </label>
+              <input
+                type="number"
+                value={userId}
+                onChange={(e) => {
+                  setUserId(e.target.value);
+                  localStorage.setItem("user_id", e.target.value);
+                }}
+                placeholder="Nhập User ID"
+                className="form-input"
+                disabled={!isEditing}
+              />
+            </div>
+
+            {/* Tên */}
+            <div className="form-group">
+              <label className="form-label">
+                <span className="label-icon">👤</span>
+                Tên người dùng
+              </label>
+              <input
+                type="text"
+                value={profile.name}
+                onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                placeholder="Họ và tên"
+                className="form-input"
+                disabled={!isEditing}
+              />
+            </div>
+
+            {/* Tuổi và Giới tính */}
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">
+                  <span className="label-icon">🎂</span>
+                  Tuổi
+                </label>
+                <input
+                  type="number"
+                  value={profile.age}
+                  onChange={(e) => setProfile({ ...profile, age: +e.target.value })}
+                  placeholder="Tuổi"
+                  className="form-input"
+                  disabled={!isEditing}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">
+                  <span className="label-icon">⚧</span>
+                  Giới tính
+                </label>
+                <select
+                  value={profile.sex}
+                  onChange={(e) => setProfile({ ...profile, sex: e.target.value })}
+                  className="form-input form-select"
+                  disabled={!isEditing}
+                >
+                  <option value="Nam">Nam</option>
+                  <option value="Nữ">Nữ</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Cân nặng và Chiều cao */}
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">
+                  <span className="label-icon">⚖️</span>
+                  Cân nặng (kg)
+                </label>
+                <input
+                  type="number"
+                  value={profile.weight}
+                  onChange={(e) => setProfile({ ...profile, weight: +e.target.value })}
+                  placeholder="Cân nặng"
+                  className="form-input"
+                  disabled={!isEditing}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">
+                  <span className="label-icon">📏</span>
+                  Chiều cao (cm)
+                </label>
+                <input
+                  type="number"
+                  value={profile.height}
+                  onChange={(e) => setProfile({ ...profile, height: +e.target.value })}
+                  placeholder="Chiều cao"
+                  className="form-input"
+                  disabled={!isEditing}
+                />
+              </div>
+            </div>
+
+            {/* Môn thể thao */}
+            <div className="form-group">
+              <label className="form-label">
+                <span className="label-icon">⚽</span>
+                Môn thể thao
+              </label>
+              <input
+                type="text"
+                value={profile.sport}
+                onChange={(e) => setProfile({ ...profile, sport: e.target.value })}
+                placeholder="Môn thể thao"
+                className="form-input"
+                disabled={!isEditing}
+              />
+            </div>
+
+            {/* Hoạt động thể chất */}
+            <div className="form-group">
+              <label className="form-label">
+                <span className="label-icon">⚡</span>
+                Hoạt động thể chất
+              </label>
+              <select
+                value={profile.activity}
+                onChange={(e) => setProfile({ ...profile, activity: e.target.value })}
+                className="form-input form-select"
+                disabled={!isEditing}
+              >
+                <option value="Vừa phải (3-5 ngày/tuần)">Vừa phải (3-5 ngày/tuần)</option>
+                <option value="Ít hoạt động (1-2 ngày/tuần)">Ít hoạt động (1-2 ngày/tuần)</option>
+                <option value="Rất hoạt động (6-7 ngày/tuần)">Rất hoạt động (6-7 ngày/tuần)</option>
+              </select>
+            </div>
+
+            {/* Mục tiêu */}
+            <div className="form-group">
+              <label className="form-label">
+                <span className="label-icon">🎯</span>
+                Mục tiêu
+              </label>
+              <select
+                value={profile.goal}
+                onChange={(e) => setProfile({ ...profile, goal: e.target.value })}
+                className="form-input form-select"
+                disabled={!isEditing}
+              >
+                <option value="Duy trì cân nặng">Duy trì cân nặng</option>
+                <option value="Giảm cân">Giảm cân</option>
+                <option value="Tăng cơ">Tăng cơ</option>
+              </select>
+            </div>
+
+            {/* Buttons */}
+            <div className="button-group">
+              {!isEditing ? (
+                <button onClick={() => setIsEditing(true)} className="btn btn-edit">
+                  <span className="btn-icon">✏️</span>
+                  Chỉnh sửa
+                </button>
+              ) : (
+                <>
+                  <button onClick={saveProfile} className="btn btn-save">
+                    <span className="btn-icon">✅</span>
+                    Lưu hồ sơ
+                  </button>
+                  <button onClick={() => setIsEditing(false)} className="btn btn-cancel">
+                    <span className="btn-icon">❌</span>
+                    Hủy
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Tên */}
-        <div className="profile-field">
-          <label>Tên:</label>
-          <input
-            type="text"
-            value={profile.name}
-            onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-            placeholder="Họ và tên"
-          />
-        </div>
+        {/* Cột phải - Stats */}
+        <div className="profile-right">
+          <div className="stats-header">
+            <h2 className="stats-title">
+              <span className="stats-icon">📊</span>
+              Thông Tin Sức Khỏe
+            </h2>
+          </div>
 
-        {/* Giới tính */}
-        <div className="profile-field">
-          <label>Giới tính:</label>
-          <select
-            value={profile.sex}
-            onChange={(e) => setProfile({ ...profile, sex: e.target.value })}
-          >
-            <option value="Nam">Nam</option>
-            <option value="Nữ">Nữ</option>
-          </select>
-        </div>
+          {/* BMI Card */}
+          <div className="stat-card bmi-card">
+            <div className="stat-card-header">
+              <h3 className="stat-card-title">
+                <span className="card-icon">📈</span>
+                Chỉ số BMI
+              </h3>
+            </div>
+            <div className="stat-value-wrapper">
+              <div className="stat-value">{bmi}</div>
+              <div className={`stat-badge badge-${bmiInfo.color}`}>
+                {bmiInfo.category}
+              </div>
+            </div>
+            <div className="bmi-scale">
+              <div className="bmi-bar">
+                <div 
+                  className="bmi-indicator" 
+                  style={{ left: `${Math.min(Math.max((parseFloat(bmi) / 40) * 100, 0), 100)}%` }}
+                ></div>
+              </div>
+              <div className="bmi-labels">
+                <span>Thiếu</span>
+                <span>Chuẩn</span>
+                <span>Thừa</span>
+                <span>Béo</span>
+              </div>
+            </div>
+          </div>
 
-        {/* Tuổi */}
-        <div className="profile-field">
-          <label>Tuổi:</label>
-          <input
-            type="number"
-            value={profile.age}
-            onChange={(e) => setProfile({ ...profile, age: +e.target.value })}
-            placeholder="Tuổi"
-          />
-        </div>
+          {/* TDEE Card */}
+          <div className="stat-card tdee-card">
+            <div className="stat-card-header">
+              <h3 className="stat-card-title">
+                <span className="card-icon">🔥</span>
+                TDEE
+              </h3>
+            </div>
+            <div className="stat-value-wrapper">
+              <div className="stat-value">{tdee}</div>
+              <div className="stat-unit">kcal/ngày</div>
+            </div>
+            <div className="tdee-breakdown">
+              <div className="tdee-item">
+                <span className="tdee-label">
+                  <span className="tdee-icon">📉</span>
+                  Giảm cân
+                </span>
+                <span className="tdee-value">{tdee - 500} kcal</span>
+              </div>
+              <div className="tdee-item tdee-maintain">
+                <span className="tdee-label">
+                  <span className="tdee-icon">➡️</span>
+                  Duy trì
+                </span>
+                <span className="tdee-value">{tdee} kcal</span>
+              </div>
+              <div className="tdee-item">
+                <span className="tdee-label">
+                  <span className="tdee-icon">📈</span>
+                  Tăng cơ
+                </span>
+                <span className="tdee-value">{tdee + 500} kcal</span>
+              </div>
+            </div>
+          </div>
 
-        {/* Chiều cao */}
-        <div className="profile-field">
-          <label>Chiều cao:</label>
-          <input
-            type="number"
-            value={profile.height}
-            onChange={(e) => setProfile({ ...profile, height: +e.target.value })}
-            placeholder="Chiều cao (cm)"
-          />
-        </div>
+          {/* Info Card */}
+          <div className="info-card">
+            <h4 className="info-title">
+              <span className="info-icon">📝</span>
+              Thông Tin Chi Tiết
+            </h4>
+            <div className="info-list">
+              <div className="info-item">
+                <span className="info-label">Chiều cao:</span>
+                <span className="info-value">{profile.height} cm</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">Cân nặng:</span>
+                <span className="info-value">{profile.weight} kg</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">Môn thể thao:</span>
+                <span className="info-value">{profile.sport}</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">Mục tiêu:</span>
+                <span className="info-value">{profile.goal}</span>
+              </div>
+            </div>
+          </div>
 
-        {/* Cân nặng */}
-        <div className="profile-field">
-          <label>Cân nặng:</label>
-          <input
-            type="number"
-            value={profile.weight}
-            onChange={(e) => setProfile({ ...profile, weight: +e.target.value })}
-            placeholder="Cân nặng (kg)"
-          />
-        </div>
-
-        {/* Môn thể thao */}
-        <div className="profile-field">
-          <label>Môn thể thao:</label>
-          <input
-            type="text"
-            value={profile.sport}
-            onChange={(e) => setProfile({ ...profile, sport: e.target.value })}
-            placeholder="Môn thể thao"
-          />
-        </div>
-
-        {/* Hoạt động thể chất */}
-        <div className="profile-field">
-          <label>Hoạt động thể chất:</label>
-          <select
-            value={profile.activity}
-            onChange={(e) => setProfile({ ...profile, activity: e.target.value })}
-          >
-            <option value="Vừa phải (3-5 ngày/tuần)">Vừa phải (3-5 ngày/tuần)</option>
-            <option value="Ít hoạt động (1-2 ngày/tuần)">Ít hoạt động (1-2 ngày/tuần)</option>
-            <option value="Rất hoạt động (6-7 ngày/tuần)">Rất hoạt động (6-7 ngày/tuần)</option>
-          </select>
-        </div>
-
-        {/* Mục tiêu */}
-        <div className="profile-field">
-          <label>Mục tiêu:</label>
-          <select
-            value={profile.goal}
-            onChange={(e) => setProfile({ ...profile, goal: e.target.value })}
-          >
-            <option value="Duy trì cân nặng">Duy trì cân nặng</option>
-            <option value="Giảm cân">Giảm cân</option>
-            <option value="Tăng cơ">Tăng cơ</option>
-          </select>
-        </div>
-
-        {/* Nút Lưu */}
-        <div className="action-buttons">
-          <button onClick={saveProfile}>Lưu hồ sơ</button>
-        </div>
-      </div>
-
-      <div className="profile-right">
-        <div className="profile-info">
-          <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBwgHBgkIBwgKCgkLDRYPDQwMDRsUFRAWIB0iIiAdHx8kKDQsJCYxJx8fLT0tMTU3Ojo6Iys/RD84QzQ5OjcBCgoKDQwNGg8PGjclHyU3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3N//AABEIAJQAlgMBIgACEQEDEQH/xAAcAAEAAQUBAQAAAAAAAAAAAAAABwEEBQYIAwL/xAA5EAABAwIEAwUFBgYDAAAAAAABAAIDBBEFBhIhEzFBByJRYZEUMnGBoRVCgrHB8AgjUmKS0XKiwv/EABkBAQADAQEAAAAAAAAAAAAAAAABAgQDBf/EAB8RAQADAAICAwEAAAAAAAAAAAABAhEDIQQxEkFhE//aAAwDAQACEQMRAD8AnFERAREQEREBERAKta3EKPD2CSuqoKdh5OlkDQfVWGasx0GWcJkrq+RtwP5UOoB8zujWj92XLeaMwVmZMZmrsRkBc/3R91g6AeQCmIHWdNiNFVuDaWrp5nEX0xytcbeOxV0FxbTvMcnHoppIJmElskby1w+Y6lSHlHtbx7AqpsWPyzYnQabaHBvEYfEOtv8AA/RMHR6K3oKynxCjhrKOZs1POwPjkbyc08irhQCIiAiIgIiICIiAiIgIiICIiDnrtbpK3Eu1KKhmlHDfDF7KAb8OPSdRI8dQf9Fn8O7OcHkpBGYXufe5lc7vFZbtFwdzM64XjUEDpnGimY5jTa5YW6dz5SH0XvgeYqaR/sstPLFPba0jXg/4k2+a48szrXwRHx37a3i+QMFgp7GjA0j3g8g/moyzZhv2fVhrXkxuGoC29+qlnH8wvqRK+GKmpaVha3jVL3uLidhYNG1yDzWhZqidLhDppwxxBBZKw3BFxyVOO0xb26clImk9dpS/h+qXz5FML3OLaerkYwHoDZ1h8yfVSYo17B3wxZONFfTVxzOlmjPMNeToPzDT6KSlpYZjBERECIiAiIgIiICIiAiIgIiINfzbRsqaeBz2ghriw3HR1v8AQWCpsKpKOsY6nYwyOIL5CGjZo2Gw8B9FuOK03teHzwj3i3u/Ebj6qNquJ3FiM8UMsFz35XOBicfgNvis3NutvjTtcZHChRSs9jq3t5FzA153bc87fvdan2hQU8kBp4gNDRbQ0bAbLLU1I6OvEOH+x01MAHTPgjO46NBJ3+JWAxaqhlxPUd4RKC7/AI3AXOPcO9o9t17HMJqKXCqnEKtpDqrSyO4sSxhdv6uPopECoA0bCwsqrZEZGPNvabW2RERSqIiICIiAiIgIiICIiAiIgpZa1mWhFLHJiEUXEjAvPE0bkf1AfmtmWJzK+X7IqYqYAzyxlrA4XHLdVtGwvx2mLdIpxvONIKUw0EBY4ixNrAfJYahwPEMdqGNphcy8r30tb1c7wAWfoMutxKtEEUOp53LjyaPElSLFS4blfBqioksyCCIyTzEbuAH7sFn46TaW3l5IpH6wb880WWceo8vY9VXa+AFtfK61j04vQX8fXxW9tcCNiD8FyHmTGqjHsbq8WrbNlndcRg3DGgWDR5ALMZX7RMy5cbHFTV3tFIwWFNVgyMA8BvcfI2WvHnupkUc5U7XcExgNixYHCqg278zwYXHyf0/EB8SpEa5rmhzXAtIuCDsVA+kREBERAREQEREBERAREQarnjPGGZQpmGrbJUVcovDSxW1OA6knZo8/RankPN1fnR2L0WLaYXAMkikhGlsDH3aWXPXa4J5knlyUc9pdXJX56xWSSQvbHLwYx0aGjTYehPxJUq9j2DMosox1T42mbE3meS4+4DZn/UX/ABK2dJicbRg9JDRUMccgDKlznB2g2c5wJ+lh6KPO3HMMjaemy5E9p41p6ojbugjQ23xBP4R8pTkbDAXTyu9xpLpH/dbzPw5fRcw5ixZ+PY7XYtJdoqJNTQ77rAAGjys0BRWuRibT8p1hJmWs2wuV5cI9FeMj1h0jzpvyB5qoYLbq6q3IcNJIBNuvILZcn59xjK1XEY6uSqoLjiUUrrs09dF/cPw5nmtclAsS7l5leJvcbb+FkmB2LQ1cNfRwVdM8PhnjbJG4dWkXC91GXYPjv2hlmXCpnl02Gvs3Vz4TyS35Ahw8gApNXMEREBERAREQEREBERBy5nSBz84YzDTd6SSueyPzc51h9SukcNpI6KlhpYQBHBE2NtvAC36KCmUYqe1plLIAQ/F3vN/Bhc//AMqe4vdNuauNP7V8WdhmT6sRPDZqxzadhJ+649634Q5c+lt3tjeCGnc/Dw+ak3tvrjPieHUDX6Y6aF0rmf3PNh6Bp9VGJqPaGF5GnUbgN2v4FSKyStvZxFwOQXjLL32Nb1ubfJUkc1o5AK0DtdUxpNg4EX+SD24g5e9b97r5DeJ7tzZfTmPd3WgDyX1rFI9zI2iWTY3tsCgk7+H+qp4cyYhTyS2nnpBw2n7+l3e9FPS5Z7L6p9N2gYE8kAmoLPLvMc39V1KOSpIqiIoBERAREQEREBEXzI9kbHPkc1jGi7nONgB4lBA3Hig7bmSTPEcYr5wXHkLxOA+pU3RO1wF8fevy/JczYnNLj+fQ+kBkdV4kXM4J95mu9x+EXXSFbUmhw6eqLgWwxOlvb+ndXHOHaZihxDNuLTMeSH1HAj/tawBht/ifmVgbhrQ0dNlbSTPqa50kry8s5uP3nH3j6rymeWvNjzQfc8moq21WlZcXF1UyX3K8pHXGyDKucWx6I3APcN3dR8FbcNzD3JDb+5HAkcQFoZyG6qXtaAGu1OPRx2QXNDWSYfV09cwWkppmTNt10uB/RdiNIIBHI8lxe4SPBa7kRbb/AEuvcq1ft+WsKq7341JE8nxu0KJGUREVQREQEREBES6Ao07e62ppcowxQTGOGpqhHUNG3EZpcdN/iB8eSkpYbNuD4VjmCzU+N0gqaaMcXTctLSBzBG4KDnvsum1doeX7htgZAG25DgvCmLtWxB2Fdn2LPaRqljEEZv8A1uDT6NJ9Fp2UcAwWhr/bsDpquqngu1lXK8tbGCCO5yDja42vb5rO5vw2bNeBjCautMWiQSNe1o3cAbB3iN1z/vXcd58e+a58o22aSeq+5QH2C95KV1M+SCRw1xvcx1vEGy+6inbAA6Nwc437t79Qu7gxsruFsxwJI3K8WRvk9wEgdVkm8Nou0Bl/BC4sF2gOb1aCg84oZGtY17gQB0F7IXvs67WOt10qr5gRYNIt5KsDBMTqcABzF7IPiJziP5hs3xG111P2WTGfs9wJ7ha1MGgeTSQPoFymXEss7drRy8V1vkKimw7JeC0lSwsmio4w9p6G1yFEjPoiKoIiICIiChFwtdxUZsZMPs12FyxE7l7XMePlcg+oWxqlgiYnGt1GH5mqcOl4WNxUda5w4emmY9jG9Qbjmf3daxW5TzkdVRiGPDGWMF/Yj/JbJ5WaA0/AqS7KqrNdWreayh5uMVHBZC+kNGyK7C0d0Ag20gW2XzHirYQ55l352FisbmXFsPq+1HGaKtroaSGJkTInubs+QMbquT13tv8A0hemc8ObhWU6qvw+pkkqojHZ7g21nPDdha33lnnhnWyPJpnaN8x2ixqvBADny6z5agHfqsPxLEWXpiRrxUu+0iTUEAklwNx8lbBrTYumbG1wJG1zt0WyvphtOzMvqUiRtuVtwvNoePdO3mqSPY0jg6n3bvqHIryL3+NvJNQu2B9i94IYPPmt1yT2bYrnKmOIRT01FQazGJX995I52aPzJC0B0jnuGqyn/wDhyxDjYBimHucSaWpbI0W5NkB/Vjk0Z/LPZJlrApIamaKTEa2I6my1J7od4hg29brfgqoqgiIgIiICIiAiIgIiIOKcSqpa7EamsqCDNUSvkkI5XLiSrqvdLTiOninmbTyNu6ESHR6ckRD6Y1w08tl8c+aIrSPprQvtrR4IiiBUtAUy/wANz3Cvx6MHumKBxHmC/wD2VVFMidURFUEREH//2Q==" alt="Avatar" />
-          <h3>{profile.name}</h3>
-          <p>
-            {profile.sex}, {profile.age} tuổi
-          </p>
-          <button>Thay đổi ảnh đại diện</button>
-        </div>
-
-        <div className="stats">
-          <p className="bmi">BMI: {bmi}</p>
-          <p className="tdee">TDEE: {tdee} kcal/ngày</p>
-          <p>Chiều cao: {profile.height} cm</p>
-          <p>Cân nặng: {profile.weight} kg</p>
-          <p>Môn: {profile.sport}</p>
-          <p>Mục tiêu: {profile.goal}</p>
         </div>
       </div>
     </div>
