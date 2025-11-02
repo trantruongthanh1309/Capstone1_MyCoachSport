@@ -1,14 +1,14 @@
 from flask import Blueprint, jsonify, request
 import requests
 import os
-
+import requests
 videos_bp = Blueprint('videos', __name__)
 
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY", "AIzaSyB_Ranl08UdqJfP3eQdrx3NfO95vxnfNs4")
 YT_SEARCH_URL = "https://www.googleapis.com/youtube/v3/search"
 YT_VIDEOS_URL = "https://www.googleapis.com/youtube/v3/videos"
 
-import re
+import re 
 
 def parse_iso8601_duration(iso):
     m = re.match(r"PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?", iso or "")
