@@ -5,5 +5,6 @@ from .workout import Workout
 from .log import Log
 from .account_model import Account
 from .user_schedule import UserSchedule
+from .post import Post, AdminLog
 # Xuất ra để dùng
-__all__ = ["User", "Meal", "Workout", "Log", "Account","UserSchedule"]
+__all__ = ["User", "Meal", "Workout", "Log", "Account","UserSchedule","Post","AdminLog"]

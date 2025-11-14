@@ -2,11 +2,11 @@ from flask import Flask, jsonify, session
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine
-from api.leaderboard import leaderboard_bp  # Import leaderboard API từ leaderboard_route.py
-from api.logs import logs_bp  # Import logs API từ logs.py
+from api.leaderboard import leaderboard_bp  
+from api.logs import logs_bp  
 from api.chatbot import chatbot_bp 
-from api.videos import videos_bp  # Import video API từ video.py
-from db import db # Import db từ db.py nếu bạn đang sử dụng chung
+from api.videos import videos_bp  
+from db import db 
 from api.auth import auth_bp
 from api.profile import profile_bp
 from datetime import timedelta
@@ -14,6 +14,15 @@ from flask_session import Session
 from api.planner import planner_bp
 from api.ai_coach import ai_coach_bp
 from api.schedule_manager import schedule_bp
+
+from api.routes.admin_routes.users_admin import users_admin_bp
+from api.routes.admin_routes.dashboard_admin import dashboard_bp
+from api.routes.admin_routes.accounts import accounts_bp
+from api.routes.admin_routes.meals_admin_api import meals_admin_bp
+from api.routes.admin_routes.workouts_admin_api import workouts_admin_bp
+from api.routes.admin_routes.posts_admin_api import posts_admin_bp
+from api.routes.admin_routes.feedback import feedback_bp
+
 # Khởi tạo Flask app
 app = Flask(__name__)
 
@@ -75,7 +84,13 @@ app.register_blueprint(profile_bp, url_prefix='/api/profile')
 app.register_blueprint(planner_bp, url_prefix="/api/planner")
 app.register_blueprint(ai_coach_bp, url_prefix='/api/ai')
 app.register_blueprint(schedule_bp, url_prefix="/api/schedule")
-
+app.register_blueprint(users_admin_bp)
+app.register_blueprint(dashboard_bp)
+app.register_blueprint(accounts_bp)
+app.register_blueprint(meals_admin_bp)
+app.register_blueprint(workouts_admin_bp)
+app.register_blueprint(posts_admin_bp)
+app.register_blueprint(feedback_bp)
 
 GEMINI_API_KEY = "AIzaSyC5Dwwo6PYfKOS9RwUsaunIiyBNTevJy5U"  # Thay thế bằng API Key của bạn
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
