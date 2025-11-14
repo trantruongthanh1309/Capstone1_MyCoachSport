@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -10,16 +10,25 @@ import Social from "./pages/Social";
 import Videos from "./pages/Videos";
 import WorkScheduleManager from "./pages/WorkScheduleManager";
 import Settings from "./pages/Settings";
+import AdminLayout from "./admin/pages/AdminLayout";
+import { AdminRoute } from "./admin/components/ProtectedRoute";
+
+
 export default function App() {
   const location = useLocation();
-  const hideNavbar = location.pathname === "/"; // Kiểm tra nếu đang ở trang Login thì ẩn Navbar
+  
+  // Ẩn Navbar ở trang Login VÀ tất cả trang Admin
+  const hideNavbar = location.pathname === "/" || location.pathname.startsWith("/admin");
 
   return (
     <div className="app-container">
       {!hideNavbar && <Navbar />}
       <div className="main-content">
         <Routes>
-          <Route path="/" element={<Login />} /> {/* Trang đăng nhập */}
+          {/* Public */}
+          <Route path="/" element={<Login />} />
+          
+          {/* User Pages */}
           <Route path="/home" element={<Home />} />
           <Route path="/planner" element={<Planner />} />
           <Route path="/schedule-manager" element={<WorkScheduleManager />} />
@@ -29,9 +38,18 @@ export default function App() {
           <Route path="/social" element={<Social />} />
           <Route path="/videos" element={<Videos />} />
           <Route path="/settings" element={<Settings />} />
+          
+          {/* Admin Pages - Protected */}
+          <Route 
+            path="/admin/*" 
+            element={
+              <AdminRoute>
+                <AdminLayout />
+              </AdminRoute>
+            } 
+          />
         </Routes>
       </div>
-      
     </div>
   );
 }
