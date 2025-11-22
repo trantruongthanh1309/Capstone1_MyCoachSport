@@ -11,13 +11,13 @@ export default function ChatBox() {
     setLog(l => [...l, { who: "you", text: content }]);
     setMsg("");
     try {
-      const r = await fetch(`${API_BASE}/chat`, {
+      const r = await fetch(`${API_BASE}/api/bot/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: content })
       });
       const j = await r.json();
-      setLog(l => [...l, { who: "bot", text: j.reply || "⚠️ Lỗi server" }]);
+      setLog(l => [...l, { who: "bot", text: j.response || "⚠️ Lỗi server" }]);
     } catch {
       setLog(l => [...l, { who: "bot", text: "❌ Backend error" }]);
     }
@@ -37,7 +37,7 @@ export default function ChatBox() {
         <input className="border flex-1 p-2"
           value={msg}
           onChange={e => setMsg(e.target.value)}
-          onKeyDown={e => e.key === "Enter" && send()}/>
+          onKeyDown={e => e.key === "Enter" && send()} />
         <button onClick={send} className="bg-cyan-500 text-white px-3">Gửi</button>
       </div>
     </div>

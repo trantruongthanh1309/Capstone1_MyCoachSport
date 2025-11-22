@@ -9,6 +9,7 @@ import AdminFeedback from './AdminFeedback';
 import AdminSettings from './AdminSettings';
 
 import "./AdminLayout.css";
+import "./AdminOverride.css";
 
 export default function AdminLayout() {
   const [currentPage, setCurrentPage] = useState("dashboard");
@@ -21,17 +22,17 @@ export default function AdminLayout() {
       label: "Dashboard",
       component: AdminDashboard,
     },
-    { 
-      id: "users", 
-      icon: "👥", 
-      label: "Quản Lý Users", 
-      component: AdminUsers 
+    {
+      id: "users",
+      icon: "👥",
+      label: "Quản Lý Users",
+      component: AdminUsers
     },
-    { 
-      id: "posts", 
-      icon: "📝", 
-      label: "Duyệt Bài Đăng", 
-      component: AdminPosts 
+    {
+      id: "posts",
+      icon: "📝",
+      label: "Duyệt Bài Đăng",
+      component: AdminPosts
     },
     {
       id: "meals",

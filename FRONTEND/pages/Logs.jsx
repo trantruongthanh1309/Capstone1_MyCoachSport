@@ -1,82 +1,94 @@
 import { useState, useEffect } from "react";
+import axios from "axios";
 import "./Logs.css";
 
 export default function Logs() {
   const [logs, setLogs] = useState([]);
-  const [date, setDate] = useState("");
-  const [type, setType] = useState("workout");
+  const [loading, setLoading] = useState(true);
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [type, setType] = useState("workout"); // workout | meal | other
   const [content, setContent] = useState("");
-  const [feeling, setFeeling] = useState("");
+  const [feeling, setFeeling] = useState(""); // Mapping to FeedbackType or Notes
   const [rpe, setRpe] = useState(5);
-  const [userId, setUserId] = useState("");
+  const [rating, setRating] = useState(5);
+
+  // Optional IDs
   const [mealId, setMealId] = useState("");
   const [workoutId, setWorkoutId] = useState("");
+
   const [showModal, setShowModal] = useState(false);
   const [filter, setFilter] = useState("all");
 
-  useEffect(() => {
-    const saved = localStorage.getItem("msc_logs_v4");
-    if (saved) setLogs(JSON.parse(saved));
-  }, []);
+  const API_URL = "http://localhost:5000/api/logs";
+
+  // Fetch Logs
+  const fetchLogs = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(API_URL, { withCredentials: true });
+      if (res.data.success) {
+        // Map data từ backend về format frontend
+        const mappedLogs = res.data.data.map(log => ({
+          id: log.id,
+          date: log.day,
+          type: log.workoutName ? "workout" : (log.mealName ? "meal" : "other"),
+          content: log.notes,
+          feeling: log.feedbackType,
+          rpe: log.rpe || 0,
+          rating: log.rating || 0,
+          mealName: log.mealName,
+          workoutName: log.workoutName
+        }));
+        setLogs(mappedLogs);
+      }
+    } catch (err) {
+      console.error("Error fetching logs:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    localStorage.setItem("msc_logs_v4", JSON.stringify(logs));
-  }, [logs]);
+    fetchLogs();
+  }, []);
 
   const addLog = async (e) => {
     e.preventDefault();
-    if (!date || !content || !userId || !mealId || !workoutId) {
-      alert("⚠️ Nhập đủ thông tin!");
-      return;
-    }
 
     const newLog = {
-      id: Date.now(),
-      date,
-      type,
-      content,
-      feeling,
+      day: date,
+      notes: content,
       rpe: parseInt(rpe),
-      user_id: userId,
-      meal_id: mealId,
-      workout_id: workoutId,
+      rating: parseInt(rating),
+      feedback_type: feeling,
+      meal_id: mealId ? parseInt(mealId) : null,
+      workout_id: workoutId ? parseInt(workoutId) : null
     };
 
     try {
-      const res = await fetch("http://127.0.0.1:5000/api/logs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newLog),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setLogs([data, ...logs]);
-        alert("✅ Đã lưu!");
+      const res = await axios.post(`${API_URL}/create`, newLog, { withCredentials: true });
+      if (res.data.success) {
+        alert("✅ Đã lưu log thành công!");
         resetForm();
+        fetchLogs(); // Reload logs
       } else {
-        alert("❌ Lỗi: " + data.error);
+        alert("❌ Lỗi: " + res.data.error);
       }
     } catch (err) {
-      alert("❌ Lỗi: " + err.message);
+      alert("❌ Lỗi kết nối: " + err.message);
     }
   };
 
   const resetForm = () => {
-    setDate("");
+    setDate(new Date().toISOString().split('T')[0]);
     setType("workout");
     setContent("");
     setFeeling("");
     setRpe(5);
-    setUserId("");
+    setRating(5);
     setMealId("");
     setWorkoutId("");
     setShowModal(false);
-  };
-
-  const deleteLog = (id) => {
-    if (confirm("Xóa log này?")) {
-      setLogs(logs.filter((l) => l.id !== id));
-    }
   };
 
   const filteredLogs = filter === "all" ? logs : logs.filter((l) => l.type === filter);
@@ -130,50 +142,27 @@ export default function Logs() {
               <div className="stat-label">Tổng Logs</div>
             </div>
           </div>
-
-          <div className="stat-box">
-            <div className="stat-icon-wrap" style={{ background: "linear-gradient(135deg, #fa709a, #fee140)" }}>
-              <span className="stat-emoji">🔥</span>
-            </div>
-            <div className="stat-info">
-              <div className="stat-num">
-                {logs.length > 0 ? (logs.reduce((sum, l) => sum + l.rpe, 0) / logs.length).toFixed(1) : "0"}
-              </div>
-              <div className="stat-label">RPE TB</div>
-            </div>
-          </div>
         </div>
 
         {/* Filter Tabs */}
         <div className="filter-section">
           <button className={`filter-btn ${filter === "all" ? "active" : ""}`} onClick={() => setFilter("all")}>
-            <span className="filter-icon">📋</span>
-            Tất cả
-            <span className="filter-count">{logs.length}</span>
+            Tất cả ({logs.length})
           </button>
           <button className={`filter-btn ${filter === "workout" ? "active" : ""}`} onClick={() => setFilter("workout")}>
-            <span className="filter-icon">💪</span>
             Tập luyện
-            <span className="filter-count">{logs.filter((l) => l.type === "workout").length}</span>
           </button>
           <button className={`filter-btn ${filter === "meal" ? "active" : ""}`} onClick={() => setFilter("meal")}>
-            <span className="filter-icon">🍽️</span>
             Ăn uống
-            <span className="filter-count">{logs.filter((l) => l.type === "meal").length}</span>
-          </button>
-          <button className={`filter-btn ${filter === "other" ? "active" : ""}`} onClick={() => setFilter("other")}>
-            <span className="filter-icon">📝</span>
-            Khác
-            <span className="filter-count">{logs.filter((l) => l.type === "other").length}</span>
           </button>
         </div>
 
         {/* Logs Grid */}
-        {filteredLogs.length === 0 ? (
+        {loading ? (
+          <div className="loading-text">Đang tải nhật ký...</div>
+        ) : filteredLogs.length === 0 ? (
           <div className="empty-box">
-            <div className="empty-icon">📭</div>
             <h2 className="empty-title">Chưa có log nào</h2>
-            <p className="empty-text">Hãy bắt đầu ghi lại hành trình của bạn ngay hôm nay!</p>
             <button className="btn-empty" onClick={() => setShowModal(true)}>
               Tạo log đầu tiên
             </button>
@@ -181,51 +170,34 @@ export default function Logs() {
         ) : (
           <div className="logs-grid">
             {filteredLogs.map((log, idx) => (
-              <div key={log.id} className="log-item" style={{ animationDelay: `${idx * 0.05}s` }}>
+              <div key={log.id} className="log-item">
                 <div className="log-header">
                   <span className={`log-badge ${log.type}`}>
                     {log.type === "workout" ? "💪 Tập luyện" : log.type === "meal" ? "🍽️ Ăn uống" : "📝 Khác"}
                   </span>
                   <span className="log-date">📅 {log.date}</span>
                 </div>
+
+                {log.workoutName && <div className="log-ref">Bài tập: <strong>{log.workoutName}</strong></div>}
+                {log.mealName && <div className="log-ref">Món ăn: <strong>{log.mealName}</strong></div>}
+
                 <p className="log-text">{log.content}</p>
+
                 {log.feeling && (
                   <div className="log-feeling">
-                    <span className="feeling-icon">💭</span>
-                    {log.feeling}
+                    <span className="feeling-icon">💭</span> {log.feeling}
                   </div>
                 )}
+
                 <div className="log-footer">
                   <div className="rpe-bar">
-                    <span className="rpe-label">RPE</span>
+                    <span className="rpe-label">RPE: {log.rpe}/10</span>
                     <div className="rpe-dots">
                       {Array.from({ length: 10 }).map((_, i) => (
-                        <div
-                          key={i}
-                          className={`rpe-dot ${i < log.rpe ? "filled" : ""}`}
-                          style={
-                            i < log.rpe
-                              ? {
-                                  background:
-                                    log.rpe <= 3 ? "#10b981" : log.rpe <= 6 ? "#f59e0b" : "#ef4444",
-                                }
-                              : {}
-                          }
-                        />
+                        <div key={i} className={`rpe-dot ${i < log.rpe ? "filled" : ""}`} />
                       ))}
                     </div>
-                    <span
-                      className="rpe-num"
-                      style={{
-                        color: log.rpe <= 3 ? "#10b981" : log.rpe <= 6 ? "#f59e0b" : "#ef4444",
-                      }}
-                    >
-                      {log.rpe}/10
-                    </span>
                   </div>
-                  <button className="btn-del" onClick={() => deleteLog(log.id)} title="Xóa">
-                    🗑️
-                  </button>
                 </div>
               </div>
             ))}
@@ -239,9 +211,7 @@ export default function Logs() {
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
             <div className="modal-top">
               <h2 className="modal-title">✨ Thêm Log Mới</h2>
-              <button className="modal-close" onClick={resetForm}>
-                ✕
-              </button>
+              <button className="modal-close" onClick={resetForm}>✕</button>
             </div>
 
             <form onSubmit={addLog} className="modal-form">
@@ -260,95 +230,55 @@ export default function Logs() {
                 </div>
               </div>
 
+              {/* Optional IDs */}
+              {type === 'workout' && (
+                <div className="input-group">
+                  <label className="input-label">💪 Workout ID (Tùy chọn)</label>
+                  <input type="number" value={workoutId} onChange={(e) => setWorkoutId(e.target.value)} className="input-field" placeholder="Nhập ID bài tập..." />
+                </div>
+              )}
+
+              {type === 'meal' && (
+                <div className="input-group">
+                  <label className="input-label">🍽️ Meal ID (Tùy chọn)</label>
+                  <input type="number" value={mealId} onChange={(e) => setMealId(e.target.value)} className="input-field" placeholder="Nhập ID món ăn..." />
+                </div>
+              )}
+
               <div className="input-group">
-                <label className="input-label">📝 Nội dung</label>
+                <label className="input-label">📝 Ghi chú</label>
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   className="input-field textarea-field"
-                  rows="4"
-                  placeholder="Mô tả chi tiết..."
+                  rows="3"
+                  placeholder="Hôm nay tập thế nào?"
                   required
                 />
               </div>
 
               <div className="input-group">
-                <label className="input-label">😊 Cảm nhận</label>
+                <label className="input-label">💭 Cảm nhận (Feedback Type)</label>
                 <input
                   value={feeling}
                   onChange={(e) => setFeeling(e.target.value)}
                   className="input-field"
-                  placeholder="VD: Tràn đầy năng lượng..."
+                  placeholder="VD: Mệt, Hưng phấn, Đau cơ..."
                 />
               </div>
 
               <div className="input-group">
-                <label className="input-label">
-                  💯 Mức độ vất vả (RPE):{" "}
-                  <strong style={{ color: rpe <= 3 ? "#10b981" : rpe <= 6 ? "#f59e0b" : "#ef4444" }}>
-                    {rpe}/10
-                  </strong>
-                </label>
+                <label className="input-label">💯 Mức độ vất vả (RPE): <strong>{rpe}/10</strong></label>
                 <input
-                  type="range"
-                  min="1"
-                  max="10"
-                  value={rpe}
+                  type="range" min="1" max="10" value={rpe}
                   onChange={(e) => setRpe(e.target.value)}
                   className="range-slider"
-                  style={{
-                    background: `linear-gradient(to right, ${
-                      rpe <= 3 ? "#10b981" : rpe <= 6 ? "#f59e0b" : "#ef4444"
-                    } ${rpe * 10}%, #e0e0e0 ${rpe * 10}%)`,
-                  }}
                 />
-                <div className="range-labels">
-                  <span>Dễ</span>
-                  <span>Trung bình</span>
-                  <span>Khó</span>
-                </div>
-              </div>
-
-              <div className="input-row">
-                <div className="input-group">
-                  <label className="input-label">🆔 User ID</label>
-                  <input
-                    type="number"
-                    value={userId}
-                    onChange={(e) => setUserId(e.target.value)}
-                    className="input-field"
-                    required
-                  />
-                </div>
-                <div className="input-group">
-                  <label className="input-label">🍽️ Meal ID</label>
-                  <input
-                    type="number"
-                    value={mealId}
-                    onChange={(e) => setMealId(e.target.value)}
-                    className="input-field"
-                    required
-                  />
-                </div>
-                <div className="input-group">
-                  <label className="input-label">💪 Workout ID</label>
-                  <input
-                    type="number"
-                    value={workoutId}
-                    onChange={(e) => setWorkoutId(e.target.value)}
-                    className="input-field"
-                    required
-                  />
-                </div>
               </div>
 
               <div className="modal-actions">
-                <button type="button" onClick={resetForm} className="btn-cancel">
-                  Hủy
-                </button>
-                <button type="submit" className="btn-save">
-                  ✓ Lưu Log
-                </button>
+                <button type="button" onClick={resetForm} className="btn-cancel">Hủy</button>
+                <button type="submit" className="btn-save">✓ Lưu Log</button>
               </div>
             </form>
           </div>

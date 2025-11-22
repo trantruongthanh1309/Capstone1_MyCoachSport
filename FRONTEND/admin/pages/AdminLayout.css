@@ -189,17 +189,15 @@ body {
   margin-left: 280px;
   transition: all 0.3s ease;
   min-height: 100vh;
-  width: calc(100% - 80px);
   /* Remove any background or padding that might restrict content */
 }
 
 .admin-main.expanded {
   margin-left: 80px;
-  width: calc(100% - 80px);
 }
 
 /* Ensure child components take full width */
-.admin-main > * {
+.admin-main>* {
   width: 100%;
   min-height: 100vh;
 }
@@ -219,9 +217,12 @@ body {
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.05);
   }
@@ -270,7 +271,6 @@ body {
 
   .admin-main {
     margin-left: 80px;
-    width: calc(100% - 80px);
   }
 
   .toggle-btn {

@@ -10,13 +10,14 @@ import Social from "./pages/Social";
 import Videos from "./pages/Videos";
 import WorkScheduleManager from "./pages/WorkScheduleManager";
 import Settings from "./pages/Settings";
+import NewsFeed from "./pages/NewsFeed";
 import AdminLayout from "./admin/pages/AdminLayout";
 import { AdminRoute } from "./admin/components/ProtectedRoute";
 
 
 export default function App() {
   const location = useLocation();
-  
+
   // Ẩn Navbar ở trang Login VÀ tất cả trang Admin
   const hideNavbar = location.pathname === "/" || location.pathname.startsWith("/admin");
 
@@ -27,7 +28,7 @@ export default function App() {
         <Routes>
           {/* Public */}
           <Route path="/" element={<Login />} />
-          
+
           {/* User Pages */}
           <Route path="/home" element={<Home />} />
           <Route path="/planner" element={<Planner />} />
@@ -36,17 +37,18 @@ export default function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/social" element={<Social />} />
+          <Route path="/newsfeed" element={<NewsFeed />} />
           <Route path="/videos" element={<Videos />} />
           <Route path="/settings" element={<Settings />} />
-          
+
           {/* Admin Pages - Protected */}
-          <Route 
-            path="/admin/*" 
+          <Route
+            path="/admin/*"
             element={
               <AdminRoute>
                 <AdminLayout />
               </AdminRoute>
-            } 
+            }
           />
         </Routes>
       </div>

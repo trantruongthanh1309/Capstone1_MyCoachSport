@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
 import "./Planner.css";
-import "./PlannerEnhanced.css";
-import SwapButton from "../components/SwapButton";
 
 export default function Planner() {
   const [weeklyPlan, setWeeklyPlan] = useState({});
@@ -83,15 +81,18 @@ export default function Planner() {
     if (item.type === "meal") {
       setDetailItem({
         title: item.data.Name,
-        content: `Calo: ${item.data.Kcal || 0} kcal\nProtein: ${item.data.Protein || 0
-          }g\nCarb: ${item.data.Carb || 0}g\nFat: ${item.data.Fat || 0}g`,
+        content: `Calo: ${item.data.Kcal || 0} kcal\nProtein: ${
+          item.data.Protein || 0
+        }g\nCarb: ${item.data.Carb || 0}g\nFat: ${item.data.Fat || 0}g`,
       });
     } else {
       setDetailItem({
         title: item.data.Name,
-        content: `Môn: ${item.data.Sport || "N/A"}\nNhóm cơ: ${item.data.MuscleGroups || "N/A"
-          }\nThời gian: ${item.data.Duration_min || 0} phút\nCường độ: ${item.data.Intensity || "N/A"
-          }\nDụng cụ: ${item.data.Equipment || "N/A"}`,
+        content: `Môn: ${item.data.Sport || "N/A"}\nNhóm cơ: ${
+          item.data.MuscleGroups || "N/A"
+        }\nThời gian: ${item.data.Duration_min || 0} phút\nCường độ: ${
+          item.data.Intensity || "N/A"
+        }\nDụng cụ: ${item.data.Equipment || "N/A"}`,
       });
     }
     setShowDetail(true);
@@ -187,7 +188,6 @@ export default function Planner() {
                               >
                                 ℹ️
                               </button>
-                              <SwapButton item={{ ...mealItem, date }} type="meal" onSwapSuccess={fetchWeeklyPlan} />
                             </div>
                           </div>
                         ) : (
@@ -267,7 +267,6 @@ export default function Planner() {
                             >
                               ℹ️
                             </button>
-                            <SwapButton item={{ ...workoutItem, date }} type="workout" onSwapSuccess={fetchWeeklyPlan} />
                           </div>
                         </div>
                       ) : (
@@ -320,7 +319,6 @@ export default function Planner() {
                             >
                               ℹ️
                             </button>
-                            <SwapButton item={{ ...workoutItem, date }} type="workout" onSwapSuccess={fetchWeeklyPlan} />
                           </div>
                         </div>
                       ) : (
@@ -357,4 +355,3 @@ export default function Planner() {
     </div>
   );
 }
-

@@ -1,0 +1,191 @@
+/* NewsFeed.css - High Contrast & Sharp Design */
+
+:root {
+    --bg-body: #f0f2f5;
+    --bg-card: #ffffff;
+    --text-main: #050505;
+    /* Đen tuyền */
+    --text-secondary: #65676b;
+    /* Xám đậm hơn */
+    --primary-color: #1b74e4;
+    --hover-bg: #e4e6eb;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.2);
+    /* Bóng đậm hơn */
+    --radius-card: 10px;
+}
+
+.newsfeed-container {
+    min-height: 100vh;
+    background-color: var(--bg-body);
+    display: flex;
+    justify-content: center;
+    padding-top: 20px;
+    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: var(--text-main);
+    overflow-x: hidden;
+}
+
+.newsfeed-layout {
+    display: grid;
+    grid-template-columns: 300px 680px 300px;
+    /* Cố định chiều rộng 2 bên */
+    gap: 32px;
+    width: 100%;
+    max-width: 1400px;
+    /* Giới hạn chiều rộng tổng thể cho gọn */
+    padding: 0 20px;
+}
+
+/* LEFT SIDEBAR */
+.sidebar-left {
+    position: sticky;
+    top: 100px;
+    /* Cách top navbar */
+    height: fit-content;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-main);
+}
+
+.menu-item:hover {
+    background-color: var(--hover-bg);
+}
+
+.menu-icon {
+    font-size: 28px;
+    /* Icon to hơn */
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* background: white; Bỏ background gradient để icon tự nhiên hơn hoặc giữ tùy thích */
+}
+
+/* MAIN FEED (CENTER) */
+.feed-center {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-bottom: 50px;
+}
+
+/* Create Post Box */
+.create-post-box {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.input-section {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #dadde1;
+    /* Viền đậm hơn */
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    cursor: pointer;
+    border: 1px solid #dadde1;
+    /* Viền nhẹ cho avatar */
+}
+
+.post-input {
+    flex: 1;
+    background: #f0f2f5;
+    border: 1px solid #ccd0d5;
+    /* Thêm viền cho input */
+    border-radius: 20px;
+    padding: 12px 16px;
+    font-size: 1rem;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.post-input:hover {
+    background: #e4e6eb;
+}
+
+.post-input:focus {
+    outline: none;
+    background: #e4e6eb;
+    cursor: text;
+}
+
+.actions-section {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.action-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+}
+
+.icon-feeling {
+    color: #f7b928;
+    font-size: 1.2rem;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1100px) {
+    .newsfeed-layout {
+        grid-template-columns: 1fr 600px;
+        justify-content: center;
+    }
+
+    .sidebar-right {
+        display: none;
+    }
+
+    .sidebar-left {
+        display: none;
+    }
+
+    /* Ẩn luôn left sidebar trên màn nhỏ để tập trung feed */
+}
+
+@media (max-width: 700px) {
+    .newsfeed-layout {
+        grid-template-columns: 1fr;
+        padding: 0;
+    }
+
+    .post-card {
+        border-radius: 0;
+    }
+
+    /* Mobile style */
+}
