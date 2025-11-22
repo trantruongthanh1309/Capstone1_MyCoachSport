@@ -4,7 +4,6 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine
 from api.leaderboard import leaderboard_bp  
 from api.logs import logs_bp  
-from api.chatbot import chatbot_bp 
 from api.videos import videos_bp  
 from db import db 
 from api.auth import auth_bp
@@ -14,6 +13,9 @@ from flask_session import Session
 from api.planner import planner_bp
 from api.ai_coach import ai_coach_bp
 from api.schedule_manager import schedule_bp
+from api.meals import meals_bp
+from api.newsfeed import newsfeed_bp
+from api.chatbot_local import chatbot_bp
 
 from api.routes.admin_routes.users_admin import users_admin_bp
 from api.routes.admin_routes.dashboard_admin import dashboard_bp
@@ -74,12 +76,11 @@ sql_server_status = check_connection(
     "SQL Server"
 )
 
-# Đăng ký Blueprint từ logs.py, leaderboard_route.py, chat.py và video.py
-app.register_blueprint(logs_bp, url_prefix='/api/logs')  # Đăng ký logs API với tiền tố /api/logs
-app.register_blueprint(leaderboard_bp, url_prefix='/api/leaderboard')  # Đăng ký leaderboard API với tiền tố /api/leaderboard
-app.register_blueprint(chatbot_bp, url_prefix='/api/chatbot')  # Đăng ký chat API với tiền tố /api/chat
-app.register_blueprint(videos_bp, url_prefix='/api/videos')  # Đăng ký video API với tiền tố /api/video
-app.register_blueprint(auth_bp)  # bỏ url_prefix ở đây
+# Đăng ký Blueprint
+app.register_blueprint(logs_bp, url_prefix='/api/logs')
+app.register_blueprint(leaderboard_bp, url_prefix='/api/leaderboard')
+app.register_blueprint(videos_bp, url_prefix='/api/videos')
+app.register_blueprint(auth_bp)
 app.register_blueprint(profile_bp, url_prefix='/api/profile') 
 app.register_blueprint(planner_bp, url_prefix="/api/planner")
 app.register_blueprint(ai_coach_bp, url_prefix='/api/ai')
@@ -91,56 +92,9 @@ app.register_blueprint(meals_admin_bp)
 app.register_blueprint(workouts_admin_bp)
 app.register_blueprint(posts_admin_bp)
 app.register_blueprint(feedback_bp)
-
-GEMINI_API_KEY = "AIzaSyC5Dwwo6PYfKOS9RwUsaunIiyBNTevJy5U"  # Thay thế bằng API Key của bạn
-GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
-
-from flask import Flask, request, jsonify
-import requests
-@app.route('/chat', methods=['POST'])
-def chat():
-    # Nhận tin nhắn từ người dùng
-    data = request.json or {}
-    user_msg = data.get("message", "").strip()
-
-    # Kiểm tra nếu người dùng chưa nhập tin nhắn
-    if not user_msg:
-        return jsonify({"reply": "❌ Bạn chưa nhập tin nhắn."})
-
-    # Kiểm tra API Key
-    if not GEMINI_API_KEY:
-        return jsonify({"reply": "⚠️ GEMINI_API_KEY chưa được cấu hình."}), 500
-
-    try:
-        sys_prompt = "Bạn là MySportCoachAI - huấn luyện viên AI thân thiện. Trả lời ngắn gọn bằng tiếng Việt."
-
-        payload = {
-            "contents": [
-                {"role": "user", "parts": [{"text": sys_prompt}]},
-                {"role": "user", "parts": [{"text": user_msg}]}
-            ]
-        }
-
-        # Gửi yêu cầu đến API Gemini
-        r = requests.post(
-            GEMINI_URL,
-            headers={"Content-Type": "application/json"},
-            params={"key": GEMINI_API_KEY},
-            json=payload,
-            timeout=20,
-        )
-
-        if r.status_code == 200:
-            data = r.json()
-            reply = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "⚠️ Không có phản hồi")
-            return jsonify({"reply": reply})
-
-        return jsonify({"reply": f"⚠️ Lỗi gọi Gemini API: {r.text}"}), 500
-
-    except Exception as e:
-        return jsonify({"reply": f"❌ Lỗi Backend: {e}"}), 500
+app.register_blueprint(meals_bp, url_prefix='/api')
+app.register_blueprint(newsfeed_bp, url_prefix='/api/newsfeed')
+app.register_blueprint(chatbot_bp, url_prefix='/api/bot')
 
 if __name__ == "__main__":
     app.run(debug=False)
-
-

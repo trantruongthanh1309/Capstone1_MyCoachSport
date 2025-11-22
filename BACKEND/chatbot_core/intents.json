@@ -1,0 +1,143 @@
+{
+    "intents": [
+        {
+            "tag": "greeting",
+            "patterns": [
+                "Hi",
+                "Hello",
+                "Xin chào",
+                "Chào bạn",
+                "Alo",
+                "Có ai không",
+                "Hey",
+                "Bắt đầu nào"
+            ],
+            "responses": [
+                "Xin chào! Tôi là MySportCoach AI. Tôi có thể giúp gì cho việc tập luyện của bạn?",
+                "Chào bạn! Rất vui được gặp. Hôm nay bạn muốn tập gì?",
+                "Hi! Sẵn sàng để bùng nổ chưa? Hãy hỏi tôi về lịch tập hoặc dinh dưỡng nhé!"
+            ]
+        },
+        {
+            "tag": "goodbye",
+            "patterns": [
+                "Bye",
+                "Tạm biệt",
+                "Hẹn gặp lại",
+                "See you",
+                "Thoát",
+                "Kết thúc"
+            ],
+            "responses": [
+                "Tạm biệt! Hẹn gặp lại bạn trong buổi tập tới.",
+                "Chúc bạn một ngày tốt lành! Đừng quên uống đủ nước nhé.",
+                "Bye bye! Hãy giữ vững phong độ nhé!"
+            ]
+        },
+        {
+            "tag": "thanks",
+            "patterns": [
+                "Cảm ơn",
+                "Thanks",
+                "Thank you",
+                "Hay quá",
+                "Tuyệt vời",
+                "Ok cảm ơn"
+            ],
+            "responses": [
+                "Rất vui được giúp bạn!",
+                "Không có chi! Hãy cố gắng tập luyện nhé.",
+                "Tuyệt vời! Cần gì cứ hỏi tôi thêm."
+            ]
+        },
+        {
+            "tag": "muscle_gain",
+            "patterns": [
+                "Làm sao để tăng cơ?",
+                "Muốn to hơn",
+                "Cách tập tăng cơ bắp",
+                "Dinh dưỡng tăng cơ",
+                "Ăn gì để có cơ bắp",
+                "Bài tập hypertrophy"
+            ],
+            "responses": [
+                "Để tăng cơ (Hypertrophy), bạn cần: 1. Tập với khối lượng tạ đủ nặng (8-12 reps/set). 2. Ăn dư calo (Surplus) và nạp đủ Protein (1.6g - 2.2g/kg trọng lượng cơ thể). 3. Ngủ đủ 7-8 tiếng để cơ phục hồi.",
+                "Nguyên tắc vàng để tăng cơ: Tập nặng + Ăn nhiều Protein + Nghỉ ngơi đủ. Bạn nên ưu tiên các bài Compound như Squat, Deadlift, Bench Press.",
+                "Hãy tập trung vào Progressive Overload (tăng dần tạ theo thời gian). Về dinh dưỡng, hãy ăn ức gà, thịt bò, trứng và whey protein."
+            ]
+        },
+        {
+            "tag": "fat_loss",
+            "patterns": [
+                "Làm sao để giảm cân?",
+                "Muốn ốm lại",
+                "Cách giảm mỡ bụng",
+                "Cardio giảm cân",
+                "Ăn kiêng giảm béo",
+                "Thực đơn giảm cân"
+            ],
+            "responses": [
+                "Để giảm cân, nguyên tắc quan trọng nhất là Thâm hụt Calo (Calorie Deficit) - nạp vào ít hơn tiêu thụ. Hãy kết hợp tập tạ với Cardio (chạy bộ, đạp xe).",
+                "Giảm mỡ bụng cần kiên trì. Hãy cắt giảm đường, tinh bột nhanh, ăn nhiều rau xanh và protein. Tập HIIT hoặc Cardio 30 phút mỗi ngày sẽ rất hiệu quả.",
+                "Đừng nhịn ăn! Hãy ăn đủ chất nhưng kiểm soát calo. Ưu tiên thực phẩm giàu xơ và protein để no lâu. Hãy uống nhiều nước trước bữa ăn."
+            ]
+        },
+        {
+            "tag": "schedule_advice",
+            "patterns": [
+                "Nên tập mấy buổi 1 tuần?",
+                "Lịch tập cho người mới",
+                "Chia lịch tập thế nào",
+                "Hôm nay nên tập gì",
+                "Tư vấn lịch tập"
+            ],
+            "responses": [
+                "Với người mới, bạn nên tập 3-4 buổi/tuần (Full Body hoặc Upper/Lower). Người tập lâu năm có thể tập 5-6 buổi (Push/Pull/Legs).",
+                "Quan trọng là sự đều đặn. Bạn có thể thử lịch Push/Pull/Legs (Đẩy/Kéo/Chân) rất phổ biến và hiệu quả.",
+                "Hãy dành ít nhất 1-2 ngày nghỉ mỗi tuần để cơ bắp phục hồi. Đừng tập cùng một nhóm cơ 2 ngày liên tiếp."
+            ]
+        },
+        {
+            "tag": "diet_advice",
+            "patterns": [
+                "Nên ăn gì trước khi tập?",
+                "Ăn gì sau tập?",
+                "Bữa phụ nên ăn gì?",
+                "Thực phẩm tốt cho gym",
+                "Protein nào tốt"
+            ],
+            "responses": [
+                "Trước tập 1-2 tiếng: Ăn tinh bột chậm (yến mạch, khoai lang) + ít protein. Sau tập: Nạp ngay Protein (Whey/Trứng) + Tinh bột nhanh để phục hồi.",
+                "Bữa phụ bạn có thể ăn: Sữa chua Hy Lạp, các loại hạt, chuối, hoặc một muỗng Whey Protein.",
+                "Các thực phẩm vàng: Ức gà, Cá hồi, Trứng, Bông cải xanh, Yến mạch, Gạo lứt."
+            ]
+        },
+        {
+            "tag": "identity",
+            "patterns": [
+                "Bạn là ai?",
+                "Ai tạo ra bạn?",
+                "Giới thiệu bản thân",
+                "Tên bạn là gì"
+            ],
+            "responses": [
+                "Tôi là MySportCoach AI - Trợ lý ảo hỗ trợ tập luyện và dinh dưỡng của riêng bạn. Tôi được huấn luyện để giúp bạn đạt được mục tiêu hình thể!",
+                "Tôi là AI Coach của bạn. Tôi ở đây để giúp bạn lên lịch tập, tính toán dinh dưỡng và giải đáp thắc mắc về Gym."
+            ]
+        },
+        {
+            "tag": "funny",
+            "patterns": [
+                "Kể chuyện cười đi",
+                "Buồn quá",
+                "Mệt quá không muốn tập",
+                "Lười quá"
+            ],
+            "responses": [
+                "Đừng lười! Hãy nhớ lý do bạn bắt đầu. 'No Pain, No Gain'!",
+                "Mệt thì nghỉ một chút rồi tập tiếp, chứ đừng bỏ cuộc nhé. Cơ bắp đang chờ bạn đó!",
+                "Hãy nghĩ đến body 6 múi của bạn trong tương lai. Đứng dậy và đi tập ngay nào!"
+            ]
+        }
+    ]
+}
