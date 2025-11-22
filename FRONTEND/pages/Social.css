@@ -1,0 +1,172 @@
+/* Cơ bản cho phần layout */
+.fb-wrap {
+  display: flex;
+  padding-top: 20px;
+}
+
+.fb-grid {
+  display: grid;
+  grid-template-columns: 1fr 3fr 1fr;
+  gap: 20px;
+}
+
+.fb-left, .fb-right {
+  position: sticky;
+  top: 16px;
+}
+
+.fb-card {
+  background-color: white;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.fb-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.fb-avatar-s {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+}
+
+.fb-menu-item {
+  display: block;
+  padding: 10px;
+  text-decoration: none;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  transition: background 0.3s ease;
+}
+
+.fb-menu-item:hover {
+  background-color: #f1f1f1;
+}
+
+/* Phần composer */
+.fb-input, .fb-textarea {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  transition: border-color 0.3s;
+}
+
+.fb-input:focus, .fb-textarea:focus {
+  border-color: #4CAF50;
+  outline: none;
+}
+
+/* Hiệu ứng button */
+.fb-btn-primary {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.fb-btn-primary:hover {
+  background-color: #45a049;
+}
+
+.fb-btn-ghost {
+  background: transparent;
+  border: 1px solid #ddd;
+  padding: 5px 10px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.fb-btn-ghost:hover {
+  background-color: #f1f1f1;
+}
+
+/* Phần post */
+.fb-post {
+  margin-bottom: 20px;
+}
+
+.fb-post-text {
+  font-size: 16px;
+  line-height: 1.5;
+  color: #333;
+}
+
+.fb-post-img {
+  width: 100%;
+  border-radius: 10px;
+  margin-top: 10px;
+}
+
+.fb-post-stats {
+  font-size: 14px;
+  color: #888;
+}
+
+.fb-post-actions {
+  margin-top: 10px;
+}
+
+.fb-comment-box {
+  margin-top: 20px;
+  background: #f9f9f9;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.fb-comments {
+  margin-top: 10px;
+}
+
+.fb-comment {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.fb-comment-bubble {
+  background-color: #f1f1f1;
+  padding: 8px 12px;
+  border-radius: 12px;
+  max-width: 70%;
+}
+
+.fb-comment-author {
+  font-weight: bold;
+  color: #4CAF50;
+}
+
+/* Scrollable Sidebar */
+.fb-left, .fb-right {
+  position: sticky;
+  top: 16px;
+  height: calc(100vh - 32px);
+  overflow-y: auto;
+  padding-top: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Hover effect for post actions */
+.fb-post-actions button:hover {
+  background-color: #ddd;
+}
+
+/* Effect for new posts */
+@keyframes newPost {
+  0% { opacity: 0.5; transform: translateY(-10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.fb-post {
+  animation: newPost 0.3s ease-out;
+}
