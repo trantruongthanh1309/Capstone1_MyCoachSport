@@ -7,8 +7,14 @@ from torch.utils.data import Dataset, DataLoader
 from nltk_utils import bag_of_words, tokenize, stem
 from model import NeuralNet
 
+import os
+
 # 1. Load dữ liệu
-with open('intents.json', 'r', encoding='utf-8') as f:
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+INTENTS_FILE = os.path.join(BASE_DIR, 'intents.json')
+FILE = os.path.join(BASE_DIR, 'data.pth')
+
+with open(INTENTS_FILE, 'r', encoding='utf-8') as f:
     intents = json.load(f)
 
 all_words = []
@@ -105,7 +111,7 @@ data = {
     "tags": tags
 }
 
-FILE = "data.pth"
+# FILE = "data.pth" (Đã define ở trên)
 torch.save(data, FILE)
 
 print(f'💾 Đã lưu model vào file {FILE}')

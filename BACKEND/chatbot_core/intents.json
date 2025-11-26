@@ -10,12 +10,15 @@
                 "Alo",
                 "Có ai không",
                 "Hey",
-                "Bắt đầu nào"
+                "Bắt đầu nào",
+                "Chào",
+                "Good morning",
+                "Good evening"
             ],
             "responses": [
-                "Xin chào! Tôi là MySportCoach AI. Tôi có thể giúp gì cho việc tập luyện của bạn?",
-                "Chào bạn! Rất vui được gặp. Hôm nay bạn muốn tập gì?",
-                "Hi! Sẵn sàng để bùng nổ chưa? Hãy hỏi tôi về lịch tập hoặc dinh dưỡng nhé!"
+                "Chào {name}! Rất vui được gặp lại. Hôm nay bạn thấy trong người thế nào? 💪",
+                "Xin chào {name}! Sẵn sàng bùng nổ cho buổi tập hôm nay chưa?",
+                "Hi {name}! Tôi là HLV AI của bạn. Hôm nay chúng ta sẽ chinh phục mục tiêu gì đây?"
             ]
         },
         {
@@ -26,12 +29,13 @@
                 "Hẹn gặp lại",
                 "See you",
                 "Thoát",
-                "Kết thúc"
+                "Ngủ ngon",
+                "Off đây"
             ],
             "responses": [
-                "Tạm biệt! Hẹn gặp lại bạn trong buổi tập tới.",
-                "Chúc bạn một ngày tốt lành! Đừng quên uống đủ nước nhé.",
-                "Bye bye! Hãy giữ vững phong độ nhé!"
+                "Tạm biệt {name}! Nhớ ăn uống đầy đủ và ngủ sớm để cơ bắp phục hồi nhé! 😴",
+                "Bye bye! Hẹn gặp lại bạn trong buổi tập tới. Keep fighting! 🔥",
+                "Chúc một ngày tốt lành! Đừng quên uống đủ nước nhé."
             ]
         },
         {
@@ -42,87 +46,407 @@
                 "Thank you",
                 "Hay quá",
                 "Tuyệt vời",
-                "Ok cảm ơn"
+                "Ok",
+                "Được đó",
+                "Good job"
             ],
             "responses": [
-                "Rất vui được giúp bạn!",
-                "Không có chi! Hãy cố gắng tập luyện nhé.",
-                "Tuyệt vời! Cần gì cứ hỏi tôi thêm."
+                "Rất vui được giúp bạn! Cùng nhau cố gắng nhé! 💪",
+                "Không có chi! Đó là nhiệm vụ của tôi mà.",
+                "Ok! Cần gì cứ hỏi tôi bất cứ lúc nào."
+            ]
+        },
+        {
+            "tag": "my_info",
+            "patterns": [
+                "T tên gì",
+                "Tôi tên là gì",
+                "Bạn biết tên tôi không",
+                "Tôi là ai",
+                "Mày biết tao là ai không",
+                "Profile của tôi",
+                "Thông tin của tôi"
+            ],
+            "responses": [
+                "Đang xem hồ sơ của {name}..."
+            ]
+        },
+        {
+            "tag": "my_body",
+            "patterns": [
+                "Tôi nặng bao nhiêu kí",
+                "Cân nặng của tôi",
+                "Chiều cao của tôi",
+                "Chỉ số cơ thể tôi",
+                "Tôi cao bao nhiêu",
+                "Body tôi thế nào"
+            ],
+            "responses": [
+                "Để tôi kiểm tra chỉ số cơ thể của bạn..."
+            ]
+        },
+        {
+            "tag": "my_sport",
+            "patterns": [
+                "Tôi chơi môn gì",
+                "Môn thể thao của tôi",
+                "Sở trường của tôi là gì",
+                "Tôi đang tập môn gì"
+            ],
+            "responses": [
+                "Để xem bạn đang chơi môn gì nào..."
+            ]
+        },
+        {
+            "tag": "current_date",
+            "patterns": [
+                "Hôm nay thứ mấy",
+                "Mấy giờ rồi",
+                "Ngày bao nhiêu",
+                "Hôm nay là ngày nào",
+                "Thời gian hiện tại"
+            ],
+            "responses": [
+                "Đang xem đồng hồ..."
+            ]
+        },
+        {
+            "tag": "schedule",
+            "patterns": [
+                "Hôm nay tập gì",
+                "Lịch tập hôm nay",
+                "Tối nay tập bài nào",
+                "Sáng nay tập gì",
+                "Xem lịch tập của tôi",
+                "Lịch trình hôm nay",
+                "Tuần này tập gì",
+                "Tuần nay ăn gì"
+            ],
+            "responses": [
+                "Đang kiểm tra lịch của {name}..."
+            ]
+        },
+        {
+            "tag": "stats",
+            "patterns": [
+                "Tôi tập được bao nhiêu buổi rồi",
+                "Thống kê tập luyện",
+                "Xem thành tích",
+                "Tôi có tiến bộ không",
+                "Tổng số buổi tập",
+                "Check log"
+            ],
+            "responses": [
+                "Để mình xem thống kê của {name} nhé..."
+            ]
+        },
+        {
+            "tag": "calc_tdee",
+            "patterns": [
+                "Tôi nên ăn bao nhiêu calo",
+                "Tính TDEE giúp tôi",
+                "Nhu cầu calo của tôi",
+                "Tính calo giảm cân",
+                "Tính calo tăng cân",
+                "Một ngày ăn bao nhiêu là đủ"
+            ],
+            "responses": [
+                "Đang tính toán nhu cầu năng lượng (TDEE) cho {name}..."
+            ]
+        },
+        {
+            "tag": "calc_bmi",
+            "patterns": [
+                "Tính BMI",
+                "Tôi có béo không",
+                "Chỉ số BMI của tôi",
+                "Phân tích cơ thể",
+                "Tôi có gầy quá không"
+            ],
+            "responses": [
+                "Đang phân tích chỉ số BMI cho {name}..."
+            ]
+        },
+        {
+            "tag": "chest_workout",
+            "patterns": [
+                "Tập ngực",
+                "Bài tập ngực hiệu quả",
+                "Muốn ngực to",
+                "Bench Press",
+                "Ngực trên",
+                "Ngực dưới",
+                "Cách đẩy ngực",
+                "Ngực lép phải làm sao"
+            ],
+            "responses": [
+                "Để có bộ ngực vạm vỡ, 'Vua' của các bài tập là Bench Press (Đẩy ngực ngang). Đừng quên Incline Bench Press (Ngực trên) để tạo độ đầy đặn và Dips (Xà kép) cho ngực dưới.",
+                "Nguyên tắc tập ngực: Ưu tiên bài Compound (Đẩy tạ đòn/đơn) đầu buổi khi còn khỏe. Kết thúc bằng bài Isolation (Fly/Ép ngực) để bơm máu vào cơ. 12-15 sets/tuần là tối ưu."
+            ]
+        },
+        {
+            "tag": "back_workout",
+            "patterns": [
+                "Tập lưng",
+                "Lưng xô",
+                "Muốn lưng rộng",
+                "Deadlift",
+                "Pull up",
+                "Kéo xà",
+                "Lưng chữ V",
+                "Cách tập xô"
+            ],
+            "responses": [
+                "Muốn lưng rộng (V-Shape), hãy tập Pull-up (Hít xà) và Lat Pulldown. Muốn lưng dày, hãy tập Deadlift và Barbell Row (Gập người chèo tạ).",
+                "Lưng là nhóm cơ lớn và phức tạp. Hãy chia làm 2 chuyển động chính: Kéo từ trên xuống (Vertical Pull) và Kéo từ trước ra sau (Horizontal Pull). Đừng quên gồng Core!"
+            ]
+        },
+        {
+            "tag": "leg_workout",
+            "patterns": [
+                "Tập chân",
+                "Squat",
+                "Đùi to",
+                "Mông quả đào",
+                "Leg day",
+                "Bắp chân",
+                "Gánh tạ",
+                "Chân bé quá"
+            ],
+            "responses": [
+                "Đừng bỏ qua Leg Day! Squat là bài tập bắt buộc để phát triển đùi và mông. Kết hợp thêm Leg Press và Lunges để chân phát triển toàn diện.",
+                "Chân chiếm 50% cơ thể. Tập chân giúp tăng Testosterone tự nhiên, hỗ trợ phát triển toàn bộ cơ thể. Hãy tập nặng và xuống sâu (Full Range of Motion) khi Squat."
+            ]
+        },
+        {
+            "tag": "shoulder_workout",
+            "patterns": [
+                "Tập vai",
+                "Vai rộng",
+                "Cầu vai",
+                "Overhead Press",
+                "Đẩy vai",
+                "Vai to"
+            ],
+            "responses": [
+                "Để vai rộng như 'tủ lạnh', bài Overhead Press (Đẩy vai qua đầu) là quan trọng nhất. Hãy tập thêm Lateral Raise (Bay vai) để phát triển cơ vai giữa, tạo độ rộng.",
+                "Cơ vai rất dễ chấn thương, hãy khởi động kỹ khớp xoay (Rotator Cuff). Đừng quên tập vai sau (Face Pull) để tránh bị gù lưng nhé."
+            ]
+        },
+        {
+            "tag": "arm_workout",
+            "patterns": [
+                "Tập tay",
+                "Bắp tay to",
+                "Chuột to",
+                "Tay sau",
+                "Tay trước",
+                "Biceps",
+                "Triceps"
+            ],
+            "responses": [
+                "Muốn tay to, hãy ưu tiên tập Tay Sau (Triceps) vì nó chiếm 2/3 kích thước cánh tay. Các bài Dips, Skull Crushers rất hiệu quả.",
+                "Với Tay Trước (Biceps), hãy tập Barbell Curl và Hammer Curl. Đừng đung đưa người, hãy cô lập cơ bắp tay để cảm nhận tốt nhất."
+            ]
+        },
+        {
+            "tag": "abs_workout",
+            "patterns": [
+                "Tập bụng",
+                "6 múi",
+                "Giảm mỡ bụng",
+                "Plank",
+                "Gập bụng",
+                "Cơ bụng số 11"
+            ],
+            "responses": [
+                "Cơ bụng được tạo ra trong BẾP, không phải phòng tập! Bạn cần giảm mỡ toàn thân (Calorie Deficit) thì múi bụng mới lộ ra. Các bài tập bụng chỉ làm múi dày lên thôi.",
+                "Các bài bụng tốt nhất: Hanging Leg Raise (Treo người đá bụng), Cable Crunch và Plank. Đừng gập bụng quá nhiều, hại lưng lắm!"
+            ]
+        },
+        {
+            "tag": "macro_advice",
+            "patterns": [
+                "Macro là gì",
+                "Tính macro",
+                "Tỉ lệ dinh dưỡng",
+                "Protein Carb Fat",
+                "Ăn bao nhiêu đạm",
+                "Carb là gì"
+            ],
+            "responses": [
+                "Macro (Macronutrients) gồm 3 chất chính: Protein (Đạm) xây dựng cơ, Carb (Tinh bột) cung cấp năng lượng, Fat (Chất béo) hỗ trợ hormone. Tỉ lệ vàng cho Gym: 40% Carb - 30% Protein - 30% Fat.",
+                "Để tối ưu hóa, hãy nạp 1.6g - 2.2g Protein trên mỗi kg trọng lượng cơ thể. Carb nên ăn quanh buổi tập, Fat nên ăn xa buổi tập."
+            ]
+        },
+        {
+            "tag": "supplements",
+            "patterns": [
+                "Có nên uống Whey",
+                "Creatine là gì",
+                "Thực phẩm bổ sung",
+                "Pre-workout",
+                "BCAA",
+                "Dùng whey nào tốt"
+            ],
+            "responses": [
+                "Whey Protein chỉ là sữa lọc bỏ tạp chất, giúp nạp đạm nhanh và tiện lợi. Nếu bạn ăn đủ thịt cá trứng thì không bắt buộc. Nhưng uống sau tập thì rất tốt!",
+                "Creatine là thực phẩm bổ sung được nghiên cứu kỹ nhất, giúp tăng sức mạnh và độ phồng cơ bắp. Dùng 5g mỗi ngày, uống nhiều nước nhé.",
+                "Pre-workout giúp tỉnh táo và sung sức (nhờ Caffeine), nhưng đừng lạm dụng kẻo mất ngủ. BCAA/EAA giúp chống dị hóa cơ khi tập dài."
+            ]
+        },
+        {
+            "tag": "injury_back",
+            "patterns": [
+                "Đau lưng",
+                "Đau thắt lưng",
+                "Chấn thương lưng",
+                "Tập xong đau lưng",
+                "Thoát vị đĩa đệm tập gì"
+            ],
+            "responses": [
+                "Đau thắt lưng thường do sai form Deadlift/Squat hoặc Core yếu. Hãy nghỉ ngơi, chườm đá và kiểm tra lại kỹ thuật. Đừng cố tập nặng khi đang đau!",
+                "Hãy tập thêm các bài Core (Plank, Bird-dog) để bảo vệ cột sống. Nếu đau lan xuống chân, hãy đi khám bác sĩ ngay (nguy cơ thoát vị)."
+            ]
+        },
+        {
+            "tag": "recovery",
+            "patterns": [
+                "Phục hồi cơ",
+                "Đau cơ quá",
+                "Giãn cơ",
+                "Ngủ bao nhiêu là đủ",
+                "Xả cơ",
+                "Nhức mỏi toàn thân"
+            ],
+            "responses": [
+                "Cơ bắp phát triển lúc bạn NGỦ, không phải lúc tập. Hãy ngủ đủ 7-8 tiếng/đêm. Massage (Foam Rolling) và giãn cơ (Stretching) sau tập giúp giảm đau nhức.",
+                "Đau cơ (DOMS) là bình thường với người mới. Hãy ăn đủ đạm, uống nhiều nước và vận động nhẹ nhàng để máu lưu thông, cơ sẽ nhanh hồi phục."
+            ]
+        },
+        {
+            "tag": "football_advice",
+            "patterns": [
+                "Bóng đá thì tập gì",
+                "Giáo án bóng đá",
+                "Tập bổ trợ đá banh",
+                "Cầu thủ cần tập gì",
+                "Bài tập cho dân phủi",
+                "Bóng đá",
+                "Đá banh"
+            ],
+            "responses": [
+                "Với bóng đá, bạn cần ưu tiên: 1. Thể lực (HIIT, chạy biến tốc). 2. Sức mạnh chân (Squat, Lunge, Plyometrics). 3. Cơ lõi (Core) để tranh chấp tốt hơn.",
+                "Dân đá banh nên tập các bài Plyometrics (nhảy cóc, bật nhảy) để tăng sức bật và tốc độ. Đừng quên tập Agility Ladder (thang dây) nhé!",
+                "Ngoài kỹ thuật, hãy tập thêm Gym để tăng sức va chạm. Các bài Squat, Deadlift và Calf Raise là bắt buộc."
+            ]
+        },
+        {
+            "tag": "volleyball",
+            "patterns": [
+                "Bóng chuyền chơi như nào",
+                "Tập bóng chuyền",
+                "Kỹ thuật bóng chuyền",
+                "Cách đập bóng",
+                "Chuyền hai",
+                "Bóng chuyền",
+                "Bật cao"
+            ],
+            "responses": [
+                "Bóng chuyền đòi hỏi sức bật và phản xạ. Hãy tập các bài Plyometrics (Jump Squat, Box Jump) để bật cao hơn. Kỹ thuật đệm bóng và búng bóng là nền tảng quan trọng nhất.",
+                "Để chơi tốt bóng chuyền, bạn cần tập trung vào sức mạnh đôi chân và sự linh hoạt của cổ tay. Đừng quên tập cơ bụng để giữ thăng bằng trên không!"
+            ]
+        },
+        {
+            "tag": "badminton",
+            "patterns": [
+                "Cầu lông tập gì",
+                "Cách đánh cầu lông",
+                "Kỹ thuật cầu lông",
+                "Smash cầu lông",
+                "Cầu lông"
+            ],
+            "responses": [
+                "Cầu lông cần sự nhanh nhẹn và dẻo dai. Hãy tập di chuyển (Footwork) thật nhiều. Các bài tập cổ tay và cẳng tay sẽ giúp cú Smash của bạn uy lực hơn.",
+                "Thể lực là chìa khóa trong cầu lông. Hãy chạy bộ biến tốc và nhảy dây để tăng sức bền. Kỹ thuật phông cầu và bỏ nhỏ cũng rất quan trọng."
+            ]
+        },
+        {
+            "tag": "basketball",
+            "patterns": [
+                "Bóng rổ tập gì",
+                "Cách ném bóng rổ",
+                "Kỹ thuật bóng rổ",
+                "Dribble",
+                "Bóng rổ",
+                "Úp rổ"
+            ],
+            "responses": [
+                "Bóng rổ cần sự kết hợp giữa sức mạnh và khéo léo. Hãy tập nhồi bóng (Dribble) mỗi ngày. Các bài tập bật nhảy và ném rổ (Shooting) là không thể thiếu.",
+                "Để chơi bóng rổ giỏi, bạn cần tập Gym để tăng sức va chạm. Squat, Deadlift và Overhead Press là những bài tập tốt cho dân bóng rổ."
+            ]
+        },
+        {
+            "tag": "swimming",
+            "patterns": [
+                "Bơi lội",
+                "Tác dụng của bơi",
+                "Học bơi",
+                "Bơi sải",
+                "Bơi ếch",
+                "Đi bơi"
+            ],
+            "responses": [
+                "Bơi lội là môn Cardio tuyệt vời, đốt calo khủng và không gây áp lực lên khớp. Nó giúp phát triển chiều cao và phổi cực tốt.",
+                "Bơi sải giúp vai rộng và tay săn chắc. Bơi ếch tốt cho chân và đùi. Hãy kết hợp bơi 2-3 buổi/tuần để xả cơ sau những ngày tập tạ."
+            ]
+        },
+        {
+            "tag": "yoga",
+            "patterns": [
+                "Tập Yoga",
+                "Lợi ích Yoga",
+                "Yoga cho nam",
+                "Giãn cơ yoga",
+                "Thiền"
+            ],
+            "responses": [
+                "Yoga không chỉ dành cho nữ! Nó giúp tăng độ dẻo dai, cải thiện thăng bằng và giảm stress cực tốt. Rất nhiều vận động viên chuyên nghiệp tập Yoga để tránh chấn thương.",
+                "Kết hợp Yoga với Gym là 'cặp đôi hoàn hảo'. Gym làm cơ cứng, Yoga làm cơ mềm dẻo linh hoạt. Hãy thử 1 buổi Yoga mỗi tuần."
             ]
         },
         {
             "tag": "muscle_gain",
             "patterns": [
-                "Làm sao để tăng cơ?",
+                "Làm sao để tăng cơ",
                 "Muốn to hơn",
                 "Cách tập tăng cơ bắp",
                 "Dinh dưỡng tăng cơ",
                 "Ăn gì để có cơ bắp",
-                "Bài tập hypertrophy"
+                "Bài tập hypertrophy",
+                "Bulking"
             ],
             "responses": [
-                "Để tăng cơ (Hypertrophy), bạn cần: 1. Tập với khối lượng tạ đủ nặng (8-12 reps/set). 2. Ăn dư calo (Surplus) và nạp đủ Protein (1.6g - 2.2g/kg trọng lượng cơ thể). 3. Ngủ đủ 7-8 tiếng để cơ phục hồi.",
-                "Nguyên tắc vàng để tăng cơ: Tập nặng + Ăn nhiều Protein + Nghỉ ngơi đủ. Bạn nên ưu tiên các bài Compound như Squat, Deadlift, Bench Press.",
-                "Hãy tập trung vào Progressive Overload (tăng dần tạ theo thời gian). Về dinh dưỡng, hãy ăn ức gà, thịt bò, trứng và whey protein."
+                "Để tăng cơ (Hypertrophy): Tập nặng (8-12 reps) + Ăn dư Calo + Đủ Protein (2g/kg). Ngủ đủ 8 tiếng là lúc cơ bắp phát triển nhất!",
+                "Muốn to thì phải ăn! Hãy nạp nhiều Protein (Ức gà, Bò, Trứng, Whey) và đừng sợ tinh bột. Tập các bài Compound như Bench Press, Squat.",
+                "Nguyên tắc: Progressive Overload (Tăng tạ dần dần). Đừng tập nhẹ mãi, cơ bắp sẽ không có lý do để to lên đâu!"
             ]
         },
         {
             "tag": "fat_loss",
             "patterns": [
-                "Làm sao để giảm cân?",
+                "Làm sao để giảm cân",
                 "Muốn ốm lại",
                 "Cách giảm mỡ bụng",
                 "Cardio giảm cân",
                 "Ăn kiêng giảm béo",
-                "Thực đơn giảm cân"
+                "Thực đơn giảm cân",
+                "Cutting"
             ],
             "responses": [
-                "Để giảm cân, nguyên tắc quan trọng nhất là Thâm hụt Calo (Calorie Deficit) - nạp vào ít hơn tiêu thụ. Hãy kết hợp tập tạ với Cardio (chạy bộ, đạp xe).",
-                "Giảm mỡ bụng cần kiên trì. Hãy cắt giảm đường, tinh bột nhanh, ăn nhiều rau xanh và protein. Tập HIIT hoặc Cardio 30 phút mỗi ngày sẽ rất hiệu quả.",
-                "Đừng nhịn ăn! Hãy ăn đủ chất nhưng kiểm soát calo. Ưu tiên thực phẩm giàu xơ và protein để no lâu. Hãy uống nhiều nước trước bữa ăn."
-            ]
-        },
-        {
-            "tag": "schedule_advice",
-            "patterns": [
-                "Nên tập mấy buổi 1 tuần?",
-                "Lịch tập cho người mới",
-                "Chia lịch tập thế nào",
-                "Hôm nay nên tập gì",
-                "Tư vấn lịch tập"
-            ],
-            "responses": [
-                "Với người mới, bạn nên tập 3-4 buổi/tuần (Full Body hoặc Upper/Lower). Người tập lâu năm có thể tập 5-6 buổi (Push/Pull/Legs).",
-                "Quan trọng là sự đều đặn. Bạn có thể thử lịch Push/Pull/Legs (Đẩy/Kéo/Chân) rất phổ biến và hiệu quả.",
-                "Hãy dành ít nhất 1-2 ngày nghỉ mỗi tuần để cơ bắp phục hồi. Đừng tập cùng một nhóm cơ 2 ngày liên tiếp."
-            ]
-        },
-        {
-            "tag": "diet_advice",
-            "patterns": [
-                "Nên ăn gì trước khi tập?",
-                "Ăn gì sau tập?",
-                "Bữa phụ nên ăn gì?",
-                "Thực phẩm tốt cho gym",
-                "Protein nào tốt"
-            ],
-            "responses": [
-                "Trước tập 1-2 tiếng: Ăn tinh bột chậm (yến mạch, khoai lang) + ít protein. Sau tập: Nạp ngay Protein (Whey/Trứng) + Tinh bột nhanh để phục hồi.",
-                "Bữa phụ bạn có thể ăn: Sữa chua Hy Lạp, các loại hạt, chuối, hoặc một muỗng Whey Protein.",
-                "Các thực phẩm vàng: Ức gà, Cá hồi, Trứng, Bông cải xanh, Yến mạch, Gạo lứt."
-            ]
-        },
-        {
-            "tag": "identity",
-            "patterns": [
-                "Bạn là ai?",
-                "Ai tạo ra bạn?",
-                "Giới thiệu bản thân",
-                "Tên bạn là gì"
-            ],
-            "responses": [
-                "Tôi là MySportCoach AI - Trợ lý ảo hỗ trợ tập luyện và dinh dưỡng của riêng bạn. Tôi được huấn luyện để giúp bạn đạt được mục tiêu hình thể!",
-                "Tôi là AI Coach của bạn. Tôi ở đây để giúp bạn lên lịch tập, tính toán dinh dưỡng và giải đáp thắc mắc về Gym."
+                "Giảm cân = Calo In < Calo Out. Hãy ăn nhiều rau, giảm đường/tinh bột và tập Cardio/HIIT 3-4 buổi/tuần.",
+                "Đừng nhịn ăn! Hãy ăn đủ chất nhưng chọn thực phẩm ít calo (Khoai lang, Ức gà, Rau xanh). Uống nhiều nước cũng giúp giảm đói.",
+                "Mỡ bụng giảm sau cùng. Hãy kiên trì tập toàn thân và Cardio, mỡ sẽ giảm dần đều."
             ]
         },
         {
@@ -131,12 +455,72 @@
                 "Kể chuyện cười đi",
                 "Buồn quá",
                 "Mệt quá không muốn tập",
-                "Lười quá"
+                "Lười quá",
+                "Chán quá",
+                "Nản quá",
+                "Có gì vui không"
             ],
             "responses": [
-                "Đừng lười! Hãy nhớ lý do bạn bắt đầu. 'No Pain, No Gain'!",
-                "Mệt thì nghỉ một chút rồi tập tiếp, chứ đừng bỏ cuộc nhé. Cơ bắp đang chờ bạn đó!",
-                "Hãy nghĩ đến body 6 múi của bạn trong tương lai. Đứng dậy và đi tập ngay nào!"
+                "Đừng lười! Hãy nhớ lý do bạn bắt đầu. 'No Pain, No Gain'! 🔥",
+                "Mệt thì nghỉ một chút rồi chiến tiếp. Body đẹp không dành cho người lười! 🚀",
+                "Hãy nghĩ đến lúc cởi áo khoe body 6 múi. Đứng dậy tập ngay đi! 💪",
+                "Bạn biết không? Thanh tạ không bao giờ biết nói dối. Bạn bỏ công sức bao nhiêu, nó trả lại bấy nhiêu!"
+            ]
+        },
+        {
+            "tag": "identity",
+            "patterns": [
+                "Mày là ai",
+                "Bạn là ai",
+                "Ai tạo ra bạn",
+                "Giới thiệu bản thân",
+                "Tên bạn là gì"
+            ],
+            "responses": [
+                "Tôi là MySportCoach AI - Trợ lý ảo riêng của {name}. Tôi ở đây để giúp bạn tập luyện và ăn uống khoa học hơn!",
+                "Tôi là AI Coach của bạn. Tôi biết lịch tập, chỉ số cơ thể và mục tiêu của bạn. Hãy hỏi tôi bất cứ gì!"
+            ]
+        },
+        {
+            "tag": "english",
+            "patterns": [
+                "Nói tiếng anh được không",
+                "Can you speak English",
+                "English please",
+                "Do you know English"
+            ],
+            "responses": [
+                "Yes, I can! But I prefer Vietnamese to serve you better. How can I help you with your workout? 💪",
+                "Sure! I'm a pro coach, so I know all the gym terms in English like Bench Press, Squat, Deadlift. Ask me anything!"
+            ]
+        },
+        {
+            "tag": "food_advice",
+            "patterns": [
+                "Cơm ăn với gì",
+                "Ăn gì ngon",
+                "Thực đơn hôm nay",
+                "Gợi ý món ăn",
+                "Tối nay ăn gì"
+            ],
+            "responses": [
+                "Nếu bạn đang tăng cơ, hãy ăn Cơm + Ức gà nướng + Bông cải xanh. Nếu giảm cân, thử Salad cá ngừ xem sao!",
+                "Nguyên tắc đĩa ăn: 1/2 là Rau, 1/4 là Protein (Thịt/Cá), 1/4 là Tinh bột (Cơm/Khoai). Đơn giản mà hiệu quả!",
+                "Thử món Bò xào ớt chuông hoặc Tôm hấp nước dừa đi. Vừa ngon vừa giàu Protein!"
+            ]
+        },
+        {
+            "tag": "health_issue",
+            "patterns": [
+                "Đau bụng quá",
+                "Nhức đầu quá",
+                "Chóng mặt",
+                "Buồn nôn khi tập",
+                "Khó thở"
+            ],
+            "responses": [
+                "Nếu bạn thấy không khỏe, hãy NGỪNG tập ngay lập tức. Nghỉ ngơi, uống nước và hít thở sâu. Đừng cố quá thành 'quá cố' đấy! 🛑",
+                "Có thể bạn bị tụt đường huyết hoặc thiếu nước. Hãy uống một chút nước đường hoặc Oresol. Nếu không đỡ, hãy đi khám bác sĩ nhé."
             ]
         }
     ]

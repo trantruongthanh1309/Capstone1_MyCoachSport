@@ -16,6 +16,7 @@ from api.schedule_manager import schedule_bp
 from api.meals import meals_bp
 from api.newsfeed import newsfeed_bp
 from api.chatbot_local import chatbot_bp
+from api.smart_swap import smart_swap_bp
 
 from api.routes.admin_routes.users_admin import users_admin_bp
 from api.routes.admin_routes.dashboard_admin import dashboard_bp
@@ -50,10 +51,10 @@ Session(app)
 db.init_app(app)
 
 CORS(app, 
+     resources={r"/*": {"origins": "http://localhost:5173"}},
      supports_credentials=True, 
-     origins=["http://localhost:5173"],  # ← địa chỉ frontend của bạn
-     allow_headers=["Content-Type"],
-     methods=["GET", "POST", "OPTIONS"])
+     allow_headers=["Content-Type", "Authorization"],
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
 
 # Hàm kiểm tra kết nối cơ sở dữ liệu
@@ -92,9 +93,17 @@ app.register_blueprint(meals_admin_bp)
 app.register_blueprint(workouts_admin_bp)
 app.register_blueprint(posts_admin_bp)
 app.register_blueprint(feedback_bp)
-app.register_blueprint(meals_bp, url_prefix='/api')
+app.register_blueprint(meals_bp, url_prefix='/api/meals')
 app.register_blueprint(newsfeed_bp, url_prefix='/api/newsfeed')
 app.register_blueprint(chatbot_bp, url_prefix='/api/bot')
+app.register_blueprint(smart_swap_bp, url_prefix='/api/smart-swap')
+
+from api.notifications import notifications_bp
+app.register_blueprint(notifications_bp, url_prefix='/api/notifications')
 
 if __name__ == "__main__":
-    app.run(debug=False)
+    # Khởi chạy Scheduler (Thông báo & Email)
+    from services.scheduler import start_scheduler
+    start_scheduler(app)
+
+    app.run(debug=True, port=5000)

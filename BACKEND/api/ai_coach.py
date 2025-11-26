@@ -1,5 +1,5 @@
 # api/ai_coach.py
-from flask import Blueprint, request, jsonify,session
+from flask import Blueprint, request, jsonify, session
 from datetime import datetime
 from services.recommendation_service import build_daily_schedule
 from db import db
@@ -77,21 +77,28 @@ def swap_schedule_item():
             return jsonify({"success": False, "error": "Missing required fields"}), 400
         
         if item_type == "meal":
-            # Lấy thông tin meal cũ để biết MealType
-            old_meal_query = text("""
-                SELECT MealType FROM dbo.Meals WHERE Id = :meal_id
+            # Lấy thông tin meal cũ từ schedule để biết Period (time slot)
+            old_schedule_query = text("""
+                SELECT Period FROM dbo.UserSchedule 
+                WHERE User_id = :user_id 
+                AND Date = :date 
+                AND MealId = :meal_id
             """)
-            old_meal = db.session.execute(old_meal_query, {"meal_id": old_item_id}).fetchone()
+            old_schedule = db.session.execute(old_schedule_query, {
+                "user_id": user_id,
+                "date": date,
+                "meal_id": old_item_id
+            }).fetchone()
             
-            if not old_meal:
-                return jsonify({"success": False, "error": "Old meal not found"}), 404
+            if not old_schedule:
+                return jsonify({"success": False, "error": "Old meal not found in schedule"}), 404
             
-            meal_type = old_meal[0]
+            period = old_schedule[0]
             
             # Xóa meal cũ khỏi schedule
             delete_query = text("""
                 DELETE FROM dbo.UserSchedule 
-                WHERE UserId = :user_id 
+                WHERE User_id = :user_id 
                 AND Date = :date 
                 AND MealId = :meal_id
             """)
@@ -103,21 +110,21 @@ def swap_schedule_item():
             
             # Thêm meal mới vào schedule
             insert_query = text("""
-                INSERT INTO dbo.UserSchedule (UserId, Date, MealId, MealType)
-                VALUES (:user_id, :date, :meal_id, :meal_type)
+                INSERT INTO dbo.UserSchedule (User_id, Date, MealId, Period)
+                VALUES (:user_id, :date, :meal_id, :period)
             """)
             db.session.execute(insert_query, {
                 "user_id": user_id,
                 "date": date,
                 "meal_id": new_item_id,
-                "meal_type": meal_type
+                "period": period
             })
             
         elif item_type == "workout":
-            # Lấy thông tin workout cũ để biết time slot
+            # Lấy thông tin workout cũ để biết Period (time slot)
             old_workout_query = text("""
-                SELECT TimeSlot FROM dbo.UserSchedule 
-                WHERE UserId = :user_id 
+                SELECT Period FROM dbo.UserSchedule 
+                WHERE User_id = :user_id 
                 AND Date = :date 
                 AND WorkoutId = :workout_id
             """)
@@ -130,12 +137,12 @@ def swap_schedule_item():
             if not old_workout:
                 return jsonify({"success": False, "error": "Old workout not found"}), 404
             
-            time_slot = old_workout[0]
+            period = old_workout[0]
             
             # Xóa workout cũ
             delete_query = text("""
                 DELETE FROM dbo.UserSchedule 
-                WHERE UserId = :user_id 
+                WHERE User_id = :user_id 
                 AND Date = :date 
                 AND WorkoutId = :workout_id
             """)
@@ -147,14 +154,14 @@ def swap_schedule_item():
             
             # Thêm workout mới
             insert_query = text("""
-                INSERT INTO dbo.UserSchedule (UserId, Date, WorkoutId, TimeSlot)
-                VALUES (:user_id, :date, :workout_id, :time_slot)
+                INSERT INTO dbo.UserSchedule (User_id, Date, WorkoutId, Period)
+                VALUES (:user_id, :date, :workout_id, :period)
             """)
             db.session.execute(insert_query, {
                 "user_id": user_id,
                 "date": date,
                 "workout_id": new_item_id,
-                "time_slot": time_slot
+                "period": period
             })
         else:
             return jsonify({"success": False, "error": "Invalid type"}), 400
