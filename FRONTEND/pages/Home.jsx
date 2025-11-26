@@ -60,13 +60,13 @@ export default function Home() {
     setLog((l) => [...l, { who: "you", text: content }]);
     setMsg("");
     try {
-      const r = await fetch(`${API_BASE}/chat`, {
+      const r = await fetch(`${API_BASE}/api/bot/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: content }),
       });
       const j = await r.json();
-      setLog((l) => [...l, { who: "bot", text: j.reply || "⚠️ Lỗi server" }]);
+      setLog((l) => [...l, { who: "bot", text: j.response || "⚠️ Lỗi server" }]);
     } catch {
       setLog((l) => [...l, { who: "bot", text: "❌ Backend error" }]);
     }
@@ -166,9 +166,8 @@ export default function Home() {
               {log.map((m, i) => (
                 <div
                   key={i}
-                  className={`${styles.msg} ${
-                    m.who === "you" ? styles.you : styles.bot
-                  }`}
+                  className={`${styles.msg} ${m.who === "you" ? styles.you : styles.bot
+                    }`}
                 >
                   {m.text}
                 </div>

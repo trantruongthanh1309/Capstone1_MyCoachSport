@@ -13,6 +13,7 @@ import Settings from "./pages/Settings";
 import NewsFeed from "./pages/NewsFeed";
 import AdminLayout from "./admin/pages/AdminLayout";
 import { AdminRoute } from "./admin/components/ProtectedRoute";
+import { ToastProvider } from "./contexts/ToastContext";
 
 
 export default function App() {
@@ -22,36 +23,38 @@ export default function App() {
   const hideNavbar = location.pathname === "/" || location.pathname.startsWith("/admin");
 
   return (
-    <div className="app-container">
-      {!hideNavbar && <Navbar />}
-      <div className="main-content">
-        <Routes>
-          {/* Public */}
-          <Route path="/" element={<Login />} />
+    <ToastProvider>
+      <div className="app-container">
+        {!hideNavbar && <Navbar />}
+        <div className="main-content">
+          <Routes>
+            {/* Public */}
+            <Route path="/" element={<Login />} />
 
-          {/* User Pages */}
-          <Route path="/home" element={<Home />} />
-          <Route path="/planner" element={<Planner />} />
-          <Route path="/schedule-manager" element={<WorkScheduleManager />} />
-          <Route path="/logs" element={<Logs />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/leaderboard" element={<Leaderboard />} />
-          <Route path="/social" element={<Social />} />
-          <Route path="/newsfeed" element={<NewsFeed />} />
-          <Route path="/videos" element={<Videos />} />
-          <Route path="/settings" element={<Settings />} />
+            {/* User Pages */}
+            <Route path="/home" element={<Home />} />
+            <Route path="/planner" element={<Planner />} />
+            <Route path="/schedule-manager" element={<WorkScheduleManager />} />
+            <Route path="/logs" element={<Logs />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/social" element={<Social />} />
+            <Route path="/newsfeed" element={<NewsFeed />} />
+            <Route path="/videos" element={<Videos />} />
+            <Route path="/settings" element={<Settings />} />
 
-          {/* Admin Pages - Protected */}
-          <Route
-            path="/admin/*"
-            element={
-              <AdminRoute>
-                <AdminLayout />
-              </AdminRoute>
-            }
-          />
-        </Routes>
+            {/* Admin Pages - Protected */}
+            <Route
+              path="/admin/*"
+              element={
+                <AdminRoute>
+                  <AdminLayout />
+                </AdminRoute>
+              }
+            />
+          </Routes>
+        </div>
       </div>
-    </div>
+    </ToastProvider>
   );
 }

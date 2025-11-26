@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import "./WorkScheduleManager.css";
+import { useToast } from "../contexts/ToastContext";
 
 export default function WorkScheduleManager() {
+  const toast = useToast();
   const [schedule, setSchedule] = useState({
     mon: { morning: "", afternoon: "", evening: "" },
     tue: { morning: "", afternoon: "", evening: "" },
@@ -14,19 +16,18 @@ export default function WorkScheduleManager() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  
-  const dayNames = {
-   sun: "Thứ 2",
-    mon: "Thứ 3",
-tue: "Thứ 4",
-wed: "Thứ 5",
-thu: "Thứ 6",
-fri: "Thứ 7",
-sat: "Chủ nhật",
 
+  const dayNames = {
+    sun: "Thứ 2",
+    mon: "Thứ 3",
+    tue: "Thứ 4",
+    wed: "Thứ 5",
+    thu: "Thứ 6",
+    fri: "Thứ 7",
+    sat: "Chủ nhật",
 
   };
-  
+
   const dayIcons = {
     fri: "",
     sat: "",
@@ -36,14 +37,14 @@ sat: "Chủ nhật",
     wed: "",
     thu: "",
   };
-  
+
   const periods = ["morning", "afternoon", "evening"];
   const periodLabels = {
     morning: "Buổi sáng",
     afternoon: "Buổi trưa",
     evening: "Buổi tối",
   };
-  
+
   const periodIcons = {
     morning: "🌅",
     afternoon: "☀️",
@@ -72,7 +73,7 @@ sat: "Chủ nhật",
         setIsLoading(false);
       })
       .catch((err) => {
-        alert("Lỗi tải lịch");
+        toast.error("Lỗi tải lịch");
         setIsLoading(false);
       });
   }, []);
@@ -97,13 +98,13 @@ sat: "Chủ nhật",
         const btn = document.querySelector('.save-btn');
         btn?.classList.add('success-pulse');
         setTimeout(() => {
-          alert("✅ Lưu lịch thành công!");
+          toast.success("✅ Lưu lịch thành công!");
         }, 500);
       } else {
-        alert("❌ Lỗi khi lưu lịch");
+        toast.error("❌ Lỗi khi lưu lịch");
       }
     } catch (err) {
-      alert("Không thể kết nối đến máy chủ");
+      toast.error("Không thể kết nối đến máy chủ");
     } finally {
       setIsSaving(false);
     }
@@ -123,7 +124,7 @@ sat: "Chủ nhật",
   return (
     <div className="schedule-manager">
       <div className="animated-bg"></div>
-      
+
       <div className="header-section">
         <div className="header-icon-wrapper">
           <span className="header-icon">📅</span>
@@ -191,8 +192,8 @@ sat: "Chủ nhật",
       </div>
 
       <div className="action-section">
-        <button 
-          onClick={handleSave} 
+        <button
+          onClick={handleSave}
           className={`save-btn ${isSaving ? 'saving' : ''}`}
           disabled={isSaving}
         >
@@ -204,9 +205,9 @@ sat: "Chủ nhật",
           ) : (
             <>
               <svg className="btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16L21 8V19C21 20.1046 20.1046 21 19 21Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M17 21V13H7V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M7 3V8H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16L21 8V19C21 20.1046 20.1046 21 19 21Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M17 21V13H7V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M7 3V8H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               <span>Lưu Lịch Làm Việc</span>
             </>

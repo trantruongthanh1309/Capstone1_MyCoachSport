@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import "./Planner.css";
 import "./PlannerEnhanced.css";
 import SwapButton from "../components/SwapButton";
+import { useToast } from "../contexts/ToastContext";
 
 export default function Planner() {
   const [weeklyPlan, setWeeklyPlan] = useState({});
@@ -9,6 +10,7 @@ export default function Planner() {
   const [error, setError] = useState("");
   const [showDetail, setShowDetail] = useState(false);
   const [detailItem, setDetailItem] = useState(null);
+  const toast = useToast();
 
   // ✅ DÙNG USER_ID THẬT CỦA BẠN
   const currentUser = { id: 18 };
@@ -75,7 +77,7 @@ export default function Planner() {
       });
       fetchWeeklyPlan();
     } catch (err) {
-      alert("Gửi phản hồi thất bại.");
+      toast.error("Gửi phản hồi thất bại.");
     }
   };
 
@@ -187,7 +189,7 @@ export default function Planner() {
                               >
                                 ℹ️
                               </button>
-                              <SwapButton item={{ ...mealItem, date }} type="meal" onSwapSuccess={fetchWeeklyPlan} />
+                              <SwapButton item={{ ...mealItem, date }} type="meal" userId={currentUser.id} onSwapSuccess={fetchWeeklyPlan} />
                             </div>
                           </div>
                         ) : (
@@ -267,7 +269,7 @@ export default function Planner() {
                             >
                               ℹ️
                             </button>
-                            <SwapButton item={{ ...workoutItem, date }} type="workout" onSwapSuccess={fetchWeeklyPlan} />
+                            <SwapButton item={{ ...workoutItem, date }} type="workout" userId={currentUser.id} onSwapSuccess={fetchWeeklyPlan} />
                           </div>
                         </div>
                       ) : (
@@ -320,7 +322,7 @@ export default function Planner() {
                             >
                               ℹ️
                             </button>
-                            <SwapButton item={{ ...workoutItem, date }} type="workout" onSwapSuccess={fetchWeeklyPlan} />
+                            <SwapButton item={{ ...workoutItem, date }} type="workout" userId={currentUser.id} onSwapSuccess={fetchWeeklyPlan} />
                           </div>
                         </div>
                       ) : (

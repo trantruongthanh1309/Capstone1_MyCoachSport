@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import "./Profile.css";
+import { useToast } from "../contexts/ToastContext";
 
 export default function Profile() {
+  const toast = useToast();
   const [userId, setUserId] = useState(localStorage.getItem("user_id") || "");
   const [profile, setProfile] = useState({
     name: "Người Dùng",
@@ -49,15 +51,15 @@ export default function Profile() {
     console.log("Lưu hồ sơ đang được gọi...");
 
     if (!userId || userId === "null" || userId === "undefined") {
-      alert("❌ Không tìm thấy user_id. Vui lòng nhập ID hoặc đăng nhập.");
+      toast.error("❌ Không tìm thấy user_id. Vui lòng nhập ID hoặc đăng nhập.");
       return;
     }
 
     const sessions = profile.activity.includes("6-7")
       ? 6
       : profile.activity.includes("1-2")
-      ? 2
-      : 4;
+        ? 2
+        : 4;
 
     console.log("Saving profile with data:", profile);
 
@@ -84,12 +86,12 @@ export default function Profile() {
       })
       .then((data) => {
         console.log("✅ Kết quả từ server:", data);
-        alert(data.message || "✅ Hồ sơ đã được lưu!");
+        toast.success(data.message || "✅ Hồ sơ đã được lưu!");
         setIsEditing(false);
       })
       .catch((err) => {
         console.error("❌ Lỗi khi gửi request:", err);
-        alert("❌ Có lỗi xảy ra khi lưu hồ sơ.");
+        toast.error("❌ Có lỗi xảy ra khi lưu hồ sơ.");
       });
   };
 
@@ -100,7 +102,7 @@ export default function Profile() {
       6.25 * profile.height -
       5 * profile.age +
       (profile.sex === "Nam" ? 5 : -161)) *
-      1.55
+    1.55
   );
 
   const getBMICategory = (bmi) => {
@@ -115,7 +117,7 @@ export default function Profile() {
   return (
     <div className="profile-wrapper">
       <div className="profile-container">
-        
+
         {/* Cột trái - Form */}
         <div className="profile-left">
           <div className="profile-header">
@@ -126,11 +128,11 @@ export default function Profile() {
           {/* Avatar */}
           <div className="avatar-section">
             <div className="avatar-box">
-              <img 
-                
+              <img
+
                 src="https://scontent.fdad3-6.fna.fbcdn.net/v/t39.30808-6/502146546_1398928527897385_7313017022900260020_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeH4YsIHxcYTMqx2z1giIot1-wWF3OqloOX7BYXc6qWg5djHXbAsMzwKd7ZNYlGPlStCnZjUBYnvCCQAKtMEliqS&_nc_ohc=mDibpFMF-hAQ7kNvwFnj7gZ&_nc_oc=AdlrVnC7KepvDk-8dc3WSouO7dp_CvLKA3RnKOYiuJbv7yZdMKv0udKzHf7nRBK_jetdXBwOmAPmPQCzke3siUN1&_nc_zt=23&_nc_ht=scontent.fdad3-6.fna&_nc_gid=HVl7nfmhRBwnwoq09Z2-_g&oh=00_AfifDlVn8smWIsDLmmLqfZSBOBENrEVhVUM4NBwYcxAwKA&oe=690D6F68"
-                alt="Avatar" 
-                className="avatar" 
+                alt="Avatar"
+                className="avatar"
               />
               <div className="avatar-ring"></div>
             </div>
@@ -140,7 +142,7 @@ export default function Profile() {
 
           {/* Form */}
           <div className="form-section">
-            
+
             {/* User ID */}
             <div className="form-group">
               <label className="form-label">
@@ -343,8 +345,8 @@ export default function Profile() {
             </div>
             <div className="bmi-scale">
               <div className="bmi-bar">
-                <div 
-                  className="bmi-indicator" 
+                <div
+                  className="bmi-indicator"
                   style={{ left: `${Math.min(Math.max((parseFloat(bmi) / 40) * 100, 0), 100)}%` }}
                 ></div>
               </div>

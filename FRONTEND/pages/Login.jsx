@@ -8,48 +8,48 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (!email || !pw) {
-    setMessage("Vui lòng điền đầy đủ thông tin!");
-    return;
-  }
-
-  setLoading(true);
-  setMessage("");
-
-  try {
-    const response = await fetch("http://localhost:5000/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ email, password: pw }),
-    });
-
-    const result = await response.json();
-    setLoading(false);
-
-    if (response.ok && result.success) {
-      // ✅ LƯU VÀO SESSIONSTORAGE
-      sessionStorage.setItem('user_id', result.user_id);
-      sessionStorage.setItem('role', result.role);
-      sessionStorage.setItem('isLoggedIn', 'true');
-
-      console.log('✅ Login success - Role:', result.role);
-
-      // ✅ REDIRECT DỰA VÀO ROLE
-      if (result.role === 'admin' || result.role === 'manager') {
-        window.location.href = "/admin";
-      } else {
-        window.location.href = "/home";
-      }
-    } else {
-      setMessage(result.error || result.message || "Đăng nhập thất bại!");
+    e.preventDefault();
+    if (!email || !pw) {
+      setMessage("Vui lòng điền đầy đủ thông tin!");
+      return;
     }
-  } catch (err) {
-    setLoading(false);
-    setMessage("Lỗi kết nối server");
-  }
-};
+
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password: pw }),
+      });
+
+      const result = await response.json();
+      setLoading(false);
+
+      if (response.ok && result.success) {
+        // ✅ LƯU VÀO LOCALSTORAGE
+        localStorage.setItem('user_id', result.user_id);
+        localStorage.setItem('role', result.role);
+        localStorage.setItem('isLoggedIn', 'true');
+
+        console.log('✅ Login success - Role:', result.role);
+
+        // ✅ REDIRECT DỰA VÀO ROLE
+        if (result.role === 'admin' || result.role === 'manager') {
+          window.location.href = "/admin";
+        } else {
+          window.location.href = "/home";
+        }
+      } else {
+        setMessage(result.error || result.message || "Đăng nhập thất bại!");
+      }
+    } catch (err) {
+      setLoading(false);
+      setMessage("Lỗi kết nối server");
+    }
+  };
 
   return (
     <>

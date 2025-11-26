@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import "./Logs.css";
+import { useToast } from "../contexts/ToastContext";
 
 export default function Logs() {
+  const toast = useToast();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -68,14 +70,14 @@ export default function Logs() {
     try {
       const res = await axios.post(`${API_URL}/create`, newLog, { withCredentials: true });
       if (res.data.success) {
-        alert("✅ Đã lưu log thành công!");
+        toast.success("✅ Đã lưu log thành công!");
         resetForm();
         fetchLogs(); // Reload logs
       } else {
-        alert("❌ Lỗi: " + res.data.error);
+        toast.error("❌ Lỗi: " + res.data.error);
       }
     } catch (err) {
-      alert("❌ Lỗi kết nối: " + err.message);
+      toast.error("❌ Lỗi kết nối: " + err.message);
     }
   };
 

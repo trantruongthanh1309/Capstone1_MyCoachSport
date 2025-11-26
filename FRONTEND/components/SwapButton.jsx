@@ -1,52 +1,65 @@
 import { useState } from "react";
+import { useToast } from "../contexts/ToastContext";
 import "../pages/PlannerEnhanced.css";
 
 /**
- * SwapButton Component - Nút đổi món ăn/bài tập TỰ ĐỘNG
- * Tìm món có calo/intensity tương tự và đổi ngay
+ * SwapButton Component - Nút đổi món ăn/bài tập THÔNG MINH
+ * Sử dụng AI scoring dựa trên profile user, sport tags, meal type
  */
-export default function SwapButton({ item, type, onSwapSuccess }) {
+export default function SwapButton({ item, type, onSwapSuccess, userId }) {
     const [swapping, setSwapping] = useState(false);
+    const toast = useToast();
 
     const handleSwap = async () => {
         setSwapping(true);
 
         try {
-            // Bước 1: Tìm món thay thế tự động
-            let endpoint = "";
-            let currentValue = 0;
+            // Bước 1: Gọi API smart swap để lấy đề xuất thông minh
+            let suggestEndpoint = "";
+            let payload = {};
 
             if (type === "meal") {
-                currentValue = item.data.Kcal || 0;
-                // Tìm món có calo tương tự (±50 kcal)
-                const minKcal = currentValue - 50;
-                const maxKcal = currentValue + 50;
-                endpoint = `http://localhost:5000/api/meals?meal_type=${item.data.MealType}&min_kcal=${minKcal}&max_kcal=${maxKcal}`;
+                suggestEndpoint = "http://localhost:5000/api/smart-swap/suggest-meal";
+                payload = {
+                    user_id: userId,
+                    current_meal_id: item.data.Id,
+                    time_slot: item.data.MealType  // morning, afternoon, evening
+                };
             } else {
-                // Tìm bài tập cùng intensity
-                endpoint = `http://localhost:5000/api/workouts?intensity=${item.data.Intensity}`;
+                suggestEndpoint = "http://localhost:5000/api/smart-swap/suggest-workout";
+                payload = {
+                    user_id: userId,
+                    current_workout_id: item.data.Id
+                };
             }
 
-            const res = await fetch(endpoint, { credentials: "include" });
-            const data = await res.json();
+            const suggestRes = await fetch(suggestEndpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+                credentials: "include"
+            });
 
-            // Lọc bỏ món hiện tại và chọn ngẫu nhiên 1 món
-            const alternatives = data.filter(option => option.Id !== item.data.Id);
+            if (!suggestRes.ok) {
+                throw new Error("Failed to get suggestions");
+            }
 
-            if (alternatives.length === 0) {
-                alert("❌ Không tìm thấy món thay thế phù hợp!");
+            const suggestData = await suggestRes.json();
+            const suggestions = suggestData.suggestions || [];
+
+            if (suggestions.length === 0) {
+                toast.error("Không tìm thấy món thay thế phù hợp với profile của bạn!");
                 setSwapping(false);
                 return;
             }
 
-            // Chọn ngẫu nhiên 1 món
-            const randomIndex = Math.floor(Math.random() * alternatives.length);
-            const selectedOption = alternatives[randomIndex];
+            // Chọn món có score cao nhất (đã được sort từ backend)
+            const selectedOption = suggestions[0];
 
             // Bước 2: Gọi API swap
             const swapEndpoint = "http://localhost:5000/api/ai/swap";
-            const payload = {
-                user_id: 18, // TODO: Lấy từ context/props
+            const swapPayload = {
+                user_id: userId,
                 date: item.date,
                 old_item_id: item.data.Id,
                 new_item_id: selectedOption.Id,
@@ -56,32 +69,39 @@ export default function SwapButton({ item, type, onSwapSuccess }) {
             const swapRes = await fetch(swapEndpoint, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
+                body: JSON.stringify(swapPayload),
                 credentials: "include"
             });
 
             if (swapRes.ok) {
                 // Thông báo thành công với thông tin món mới
                 if (type === "meal") {
-                    alert(`✅ Đã đổi thành công!\n\n` +
+                    const kcalDiff = selectedOption.kcal_diff || Math.abs(selectedOption.Kcal - item.data.Kcal);
+                    const message = `Đã đổi thành công!\n\n` +
                         `Món cũ: ${item.data.Name} (${item.data.Kcal} kcal)\n` +
                         `Món mới: ${selectedOption.Name} (${selectedOption.Kcal} kcal)\n\n` +
-                        `Chênh lệch: ${Math.abs(selectedOption.Kcal - item.data.Kcal)} kcal`);
+                        `Chênh lệch: ${kcalDiff} kcal\n` +
+                        `Score phù hợp: ${selectedOption.score}/100`;
+                    toast.success(message, 5000);
                 } else {
-                    alert(`✅ Đã đổi thành công!\n\n` +
+                    const message = `Đã đổi thành công!\n\n` +
                         `Bài tập cũ: ${item.data.Name}\n` +
                         `Bài tập mới: ${selectedOption.Name}\n` +
-                        `Cùng cường độ: ${selectedOption.Intensity}`);
+                        `Cùng cường độ: ${selectedOption.Intensity}\n` +
+                        `Score phù hợp: ${selectedOption.score}/100`;
+                    toast.success(message, 5000);
                 }
 
                 // Reload lịch
                 if (onSwapSuccess) onSwapSuccess();
             } else {
-                throw new Error("Swap failed");
+                const errorData = await swapRes.json();
+                console.error("Swap API error:", errorData);
+                toast.error(`Đổi món thất bại: ${errorData.error || 'Unknown error'}`);
             }
         } catch (error) {
             console.error("Error swapping:", error);
-            alert("❌ Đổi món thất bại. Vui lòng thử lại!");
+            toast.error(`Đổi món thất bại: ${error.message}`);
         } finally {
             setSwapping(false);
         }
@@ -91,7 +111,7 @@ export default function SwapButton({ item, type, onSwapSuccess }) {
         <button
             className={`action-btn swap-btn ${swapping ? 'swapping' : ''}`}
             onClick={handleSwap}
-            title={type === "meal" ? "Đổi món có calo tương tự" : "Đổi bài tập cùng cường độ"}
+            title={type === "meal" ? "Đổi món thông minh theo profile" : "Đổi bài tập phù hợp"}
             disabled={swapping}
         >
             {swapping ? '⏳' : '🔄'}
