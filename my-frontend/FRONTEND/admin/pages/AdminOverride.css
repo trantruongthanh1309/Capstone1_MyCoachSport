@@ -1,0 +1,62 @@
+/* Admin Pages Override - Fix layout to spread content evenly */
+
+/* Apply to all admin page containers */
+.admin-users,
+.admin-dashboard,
+.admin-posts,
+.admin-meals,
+.admin-workouts,
+.admin-feedback,
+.admin-settings {
+    padding: 5px !important;
+    padding-left: 10px !important;
+    padding-right: 5px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    overflow-x: hidden !important;
+}
+
+/* Ensure tables and containers take full width */
+.users-table-container,
+.dashboard-container,
+.posts-container,
+.meals-container,
+.stats-grid,
+.charts-section {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-sizing: border-box !important;
+}
+
+/* Adjust table container border radius to not create gaps */
+.users-table-container {
+    border-radius: 15px !important;
+}
+
+/* Make sure the table itself is full width */
+.users-table {
+    width: 100% !important;
+    table-layout: auto !important;
+}
+
+/* Ensure filters bar takes full width */
+.filters-bar {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    margin-right: 0 !important;
+}
+
+/* Headers should also be full width */
+.users-header,
+.dashboard-header {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-sizing: border-box !important;
+}

@@ -12,7 +12,7 @@ node_modules/
 dist
 dist-ssr
 *.local
-my-frontend/
+
 
 # Flask session
 flask_session/

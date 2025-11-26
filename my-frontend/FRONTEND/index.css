@@ -1,0 +1,121 @@
+header {
+  position: sticky;
+  top: 0;
+  background: #111;
+  color: #fff;
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header .logo {
+  color: #00b4d8;
+  font-weight: bold;
+}
+
+header nav a {
+  color: #fff;
+  text-decoration: none;
+  margin-left: 16px;
+}
+
+header nav a:hover {
+  color: #ffba08;
+}
+
+main {
+  max-width: 960px;
+  margin: 24px auto;
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  align-items: center;
+}
+
+.clock {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.date {
+  opacity: 0.8;
+}
+
+.weather {
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.chat {
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 680px;
+}
+
+.chat h3 { margin: 0 0 10px; }
+
+.chatBody {
+  height: 200px;
+  overflow-y: auto;
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.msg {
+  max-width: 75%;
+  padding: 8px 12px;
+  border-radius: 12px;
+}
+
+.msg.you {
+  align-self: flex-end;
+  background: #00b4d8;
+  color: #fff;
+}
+
+.msg.bot {
+  align-self: flex-start;
+  background: #eee;
+}
+
+.chatSend {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.chatSend input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+}
+
+.chatSend button {
+  background: #ffba08;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+footer {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
