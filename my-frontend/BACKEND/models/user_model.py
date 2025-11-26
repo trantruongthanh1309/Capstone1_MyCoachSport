@@ -18,3 +18,10 @@ class User(db.Model):
     # Thêm 2 cột mới cho AI
     WorkSchedule = db.Column(db.Text)          # JSON string
     DislikedIngredients = db.Column(db.Text)   # JSON string
+    
+    # Settings fields
+    Avatar = db.Column(db.Text)                # Base64 encoded image or URL
+    Bio = db.Column(db.Text)                   # User bio/description
+    Preferences = db.Column(db.Text)           # JSON: theme, language, notifications
+    Privacy = db.Column(db.Text)               # JSON: privacy settings
+    NotificationSettings = db.Column(db.Text)  # JSON: notification preferences

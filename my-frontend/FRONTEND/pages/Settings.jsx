@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import "./Settings.css";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
 export default function Settings() {
   // Profile Settings
   const [profile, setProfile] = useState({
@@ -47,21 +49,49 @@ export default function Settings() {
   const [activeTab, setActiveTab] = useState("profile");
   const [showSaveAlert, setShowSaveAlert] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Load settings from localStorage
-    const savedProfile = localStorage.getItem("user_profile");
-    const savedPrefs = localStorage.getItem("user_preferences");
-    const savedPrivacy = localStorage.getItem("user_privacy");
-    const savedWorkout = localStorage.getItem("workout_settings");
-    const savedNutrition = localStorage.getItem("nutrition_settings");
-
-    if (savedProfile) setProfile(JSON.parse(savedProfile));
-    if (savedPrefs) setPreferences(JSON.parse(savedPrefs));
-    if (savedPrivacy) setPrivacy(JSON.parse(savedPrivacy));
-    if (savedWorkout) setWorkoutSettings(JSON.parse(savedWorkout));
-    if (savedNutrition) setNutritionSettings(JSON.parse(savedNutrition));
+    // Load settings from backend
+    loadSettings();
   }, []);
+
+  const loadSettings = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/api/settings`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Không thể tải settings');
+      }
+
+      const data = await response.json();
+
+      setProfile(data.profile || profile);
+      setPreferences(data.preferences || preferences);
+      setPrivacy(data.privacy || privacy);
+      setWorkoutSettings(data.workoutSettings || workoutSettings);
+      setNutritionSettings(data.nutritionSettings || nutritionSettings);
+
+      if (data.profile?.avatar) {
+        setAvatarPreview(data.profile.avatar);
+      }
+
+      setError(null);
+    } catch (err) {
+      console.error('Error loading settings:', err);
+      setError('Không thể tải cài đặt. Vui lòng thử lại.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
@@ -75,40 +105,117 @@ export default function Settings() {
     }
   };
 
-  const handleSaveAll = () => {
-    localStorage.setItem("user_profile", JSON.stringify(profile));
-    localStorage.setItem("user_preferences", JSON.stringify(preferences));
-    localStorage.setItem("user_privacy", JSON.stringify(privacy));
-    localStorage.setItem("workout_settings", JSON.stringify(workoutSettings));
-    localStorage.setItem("nutrition_settings", JSON.stringify(nutritionSettings));
+  const handleSaveAll = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/settings`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          profile,
+          preferences,
+          privacy,
+          workoutSettings,
+          nutritionSettings,
+        }),
+      });
 
-    setShowSaveAlert(true);
-    setTimeout(() => setShowSaveAlert(false), 3000);
-  };
+      if (!response.ok) {
+        throw new Error('Không thể lưu settings');
+      }
 
-  const handleResetSettings = () => {
-    if (confirm("Bạn có chắc muốn đặt lại tất cả cài đặt về mặc định?")) {
-      localStorage.clear();
-      window.location.reload();
+      const data = await response.json();
+
+      setShowSaveAlert(true);
+      setTimeout(() => setShowSaveAlert(false), 3000);
+
+      console.log('✅ Settings saved:', data);
+    } catch (err) {
+      console.error('Error saving settings:', err);
+      alert('Không thể lưu cài đặt. Vui lòng thử lại.');
     }
   };
 
-  const handleExportData = () => {
-    const allData = {
-      profile,
-      preferences,
-      privacy,
-      workoutSettings,
-      nutritionSettings,
-    };
-    const dataStr = JSON.stringify(allData, null, 2);
-    const dataBlob = new Blob([dataStr], { type: "application/json" });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `mysportcoach-settings-${Date.now()}.json`;
-    link.click();
+  const handleResetSettings = async () => {
+    if (confirm("Bạn có chắc muốn đặt lại tất cả cài đặt về mặc định?")) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/settings/reset`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Không thể reset settings');
+        }
+
+        // Reload settings from server
+        await loadSettings();
+
+        alert('Đã đặt lại cài đặt về mặc định!');
+      } catch (err) {
+        console.error('Error resetting settings:', err);
+        alert('Không thể đặt lại cài đặt. Vui lòng thử lại.');
+      }
+    }
   };
+
+  const handleExportData = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/settings/export`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Không thể xuất dữ liệu');
+      }
+
+      const data = await response.json();
+      const dataStr = JSON.stringify(data, null, 2);
+      const dataBlob = new Blob([dataStr], { type: "application/json" });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `mysportcoach-settings-${Date.now()}.json`;
+      link.click();
+    } catch (err) {
+      console.error('Error exporting data:', err);
+      alert('Không thể xuất dữ liệu. Vui lòng thử lại.');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="settings-page">
+        <div className="loading-container" style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '400px',
+          gap: '1rem'
+        }}>
+          <div className="spinner" style={{
+            width: '50px',
+            height: '50px',
+            border: '4px solid #f3f3f3',
+            borderTop: '4px solid #6366f1',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }}></div>
+          <p>Đang tải cài đặt...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="settings-page">
@@ -132,6 +239,19 @@ export default function Settings() {
         <div className="save-alert">
           <span className="alert-icon">✅</span>
           Đã lưu thành công!
+        </div>
+      )}
+
+      {/* Error Alert */}
+      {error && (
+        <div className="error-alert" style={{
+          background: '#fee',
+          color: '#c33',
+          padding: '1rem',
+          borderRadius: '8px',
+          margin: '1rem 0'
+        }}>
+          <span>⚠️</span> {error}
         </div>
       )}
 
