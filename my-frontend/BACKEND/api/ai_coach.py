@@ -3,7 +3,7 @@ from flask import Blueprint, request, jsonify, session
 from datetime import datetime
 from services.recommendation_service import build_daily_schedule
 from db import db
-from models import Log
+from models import Log, UserPlan, Meal, Workout
 from sqlalchemy import text
 
 ai_coach_bp = Blueprint('ai_coach', __name__)
@@ -13,11 +13,11 @@ def get_schedule():
     if 'user_id' not in session:
         return jsonify({"error": "Chưa đăng nhập"}), 401
     
-    user_id = session['user_id']  # ← LẤY TỪ SESSION
+    user_id = session['user_id']
     date = request.args.get('date', '2025-10-18')
     
     try:
-        schedule = build_daily_schedule(user_id, date)  # ← TRUYỀN user_id
+        schedule = build_daily_schedule(user_id, date)
         return jsonify(schedule)
     except Exception as e:
         print("Lỗi AI:", str(e))
@@ -27,7 +27,6 @@ def get_schedule():
 @ai_coach_bp.route('/feedback', methods=['POST'])
 def submit_feedback():
     try:
-        
         data = request.get_json()
         user_id = data.get('user_id')
         meal_id = data.get('meal_id')
@@ -63,7 +62,7 @@ def submit_feedback():
 @ai_coach_bp.route('/swap', methods=['POST'])
 def swap_schedule_item():
     """
-    Swap một món ăn hoặc bài tập trong lịch trình
+    Swap một món ăn hoặc bài tập trong lịch trình (Sử dụng bảng UserPlans)
     """
     try:
         data = request.json
@@ -75,108 +74,123 @@ def swap_schedule_item():
         
         if not all([user_id, date, old_item_id, new_item_id, item_type]):
             return jsonify({"success": False, "error": "Missing required fields"}), 400
+            
+        # Chuyển đổi date string sang object nếu cần
+        try:
+            date_obj = datetime.strptime(date, "%Y-%m-%d").date()
+        except:
+            return jsonify({"success": False, "error": "Invalid date format"}), 400
         
         if item_type == "meal":
-            # Lấy thông tin meal cũ từ schedule để biết Period (time slot)
-            old_schedule_query = text("""
-                SELECT Period FROM dbo.UserSchedule 
-                WHERE User_id = :user_id 
-                AND Date = :date 
-                AND MealId = :meal_id
-            """)
-            old_schedule = db.session.execute(old_schedule_query, {
-                "user_id": user_id,
-                "date": date,
-                "meal_id": old_item_id
-            }).fetchone()
+            # Tìm plan cũ trong UserPlans
+            plan = UserPlan.query.filter_by(
+                UserId=user_id, 
+                Date=date_obj,
+                MealId=old_item_id
+            ).first()
             
-            if not old_schedule:
+            if not plan:
                 return jsonify({"success": False, "error": "Old meal not found in schedule"}), 404
             
-            period = old_schedule[0]
+            # Cập nhật sang món mới
+            plan.MealId = new_item_id
+            db.session.commit()
             
-            # Xóa meal cũ khỏi schedule
-            delete_query = text("""
-                DELETE FROM dbo.UserSchedule 
-                WHERE User_id = :user_id 
-                AND Date = :date 
-                AND MealId = :meal_id
-            """)
-            db.session.execute(delete_query, {
-                "user_id": user_id,
-                "date": date,
-                "meal_id": old_item_id
-            })
-            
-            # Thêm meal mới vào schedule
-            insert_query = text("""
-                INSERT INTO dbo.UserSchedule (User_id, Date, MealId, Period)
-                VALUES (:user_id, :date, :meal_id, :period)
-            """)
-            db.session.execute(insert_query, {
-                "user_id": user_id,
-                "date": date,
-                "meal_id": new_item_id,
-                "period": period
+            # Lấy thông tin món mới để trả về (optional)
+            new_meal = Meal.query.get(new_item_id)
+            return jsonify({
+                "success": True, 
+                "message": "Swapped meal successfully",
+                "new_item": {
+                    "Id": new_meal.Id,
+                    "Name": new_meal.Name,
+                    "Kcal": new_meal.Kcal,
+                    "Protein": new_meal.Protein,
+                    "Carb": new_meal.Carb,
+                    "Fat": new_meal.Fat,
+                    "Image": getattr(new_meal, 'Image', None)
+                } if new_meal else None
             })
             
         elif item_type == "workout":
-            # Lấy thông tin workout cũ để biết Period (time slot)
-            old_workout_query = text("""
-                SELECT Period FROM dbo.UserSchedule 
-                WHERE User_id = :user_id 
-                AND Date = :date 
-                AND WorkoutId = :workout_id
-            """)
-            old_workout = db.session.execute(old_workout_query, {
-                "user_id": user_id,
-                "date": date,
-                "workout_id": old_item_id
-            }).fetchone()
+            # Tìm plan cũ trong UserPlans
+            plan = UserPlan.query.filter_by(
+                UserId=user_id, 
+                Date=date_obj,
+                WorkoutId=old_item_id
+            ).first()
             
-            if not old_workout:
-                return jsonify({"success": False, "error": "Old workout not found"}), 404
+            if not plan:
+                return jsonify({"success": False, "error": "Old workout not found in schedule"}), 404
             
-            period = old_workout[0]
+            # Cập nhật sang bài tập mới
+            plan.WorkoutId = new_item_id
+            db.session.commit()
             
-            # Xóa workout cũ
-            delete_query = text("""
-                DELETE FROM dbo.UserSchedule 
-                WHERE User_id = :user_id 
-                AND Date = :date 
-                AND WorkoutId = :workout_id
-            """)
-            db.session.execute(delete_query, {
-                "user_id": user_id,
-                "date": date,
-                "workout_id": old_item_id
+            # Lấy thông tin bài tập mới để trả về
+            new_workout = Workout.query.get(new_item_id)
+            return jsonify({
+                "success": True, 
+                "message": "Swapped workout successfully",
+                "new_item": {
+                    "Id": new_workout.Id,
+                    "Name": new_workout.Name,
+                    "Duration_min": new_workout.Duration_min,
+                    "Intensity": new_workout.Intensity,
+                    "VideoUrl": getattr(new_workout, 'VideoUrl', None)
+                } if new_workout else None
             })
             
-            # Thêm workout mới
-            insert_query = text("""
-                INSERT INTO dbo.UserSchedule (User_id, Date, WorkoutId, Period)
-                VALUES (:user_id, :date, :workout_id, :period)
-            """)
-            db.session.execute(insert_query, {
-                "user_id": user_id,
-                "date": date,
-                "workout_id": new_item_id,
-                "period": period
-            })
-        else:
-            return jsonify({"success": False, "error": "Invalid type"}), 400
+        return jsonify({"success": False, "error": "Invalid item type"}), 400
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error swapping item: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@ai_coach_bp.route('/regenerate', methods=['POST'])
+def regenerate_schedule():
+    """
+    Force regenerate lịch khi user thay đổi Sport, Goal, hoặc Allergies
+    """
+    if 'user_id' not in session:
+        return jsonify({"error": "Chưa đăng nhập"}), 401
+    
+    try:
+        user_id = session['user_id']
+        data = request.json
+        date = data.get('date')
+        
+        if not date:
+            return jsonify({"success": False, "error": "Missing date"}), 400
+        
+        # Chuyển đổi date string sang object
+        try:
+            date_obj = datetime.strptime(date, "%Y-%m-%d").date()
+        except:
+            return jsonify({"success": False, "error": "Invalid date format"}), 400
+        
+        # Xóa lịch cũ
+        deleted_count = UserPlan.query.filter_by(
+            UserId=user_id,
+            Date=date_obj
+        ).delete()
         
         db.session.commit()
         
+        print(f"🔄 [REGENERATE] Deleted {deleted_count} old schedule items for user {user_id} on {date}")
+        
+        # Tạo lịch mới
+        schedule = build_daily_schedule(user_id, date)
+        
         return jsonify({
             "success": True,
-            "message": f"Successfully swapped {item_type}"
+            "message": f"Đã tạo lại lịch thành công! (Xóa {deleted_count} items cũ)",
+            "schedule": schedule
         })
         
     except Exception as e:
         db.session.rollback()
-        print(f"Error swapping item: {e}")
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
+        print(f"Error regenerating schedule: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500

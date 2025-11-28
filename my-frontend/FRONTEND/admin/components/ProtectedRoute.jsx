@@ -1,8 +1,8 @@
 import { Navigate } from 'react-router-dom';
 
 export function AdminRoute({ children }) {
-  const isLoggedIn = sessionStorage.getItem('isLoggedIn');
-  const userRole = sessionStorage.getItem('role');
+  const isLoggedIn = localStorage.getItem('isLoggedIn');
+  const userRole = localStorage.getItem('role');
 
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;

@@ -15,10 +15,11 @@ def parse_list(json_str):
     except:
         return []
 
-def score_meal_for_swap(meal, user, current_meal_kcal, time_slot):
+def score_meal_for_swap(meal, user, current_meal_kcal, current_meal_protein, time_slot):
     """
     Score a meal for swapping based on:
     - Calorie similarity (highest priority)
+    - Protein similarity (important for sports)
     - Sport compatibility
     - Meal type appropriateness
     - User allergies/dislikes
@@ -35,53 +36,72 @@ def score_meal_for_swap(meal, user, current_meal_kcal, time_slot):
         if ingredients & forbidden:
             return -1000
     
-    # 2. Calorie similarity (HIGHEST PRIORITY - 50 points max)
+    # 2. Calorie similarity (Max 40 points)
     kcal_diff = abs(meal['Kcal'] - current_meal_kcal)
-    if kcal_diff <= 10:
-        score += 50
-    elif kcal_diff <= 20:
+    if kcal_diff <= 50:
         score += 40
-    elif kcal_diff <= 30:
-        score += 30
-    elif kcal_diff <= 50:
+    elif kcal_diff <= 100:
         score += 20
     else:
-        score += 10
+        score += 5
+        
+    # 3. Protein similarity (Max 30 points)
+    # Rất quan trọng cho người tập thể thao
+    protein_diff = abs(meal.get('Protein', 0) - current_meal_protein)
+    if protein_diff <= 5:
+        score += 30
+    elif protein_diff <= 10:
+        score += 15
     
-    # 3. Sport compatibility (30 points)
+    # 4. Sport compatibility (Max 50 points - Tăng trọng số)
     user_sport = (user.get('Sport') or '').lower()
     if meal.get('SportTags') and user_sport:
         sport_tags = set(s.strip().lower() for s in meal['SportTags'].split(','))
         if user_sport in sport_tags:
-            score += 30
+            score += 50
     
-    # 4. Meal type appropriateness (20 points)
+    # 5. Meal type appropriateness (Max 30 points)
     meal_type = (meal.get('MealType') or '').lower()
-    if time_slot == 'morning':
-        if any(x in meal_type for x in ['morning', 'breakfast', 'sáng']):
-            score += 20
-        elif any(x in meal_type for x in ['evening', 'dinner', 'tối']):
-            score -= 10
-    elif time_slot == 'afternoon':
-        if any(x in meal_type for x in ['lunch', 'afternoon', 'trưa']):
-            score += 20
-    elif time_slot == 'evening':
-        if any(x in meal_type for x in ['dinner', 'evening', 'tối']):
-            score += 20
-        elif any(x in meal_type for x in ['morning', 'breakfast', 'sáng']):
-            score -= 10
+    meal_timing = (meal.get('MealTiming') or '').lower() # Cột mới thêm
     
-    # 5. Goal compatibility (bonus 10 points)
+    # Map time_slot to keywords
+    keywords = []
+    if time_slot == 'morning':
+        keywords = ['breakfast', 'sáng', 'morning', 'preworkout']
+    elif time_slot == 'afternoon':
+        keywords = ['lunch', 'trưa', 'afternoon']
+    elif time_slot == 'evening':
+        keywords = ['dinner', 'tối', 'evening', 'postworkout']
+    elif time_slot == 'snack':
+        keywords = ['snack', 'ăn vặt']
+        
+    # Check match in MealType or MealTiming
+    is_match = False
+    for kw in keywords:
+        if kw in meal_type or kw in meal_timing:
+            is_match = True
+            break
+            
+    if is_match:
+        score += 30
+    else:
+        # Phạt nặng nếu ăn món sáng vào tối hoặc ngược lại
+        if time_slot == 'morning' and ('dinner' in meal_type or 'tối' in meal_type):
+            score -= 50
+        elif time_slot == 'evening' and ('breakfast' in meal_type or 'sáng' in meal_type):
+            score -= 50
+    
+    # 6. Goal compatibility (bonus 20 points)
     goal = (user.get('Goal') or '').lower()
     protein = meal.get('Protein', 0)
     kcal = meal.get('Kcal', 0)
     
     if 'giảm cân' in goal:
-        if kcal < 500 and protein > 20:
-            score += 10
+        if kcal < 400 and protein > 20:
+            score += 20
     elif 'tăng cơ' in goal:
-        if protein > 25:
-            score += 10
+        if protein > 30:
+            score += 20
     
     return score
 
@@ -147,7 +167,7 @@ def suggest_meal_swap():
         
         # Get current meal info
         current_meal_query = text("""
-            SELECT Kcal, MealType FROM dbo.Meals WHERE Id = :meal_id
+            SELECT Kcal, Protein, MealType FROM dbo.Meals WHERE Id = :meal_id
         """)
         current_meal_result = db.session.execute(current_meal_query, {"meal_id": current_meal_id}).fetchone()
         
@@ -155,23 +175,22 @@ def suggest_meal_swap():
             return jsonify({"error": "Current meal not found"}), 404
         
         current_kcal = current_meal_result[0]
-        current_meal_type = current_meal_result[1]
+        current_protein = current_meal_result[1] or 0
         
-        # Get alternative meals (same meal type, within ±50 kcal range)
-        min_kcal = current_kcal - 50
-        max_kcal = current_kcal + 50
+        # Get alternative meals (within ±100 kcal range)
+        min_kcal = current_kcal - 100
+        max_kcal = current_kcal + 100
         
+        # Lấy danh sách rộng hơn, không lọc cứng MealType để hàm score tự xử lý
         alternatives_query = text("""
-            SELECT Id, Name, Kcal, Protein, Carb, Fat, MealType, SportTags, IngredientTags
+            SELECT Id, Name, Kcal, Protein, Carb, Fat, MealType, SportTags, IngredientTags, MealTiming
             FROM dbo.Meals 
-            WHERE MealType = :meal_type 
-            AND Kcal >= :min_kcal 
+            WHERE Kcal >= :min_kcal 
             AND Kcal <= :max_kcal
             AND Id != :current_meal_id
         """)
         
         alternatives_result = db.session.execute(alternatives_query, {
-            "meal_type": current_meal_type,
             "min_kcal": min_kcal,
             "max_kcal": max_kcal,
             "current_meal_id": current_meal_id
@@ -189,10 +208,11 @@ def suggest_meal_swap():
                 "Fat": row[5],
                 "MealType": row[6],
                 "SportTags": row[7],
-                "IngredientTags": row[8]
+                "IngredientTags": row[8],
+                "MealTiming": row[9]
             }
             
-            score = score_meal_for_swap(meal, user, current_kcal, time_slot)
+            score = score_meal_for_swap(meal, user, current_kcal, current_protein, time_slot)
             
             if score > 0:  # Only include meals with positive score
                 scored_meals.append({

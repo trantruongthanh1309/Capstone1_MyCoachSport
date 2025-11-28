@@ -1,5 +1,5 @@
 from db import db
-from models import Meal, Workout, UserSchedule, User, Log
+from models import Meal, Workout, UserSchedule, User, Log, UserPlan
 from datetime import datetime
 import random
 import json
@@ -29,37 +29,64 @@ class SmartRecommendationEngine:
             return []
 
     def _get_busy_slots(self):
+        # Vẫn đọc lịch bận từ UserSchedule như cũ
         weekday_key = self.day_map[self.day_of_week]
         schedules = UserSchedule.query.filter_by(User_id=self.user_id, DayOfWeek=weekday_key).all()
+        
+        print(f"🔍 [BUSY CHECK] User {self.user_id}, Date: {self.date_str}, Weekday: {weekday_key}")
         
         busy = set()
         for s in schedules:
             if s.Period and s.Note and s.Note.strip():
                 busy.add(s.Period.lower())
+                print(f"   ⛔ Busy slot: {s.Period} - '{s.Note}'")
+        
+        print(f"   📋 Total busy slots: {busy}")
         return busy
 
     def _score_workout(self, workout, slot):
         score = 50
         
+        # 1. Sport Match (Quan trọng nhất: +50)
         user_sport = (self.user.Sport or "").lower()
-        if user_sport and user_sport in (workout.Sport or "").lower():
-            score += 30
+        workout_sport_tags = (workout.SportTags or "").lower()
+        
+        if user_sport and user_sport in workout_sport_tags:
+            score += 50
+        elif "general" in workout_sport_tags:
+            score += 20 # Bài tập chung cũng tốt
+
+        # 2. Goal Match (Mục tiêu: +30)
+        user_goal = (self.user.Goal or "").lower()
+        workout_goal = (workout.GoalFocus or "").lower()
+        
+        if "tăng cơ" in user_goal:
+            if "sức mạnh" in workout_goal or "cơ lõi" in workout_goal:
+                score += 30
+        elif "giảm cân" in user_goal:
+            if "tim mạch" in workout_goal or "toàn thân" in workout_goal or "tốc độ" in workout_goal:
+                score += 30
+            # Ưu tiên bài đốt calo cao
+            if workout.CalorieBurn and workout.CalorieBurn > 200:
+                score += 15
+
+        # 3. Difficulty Match (Trình độ: +20)
+        # Giả định user mới là Beginner, tập lâu là Intermediate/Advanced
+        # Tạm thời ưu tiên Beginner/Intermediate cho an toàn
+        workout_diff = (workout.Difficulty or "Beginner").lower()
+        if workout_diff in ["beginner", "intermediate"]:
+            score += 20
+        
+        # 4. Intensity & Slot
+        # Buổi sáng ưu tiên cường độ vừa/cao để tỉnh táo
+        if slot == "morning" and "cao" in (workout.Intensity or "").lower():
+            score += 10
             
-        goal = (self.user.Goal or "").lower()
-        w_name = (workout.Name or "").lower()
-        w_intensity = (workout.Intensity or "").lower()
-
-        if "tăng cơ" in goal:
-            if "gym" in w_name or "tạ" in w_name or w_intensity == "cao":
-                score += 20
-        elif "giảm cân" in goal:
-            if "cardio" in w_name or "hiit" in w_name or "chạy" in w_name:
-                score += 20
-
         score += random.randint(-5, 5)
         return score
 
     def _score_meal(self, meal, time_slot):
+        # 1. Allergy Check (Tuyệt đối)
         if meal.IngredientTags:
             ingredients = set(i.strip().lower() for i in meal.IngredientTags.split(','))
             if ingredients & self.forbidden_ingredients:
@@ -67,50 +94,117 @@ class SmartRecommendationEngine:
 
         score = 50
         
+        # 2. Timing Match (Quan trọng nhất: +40)
+        # Kiểm tra cả MealTiming (AI mới) và MealType (Dữ liệu cũ)
+        meal_timing = (meal.MealTiming or "").lower()
+        meal_type = (meal.MealType or "").lower()
+        
+        is_timing_match = False
+        
+        if time_slot == "morning":
+            if "breakfast" in meal_timing or "preworkout" in meal_timing:
+                is_timing_match = True
+            elif "morning" in meal_type or "sáng" in meal_type or "breakfast" in meal_type:
+                is_timing_match = True
+                
+            # Phạt nặng nếu món tối ăn sáng
+            if "dinner" in meal_timing or "evening" in meal_type or "tối" in meal_type:
+                score -= 100
+                
+        elif time_slot == "afternoon":
+            if "lunch" in meal_timing:
+                is_timing_match = True
+            elif "afternoon" in meal_type or "lunch" in meal_type or "trưa" in meal_type:
+                is_timing_match = True
+                
+        elif time_slot == "evening":
+            if "dinner" in meal_timing:
+                is_timing_match = True
+            elif "evening" in meal_type or "dinner" in meal_type or "tối" in meal_type:
+                is_timing_match = True
+                
+            # Phạt nặng nếu món sáng ăn tối (như Xôi)
+            if "breakfast" in meal_timing or "morning" in meal_type or "sáng" in meal_type:
+                score -= 100
+
+        if is_timing_match:
+            score += 40
+        else:
+            # Nếu không đúng buổi, trừ điểm nặng để hạn chế chọn
+            score -= 20
+        
+        # 3. Sport Support (+20)
         user_sport = (self.user.Sport or "").lower()
         if meal.SportTags and user_sport:
             sport_tags = set(s.strip().lower() for s in meal.SportTags.split(','))
             if user_sport in sport_tags:
-                score += 25
+                score += 20
 
-        meal_type = (meal.MealType or "").lower()
-        if time_slot == "morning":
-            if any(x in meal_type for x in ["morning", "breakfast", "sáng"]):
-                score += 30
-            elif any(x in meal_type for x in ["evening", "dinner", "tối"]):
-                score -= 20
-        elif time_slot == "afternoon":
-            if any(x in meal_type for x in ["lunch", "afternoon", "trưa"]):
-                score += 30
-        elif time_slot == "evening":
-            if any(x in meal_type for x in ["dinner", "evening", "tối"]):
-                score += 30
-            elif any(x in meal_type for x in ["morning", "breakfast", "sáng"]):
-                score -= 20
-
-        goal = (self.user.Goal or "").lower()
+        # 4. Goal Optimization (+30)
+        user_goal = (self.user.Goal or "").lower()
         kcal = meal.Kcal or 0
         protein = meal.Protein or 0
         
-        if "giảm cân" in goal:
+        if "giảm cân" in user_goal:
+            # Ưu tiên ít calo, giàu protein để no lâu
             if kcal < 500 and protein > 20:
+                score += 30
+            elif kcal < 400:
                 score += 20
-        elif "tăng cơ" in goal:
-            if protein > 25:
-                score += 20
+        elif "tăng cơ" in user_goal:
+            # Ưu tiên protein cao
+            if protein > 30:
+                score += 30
+            elif protein > 20:
+                score += 15
 
         score += random.randint(-10, 10)
         return score
 
+    def _get_user_profile_hash(self):
+        """Tạo hash từ thông tin user để phát hiện thay đổi"""
+        profile_str = f"{self.user.Sport}_{self.user.Goal}_{self.user.Allergies}_{self.user.DislikedIngredients}"
+        return hashlib.md5(profile_str.encode()).hexdigest()
+    
+    def _has_profile_changed(self):
+        """Kiểm tra xem user có thay đổi Sport, Goal, Allergies không"""
+        # Lấy lịch đã lưu
+        existing_items = UserPlan.query.filter_by(
+            UserId=self.user_id,
+            Date=self.date_obj
+        ).first()
+        
+        if not existing_items:
+            return False
+            
+        # Kiểm tra ProfileHash
+        current_hash = self._get_user_profile_hash()
+        saved_hash = existing_items.ProfileHash if hasattr(existing_items, 'ProfileHash') else None
+        
+        if saved_hash and saved_hash != current_hash:
+            print(f"🔄 [PROFILE CHANGED] User {self.user_id} profile changed, regenerating schedule...")
+            return True
+        return False
+    
     def _load_existing_schedule(self):
-        items = UserSchedule.query.filter_by(
-            User_id=self.user_id,
+        """Đọc lịch đã lưu và LUÔN LUÔN kiểm tra busy slots"""
+        # Kiểm tra xem profile có thay đổi không
+        if self._has_profile_changed():
+            print("   ⚠️ Profile changed, will regenerate schedule")
+            return None
+        
+        # Đọc từ bảng UserPlans (Lịch tập/ăn cố định)
+        items = UserPlan.query.filter_by(
+            UserId=self.user_id,
             Date=self.date_obj
         ).all()
         
         if not items:
             return None
-            
+        
+        # ✅ LUÔN LUÔN kiểm tra busy slots, ngay cả với lịch đã lưu
+        busy_slots = self._get_busy_slots()
+        
         schedule = []
         time_map = {
             "morning": "07:00 - 08:00",
@@ -118,25 +212,41 @@ class SmartRecommendationEngine:
             "evening": "19:00 - 20:00"
         }
         
+        filtered_count = 0
+        
         for item in items:
-            if item.MealId:
+            # ✅ Bỏ qua các item trùng với busy slots
+            if item.Slot and item.Slot.lower() in busy_slots:
+                filtered_count += 1
+                print(f"   🚫 Filtered out {item.Type} at {item.Slot} (busy)")
+                continue
+            
+            if item.Type == "meal" and item.MealId:
                 meal = Meal.query.get(item.MealId)
                 if meal:
                     meal_data = self._serialize_meal(meal)
-                    meal_data["MealType"] = item.Period
+                    meal_data["MealType"] = item.Slot
                     schedule.append({
-                        "time": time_map.get(item.Period, item.Period),
+                        "time": time_map.get(item.Slot, item.Slot),
                         "type": "meal",
                         "data": meal_data
                     })
-            elif item.WorkoutId:
+            elif item.Type == "workout" and item.WorkoutId:
                 workout = Workout.query.get(item.WorkoutId)
                 if workout:
                     schedule.append({
-                        "time": f"{item.Period}_slot",
+                        "time": f"{item.Slot}_slot",
                         "type": "workout",
                         "data": self._serialize_workout(workout)
                     })
+        
+        # ✅ Nếu có item bị filter do busy, XÓA và TẠO LẠI lịch
+        if filtered_count > 0:
+            print(f"   🔄 {filtered_count} items conflict with busy slots, regenerating schedule...")
+            return None
+        
+        if not schedule:
+            return None
         
         return {
             "date": self.date_str,
@@ -145,10 +255,14 @@ class SmartRecommendationEngine:
         }
 
     def _save_schedule(self, schedule_items):
-        UserSchedule.query.filter_by(
-            User_id=self.user_id,
+        # Xóa lịch cũ trong UserPlans nếu có (để cập nhật mới)
+        UserPlan.query.filter_by(
+            UserId=self.user_id,
             Date=self.date_obj
         ).delete()
+        
+        # Lấy profile hash hiện tại
+        profile_hash = self._get_user_profile_hash()
         
         for item in schedule_items:
             if item["type"] == "meal":
@@ -161,21 +275,25 @@ class SmartRecommendationEngine:
                     time_slot = "evening"
                     
                 if time_slot:
-                    new_item = UserSchedule(
-                        User_id=self.user_id,
+                    new_item = UserPlan(
+                        UserId=self.user_id,
                         Date=self.date_obj,
-                        Period=time_slot,
-                        MealId=item["data"]["Id"]
+                        Slot=time_slot,
+                        Type="meal",
+                        MealId=item["data"]["Id"],
+                        ProfileHash=profile_hash
                     )
                     db.session.add(new_item)
                     
             elif item["type"] == "workout":
                 time_slot = item["time"].replace("_slot", "")
-                new_item = UserSchedule(
-                    User_id=self.user_id,
+                new_item = UserPlan(
+                    UserId=self.user_id,
                     Date=self.date_obj,
-                    Period=time_slot,
-                    WorkoutId=item["data"]["Id"]
+                    Slot=time_slot,
+                    Type="workout",
+                    WorkoutId=item["data"]["Id"],
+                    ProfileHash=profile_hash
                 )
                 db.session.add(new_item)
         
@@ -192,14 +310,19 @@ class SmartRecommendationEngine:
         busy_slots = self._get_busy_slots()
         schedule = []
         
+        print(f"💪 [WORKOUT] Checking workout slots...")
         workout_slot = None
-        priority_slots = ["afternoon", "morning", "evening"]
-        random.shuffle(priority_slots)
-
+        
+        # ✅ FIX: Ưu tiên Sáng -> Tối -> Chiều để lịch tập đều đặn, không bị lỏm chỏm
+        priority_slots = ["morning", "evening", "afternoon"]
+        
         for slot in priority_slots:
             if slot not in busy_slots:
                 workout_slot = slot
+                print(f"   ✅ Selected workout slot: {slot}")
                 break
+            else:
+                print(f"   ⏭️ Skipped {slot} (busy)")
         
         selected_workout = None
         if workout_slot:
@@ -227,7 +350,9 @@ class SmartRecommendationEngine:
 
         for period in periods:
             if period in busy_slots:
+                print(f"   ⏭️ Skipped meal {period} (busy)")
                 continue
+            print(f"   🍽️ Generating meal for {period}...")
                 
             candidate_meals = []
             for m in all_meals:

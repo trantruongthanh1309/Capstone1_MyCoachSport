@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import "./Planner.css";
 import "./PlannerEnhanced.css";
+import "./PlannerCompact.css";
 import SwapButton from "../components/SwapButton";
 import { useToast } from "../contexts/ToastContext";
 
@@ -15,6 +16,14 @@ export default function Planner() {
   // ✅ DÙNG USER_ID THẬT CỦA BẠN
   const currentUser = { id: 18 };
 
+  // Hàm lấy ngày Thứ 2 của tuần hiện tại
+  const getMonday = (date) => {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Nếu Chủ nhật thì lùi 6 ngày, không thì tính từ Thứ 2
+    return new Date(d.setDate(diff));
+  };
+
   const getDates = (startDate, days) => {
     const dates = [];
     const date = new Date(startDate);
@@ -25,15 +34,20 @@ export default function Planner() {
     return dates;
   };
 
-  const dayNames = [
-    "Thứ 2",
-    "Thứ 3",
-    "Thứ 4",
-    "Thứ 5",
-    "Thứ 6",
-    "Thứ 7",
-    "Chủ nhật",
-  ];
+  // Mảng tên ngày theo thứ tự JavaScript getDay() (0=CN, 1=T2, 2=T3...)
+  const getDayName = (dateStr) => {
+    const dayNames = [
+      "Chủ nhật",
+      "Thứ 2",
+      "Thứ 3",
+      "Thứ 4",
+      "Thứ 5",
+      "Thứ 6",
+      "Thứ 7",
+    ];
+    const date = new Date(dateStr);
+    return dayNames[date.getDay()];
+  };
 
   const mealTimes = ["morning", "afternoon", "evening"];
   const mealTimeLabels = ["Bữa sáng", "Bữa trưa", "Bữa tối"];
@@ -41,7 +55,8 @@ export default function Planner() {
   const fetchWeeklyPlan = async () => {
     setLoading(true);
     setError("");
-    const dates = getDates(new Date(), 7);
+    const monday = getMonday(new Date()); // Bắt đầu từ Thứ 2
+    const dates = getDates(monday, 7);
     const plan = {};
 
     try {
@@ -106,7 +121,8 @@ export default function Planner() {
   if (loading) return <div className="loading-screen"><div className="spinner"></div><p>⏳ Đang tải lịch trình...</p></div>;
   if (error) return <div className="error-screen"><p>❌ {error}</p></div>;
 
-  const dates = getDates(new Date(), 7);
+  const monday = getMonday(new Date());
+  const dates = getDates(monday, 7);
 
   return (
     <div className="planner-wrap">
@@ -132,10 +148,10 @@ export default function Planner() {
             <thead>
               <tr>
                 <th className="sticky-col">Bữa</th>
-                {dates.map((date, i) => (
+                {dates.map((date) => (
                   <th key={date}>
                     <div className="day-header">
-                      <span className="day-name">{dayNames[i]}</span>
+                      <span className="day-name">{getDayName(date)}</span>
                       <span className="day-date">{new Date(date).getDate()}</span>
                     </div>
                   </th>
@@ -215,10 +231,10 @@ export default function Planner() {
             <thead>
               <tr>
                 <th className="sticky-col">Buổi</th>
-                {dates.map((date, i) => (
+                {dates.map((date) => (
                   <th key={date}>
                     <div className="day-header">
-                      <span className="day-name">{dayNames[i]}</span>
+                      <span className="day-name">{getDayName(date)}</span>
                       <span className="day-date">{new Date(date).getDate()}</span>
                     </div>
                   </th>

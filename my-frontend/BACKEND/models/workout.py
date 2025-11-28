@@ -1,4 +1,3 @@
-# models/workout.py
 from db import db
 
 class Workout(db.Model):
@@ -6,13 +5,18 @@ class Workout(db.Model):
 
     Id = db.Column(db.Integer, primary_key=True)
     Name = db.Column(db.String(200))
-    Sport = db.Column(db.String(50))             # Môn thể thao (football, basketball...)
-    Goal = db.Column(db.String(50))              # Mục tiêu (tăng cơ, giảm cân...)
-    Duration_min = db.Column(db.Integer)         # Thời lượng bài tập (phút)
-    Rpe = db.Column(db.Integer)                  # Cảm nhận cường độ (1–10)
-    Tags = db.Column(db.String(200))             # Tag mô tả thêm (cardio, strength, flexibility...)
-
-    # ✅ Các trường thêm mới để tương thích với AI Planner
-    MuscleGroups = db.Column(db.String(200))     # Nhóm cơ tác động (legs, chest, arms,...)
-    Intensity = db.Column(db.String(50))         # Cường độ (Low, Medium, High)
-    Equipment = db.Column(db.String(100))        # Dụng cụ cần thiết (dumbbell, barbell, none)
+    Sport = db.Column(db.String(50))
+    Goal = db.Column(db.String(50))
+    Duration_min = db.Column(db.Integer)
+    Rpe = db.Column(db.Integer)
+    Tags = db.Column(db.String(200))
+    MuscleGroups = db.Column(db.String(200))
+    Intensity = db.Column(db.String(50))
+    Equipment = db.Column(db.String(255))
+    VideoUrl = db.Column(db.String(500))
+    SportTags = db.Column(db.String(500))
+    
+    # New AI fields
+    Difficulty = db.Column(db.String(50))
+    GoalFocus = db.Column(db.String(100))
+    CalorieBurn = db.Column(db.Integer)

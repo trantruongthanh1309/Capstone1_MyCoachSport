@@ -53,7 +53,7 @@ Session(app)
 db.init_app(app)
 
 CORS(app, 
-     resources={r"/*": {"origins": "http://localhost:5173"}},
+     resources={r"/*": {"origins": ["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"]}},
      supports_credentials=True, 
      allow_headers=["Content-Type", "Authorization"],
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])

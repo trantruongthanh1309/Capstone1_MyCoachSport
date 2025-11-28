@@ -621,7 +621,7 @@ export default function Login() {
               <label className="remember">
                 <input type="checkbox" /> Ghi nhớ đăng nhập
               </label>
-              <a href="/forgot" className="link">
+              <a href="/forgot-password" className="link">
                 Quên mật khẩu?
               </a>
             </div>

@@ -2,6 +2,8 @@ import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
 import Planner from "./pages/Planner";
 import Logs from "./pages/Logs";
 import Profile from "./pages/Profile";
@@ -19,8 +21,13 @@ import { ToastProvider } from "./contexts/ToastContext";
 export default function App() {
   const location = useLocation();
 
-  // Ẩn Navbar ở trang Login VÀ tất cả trang Admin
-  const hideNavbar = location.pathname === "/" || location.pathname.startsWith("/admin");
+  // Ẩn Navbar ở trang Login, Register, ForgotPassword VÀ tất cả trang Admin
+  const hideNavbar =
+    location.pathname === "/" ||
+    location.pathname === "/login" ||
+    location.pathname === "/register" ||
+    location.pathname === "/forgot-password" ||
+    location.pathname.startsWith("/admin");
 
   return (
     <ToastProvider>
@@ -28,8 +35,11 @@ export default function App() {
         {!hideNavbar && <Navbar />}
         <div className="main-content">
           <Routes>
-            {/* Public */}
+            {/* Public - Auth Pages */}
             <Route path="/" element={<Login />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
 
             {/* User Pages */}
             <Route path="/home" element={<Home />} />
