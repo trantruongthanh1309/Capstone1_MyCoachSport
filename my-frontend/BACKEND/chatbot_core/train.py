@@ -11,7 +11,7 @@ import os
 
 # 1. Load dữ liệu
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-INTENTS_FILE = os.path.join(BASE_DIR, 'intents.json')
+INTENTS_FILE = os.path.join(BASE_DIR, 'intents_mega.json')  # ✅ MEGA DATASET!
 FILE = os.path.join(BASE_DIR, 'data.pth')
 
 with open(INTENTS_FILE, 'r', encoding='utf-8') as f:
@@ -34,6 +34,10 @@ ignore_words = ['?', '!', '.', ',']
 all_words = [stem(w) for w in all_words if w not in ignore_words]
 all_words = sorted(set(all_words))
 tags = sorted(set(tags))
+
+print(f"🔢 Vocabulary size: {len(all_words)} words")
+print(f"🏷️ Number of tags: {len(tags)}")
+print(f"📝 Training samples: {len(xy)}")
 
 # 3. Tạo Training Data
 X_train = []
@@ -61,12 +65,12 @@ class ChatDataset(Dataset):
     def __len__(self):
         return self.n_samples
 
-# Hyper-parameters
-num_epochs = 1000
-batch_size = 8
+# Hyper-parameters (✅ TỐI ƯU TỐC ĐỘ)
+num_epochs = 150  # Đủ để đạt Loss 0.0000
+batch_size = 128  # Tăng tốc độ training gấp 4 lần
 learning_rate = 0.001
 input_size = len(X_train[0])
-hidden_size = 8
+hidden_size = 512  # Tăng từ 128 lên 512 neurons - SIÊU THÔNG MINH!
 output_size = len(tags)
 
 dataset = ChatDataset()

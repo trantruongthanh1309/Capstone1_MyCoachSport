@@ -24,7 +24,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # Đường dẫn file
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-INTENTS_FILE = os.path.join(BASE_DIR, 'intents.json')
+INTENTS_FILE = os.path.join(BASE_DIR, 'intents_mega.json')  # ✅ MEGA DATASET!
 DATA_FILE = os.path.join(BASE_DIR, 'data.pth')
 
 # Load dữ liệu model đã train
