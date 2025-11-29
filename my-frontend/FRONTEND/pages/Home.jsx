@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import styles from "./Home.module.css";
+import ChatBox from "../components/ChatBox";
 
 const API_BASE = "http://localhost:5000";
 const WEATHER_API_KEY = "40dfa2d8e73afabb299edc21486cb2c3"; // Thay bằng API key của bạn
@@ -154,41 +155,8 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Chatbox góc phải dưới */}
-      <div className={styles.chatFloat}>
-        {openChat ? (
-          <div className={styles.chatBox}>
-            <div className={styles.chatHeader}>
-              <span>💬 Chatbot</span>
-              <button onClick={() => setOpenChat(false)}>✖</button>
-            </div>
-            <div className={styles.chatBody}>
-              {log.map((m, i) => (
-                <div
-                  key={i}
-                  className={`${styles.msg} ${m.who === "you" ? styles.you : styles.bot
-                    }`}
-                >
-                  {m.text}
-                </div>
-              ))}
-            </div>
-            <div className={styles.chatSend}>
-              <input
-                value={msg}
-                onChange={(e) => setMsg(e.target.value)}
-                placeholder="Nhập tin nhắn..."
-                onKeyDown={(e) => e.key === "Enter" && send()}
-              />
-              <button onClick={send}>Gửi</button>
-            </div>
-          </div>
-        ) : (
-          <button className={styles.openBtn} onClick={() => setOpenChat(true)}>
-            💬
-          </button>
-        )}
-      </div>
+      {/* Chatbox component */}
+      <ChatBox />
     </main>
   );
 }

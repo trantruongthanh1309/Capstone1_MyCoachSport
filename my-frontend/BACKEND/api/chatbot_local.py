@@ -1,35 +1,25 @@
 from flask import Blueprint, request, jsonify, session
 from chatbot_core.chat_service import get_response
 from models.user_model import User
+from models.chat_history import ChatHistory
 from db import db
+import time
 
 chatbot_bp = Blueprint('chatbot_local', __name__)
 
-# Bộ nhớ hội thoại (Lưu tạm trong RAM)
-# Cấu trúc: { user_id: [ {"role": "user", "content": "..."}, ... ] }
-chat_memory = {}
-
 @chatbot_bp.route('/chat', methods=['POST'])
 def chat():
-    print(f"DEBUG CHAT - Cookies: {request.cookies}")
-    print(f"DEBUG CHAT - Session: {session.get('user_id')}")
-
+    """Chat với AI Coach và lưu lịch sử"""
     data = request.get_json()
     user_message = data.get('message')
     
-    # Debug chi tiết
-    print(f"DEBUG CHAT REQUEST:")
-    print(f"- Body User ID: {data.get('user_id')}")
-    print(f"- Session User ID: {session.get('user_id')}")
-    
-    # Ưu tiên lấy từ session, nếu không có thì lấy từ body (fallback)
+    # Lấy user_id từ session hoặc body
     user_id = session.get('user_id') or data.get('user_id')
-    print(f"-> FINAL USER ID: {user_id}")
-
+    
     if not user_message:
-        return jsonify({"response": "..."})
+        return jsonify({"response": "..."}), 400
 
-    # 1. Lấy Context User (Tên, thông tin cơ bản)
+    # 1. Lấy Context User
     user_context = {"name": "Bạn", "id": user_id}
     if user_id:
         try:
@@ -48,19 +38,71 @@ def chat():
         except:
             pass
 
-    # 2. Quản lý bộ nhớ (Memory)
-    # (Có thể dùng để AI hiểu ngữ cảnh câu trước, hiện tại ta lưu để log thôi)
-    if user_id:
-        if user_id not in chat_memory:
-            chat_memory[user_id] = []
-        chat_memory[user_id].append({"role": "user", "content": user_message})
+    # 2. Thêm delay nhỏ để tạo cảm giác "đang suy nghĩ" (1-2 giây)
+    time.sleep(1.5)
 
     # 3. Gọi Model Local
-    # Truyền user_context vào để hàm get_response có thể dùng DB tra cứu
     response = get_response(user_message, user_context)
 
-    # 4. Lưu phản hồi bot
+    # 4. Lưu vào Database
     if user_id:
-        chat_memory[user_id].append({"role": "bot", "content": response})
+        try:
+            chat_record = ChatHistory(
+                User_id=user_id,
+                Message=user_message,
+                Response=response
+            )
+            db.session.add(chat_record)
+            db.session.commit()
+        except Exception as e:
+            print(f"❌ Error saving chat history: {e}")
+            db.session.rollback()
 
     return jsonify({"response": response})
+
+
+@chatbot_bp.route('/chat/history', methods=['GET'])
+def get_chat_history():
+    """Lấy lịch sử chat của user"""
+    user_id = session.get('user_id') or request.args.get('user_id')
+    
+    if not user_id:
+        return jsonify({"error": "Chưa đăng nhập"}), 401
+    
+    try:
+        # Lấy 50 tin nhắn gần nhất
+        history = ChatHistory.query.filter_by(User_id=user_id)\
+            .order_by(ChatHistory.Timestamp.desc())\
+            .limit(50)\
+            .all()
+        
+        # Đảo ngược để tin nhắn cũ nhất ở trên
+        history.reverse()
+        
+        return jsonify({
+            "success": True,
+            "history": [h.to_dict() for h in history]
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@chatbot_bp.route('/chat/history/clear', methods=['DELETE'])
+def clear_chat_history():
+    """Xóa toàn bộ lịch sử chat của user"""
+    user_id = session.get('user_id')
+    
+    if not user_id:
+        return jsonify({"error": "Chưa đăng nhập"}), 401
+    
+    try:
+        ChatHistory.query.filter_by(User_id=user_id).delete()
+        db.session.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": "Đã xóa lịch sử chat"
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
