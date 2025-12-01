@@ -1,0 +1,290 @@
+from flask import Blueprint, request, jsonify, session
+from models.social_models import Post, Comment, Like, Share, Conversation, Message
+from models.user_model import User
+from db import db
+from datetime import datetime
+
+social_bp = Blueprint('social', __name__, url_prefix='/api/social')
+
+# ==================== POSTS ====================
+
+@social_bp.route('/posts', methods=['GET'])
+def get_posts():
+    """Lấy danh sách bài viết (newsfeed)"""
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
+        user_id = session.get('user_id')
+        
+        sport_filter = request.args.get('sport')
+        
+        query = Post.query
+        
+        # Nếu có filter sport thì lọc, nếu không thì lấy tất cả (hoặc ưu tiên sport của user nếu muốn)
+        if sport_filter and sport_filter != 'All':
+            query = query.filter(Post.Sport == sport_filter)
+            
+        posts = query.order_by(Post.CreatedAt.desc())\
+            .paginate(page=page, per_page=per_page, error_out=False)
+        
+        return jsonify({
+            'success': True,
+            'posts': [post.to_dict(user_id) for post in posts.items],
+            'total': posts.total,
+            'pages': posts.pages,
+            'current_page': page
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@social_bp.route('/posts', methods=['POST'])
+def create_post():
+    """Tạo bài viết mới"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Chưa đăng nhập'}), 401
+    
+    try:
+        data = request.get_json()
+        post = Post(
+            User_id=user_id,
+            Content=data.get('content'),
+            Title=data.get('title'),
+            Sport=data.get('sport'),
+            Topic=data.get('topic'),
+            ImageUrl=data.get('image_url')
+        )
+        db.session.add(post)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'post': post.to_dict(user_id)
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+@social_bp.route('/posts/<int:post_id>', methods=['DELETE'])
+def delete_post(post_id):
+    """Xóa bài viết"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Chưa đăng nhập'}), 401
+    
+    try:
+        post = Post.query.get_or_404(post_id)
+        if post.User_id != user_id:
+            return jsonify({'error': 'Không có quyền xóa'}), 403
+        
+        db.session.delete(post)
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Đã xóa bài viết'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+# ==================== COMMENTS ====================
+
+@social_bp.route('/posts/<int:post_id>/comments', methods=['GET'])
+def get_comments(post_id):
+    """Lấy danh sách bình luận của bài viết"""
+    try:
+        comments = Comment.query.filter_by(Post_id=post_id)\
+            .order_by(Comment.CreatedAt.desc()).all()
+        
+        return jsonify({
+            'success': True,
+            'comments': [comment.to_dict() for comment in comments]
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@social_bp.route('/posts/<int:post_id>/comments', methods=['POST'])
+def create_comment(post_id):
+    """Thêm bình luận"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Chưa đăng nhập'}), 401
+    
+    try:
+        data = request.get_json()
+        comment = Comment(
+            Post_id=post_id,
+            User_id=user_id,
+            Content=data.get('content')
+        )
+        db.session.add(comment)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'comment': comment.to_dict()
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+# ==================== LIKES ====================
+
+@social_bp.route('/posts/<int:post_id>/like', methods=['POST'])
+def toggle_like(post_id):
+    """Like/Unlike bài viết"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Chưa đăng nhập'}), 401
+    
+    try:
+        existing_like = Like.query.filter_by(Post_id=post_id, User_id=user_id).first()
+        
+        if existing_like:
+            # Unlike
+            db.session.delete(existing_like)
+            db.session.commit()
+            return jsonify({'success': True, 'liked': False})
+        else:
+            # Like
+            like = Like(Post_id=post_id, User_id=user_id)
+            db.session.add(like)
+            db.session.commit()
+            return jsonify({'success': True, 'liked': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+# ==================== SHARES ====================
+
+@social_bp.route('/posts/<int:post_id>/share', methods=['POST'])
+def share_post(post_id):
+    """Chia sẻ bài viết"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Chưa đăng nhập'}), 401
+    
+    try:
+        share = Share(Post_id=post_id, User_id=user_id)
+        db.session.add(share)
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Đã chia sẻ bài viết'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+# ==================== MESSAGES ====================
+
+@social_bp.route('/conversations', methods=['GET'])
+def get_conversations():
+    """Lấy danh sách cuộc trò chuyện"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Chưa đăng nhập'}), 401
+    
+    try:
+        conversations = Conversation.query.filter(
+            (Conversation.User1_id == user_id) | (Conversation.User2_id == user_id)
+        ).order_by(Conversation.LastMessageAt.desc()).all()
+        
+        return jsonify({
+            'success': True,
+            'conversations': [conv.to_dict(user_id) for conv in conversations]
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@social_bp.route('/conversations/<int:user2_id>', methods=['GET'])
+def get_or_create_conversation(user2_id):
+    """Lấy hoặc tạo cuộc trò chuyện với user khác"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Chưa đăng nhập'}), 401
+    
+    try:
+        # Tìm conversation hiện có
+        conversation = Conversation.query.filter(
+            ((Conversation.User1_id == user_id) & (Conversation.User2_id == user2_id)) |
+            ((Conversation.User1_id == user2_id) & (Conversation.User2_id == user_id))
+        ).first()
+        
+        if not conversation:
+            # Tạo mới
+            conversation = Conversation(User1_id=user_id, User2_id=user2_id)
+            db.session.add(conversation)
+            db.session.commit()
+        
+        # Lấy tin nhắn
+        messages = Message.query.filter_by(Conversation_id=conversation.Id)\
+            .order_by(Message.CreatedAt.asc()).all()
+        
+        return jsonify({
+            'success': True,
+            'conversation': conversation.to_dict(user_id),
+            'messages': [msg.to_dict() for msg in messages]
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+@social_bp.route('/conversations/<int:conversation_id>/messages', methods=['POST'])
+def send_message(conversation_id):
+    """Gửi tin nhắn"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Chưa đăng nhập'}), 401
+    
+    try:
+        data = request.get_json()
+        message = Message(
+            Conversation_id=conversation_id,
+            Sender_id=user_id,
+            Content=data.get('content')
+        )
+        db.session.add(message)
+        
+        # Cập nhật LastMessageAt
+        conversation = Conversation.query.get(conversation_id)
+        conversation.LastMessageAt = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': message.to_dict()
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+@social_bp.route('/users/search', methods=['GET'])
+def search_users():
+    """Tìm kiếm người dùng theo tên"""
+    query = request.args.get('q', '')
+    if not query:
+        return jsonify({'users': []})
+    
+    try:
+        # Tìm user có tên chứa query (không phân biệt hoa thường)
+        users = User.query.filter(User.Name.ilike(f'%{query}%')).limit(10).all()
+        
+        return jsonify({
+            'success': True,
+            'users': [{
+                'id': u.Id,
+                'name': u.Name,
+                'avatar': u.Avatar,
+                'email': u.Email
+            } for u in users]
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

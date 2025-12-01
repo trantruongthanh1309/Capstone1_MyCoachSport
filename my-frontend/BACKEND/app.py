@@ -18,6 +18,7 @@ from api.newsfeed import newsfeed_bp
 from api.chatbot_local import chatbot_bp
 from api.smart_swap import smart_swap_bp
 from api.settings import settings_bp
+from api.social import social_bp  # ✅ Social Media API
 
 
 from api.routes.admin_routes.users_admin import users_admin_bp
@@ -100,6 +101,7 @@ app.register_blueprint(newsfeed_bp, url_prefix='/api/newsfeed')
 app.register_blueprint(chatbot_bp, url_prefix='/api/bot')
 app.register_blueprint(smart_swap_bp, url_prefix='/api/smart-swap')
 app.register_blueprint(settings_bp, url_prefix='/api/settings')
+app.register_blueprint(social_bp)  # ✅ Social Media endpoints
 
 from api.notifications import notifications_bp
 app.register_blueprint(notifications_bp, url_prefix='/api/notifications')
