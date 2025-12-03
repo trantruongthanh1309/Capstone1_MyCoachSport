@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import "../pages/NewsFeed.css";
+import config from "../config";
 
-const API_BASE = "http://localhost:5000";
+const API_BASE = config.API_BASE;
 
 export default function Messenger({ currentUserId, startChatWithUser }) {
     const [conversations, setConversations] = useState([]);

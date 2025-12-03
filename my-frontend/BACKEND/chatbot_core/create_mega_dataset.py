@@ -1,11 +1,11 @@
 import json
 
 # Đọc file cũ (7,104 patterns)
-with open('intents_full.json', 'r', encoding='utf-8') as f:
+with open('data/intents_full.json', 'r', encoding='utf-8') as f:
     old_data = json.load(f)
 
 # Đọc file expert mới (15,950 patterns)
-with open('intents_expert.json', 'r', encoding='utf-8') as f:
+with open('data/intents_expert.json', 'r', encoding='utf-8') as f:
     expert_data = json.load(f)
 
 # Merge
@@ -76,7 +76,7 @@ final_data = {
 }
 
 # Lưu file
-with open('intents_mega.json', 'w', encoding='utf-8') as f:
+with open('data/intents_mega.json', 'w', encoding='utf-8') as f:
     json.dump(final_data, f, ensure_ascii=False, indent=2)
 
 total_patterns = sum(len(intent['patterns']) for intent in final_data['intents'])

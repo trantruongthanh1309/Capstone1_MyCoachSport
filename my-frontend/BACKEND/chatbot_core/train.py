@@ -11,7 +11,7 @@ import os
 
 # 1. Load dữ liệu
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-INTENTS_FILE = os.path.join(BASE_DIR, 'intents_mega.json')  # ✅ MEGA DATASET!
+INTENTS_FILE = os.path.join(BASE_DIR, 'data', 'intents_mega.json')  # ✅ MEGA DATASET!
 FILE = os.path.join(BASE_DIR, 'data.pth')
 
 with open(INTENTS_FILE, 'r', encoding='utf-8') as f:

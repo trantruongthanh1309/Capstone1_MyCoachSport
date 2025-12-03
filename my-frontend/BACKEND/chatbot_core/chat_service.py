@@ -24,7 +24,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # Đường dẫn file
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-INTENTS_FILE = os.path.join(BASE_DIR, 'intents_mega.json')  # ✅ MEGA DATASET!
+INTENTS_FILE = os.path.join(BASE_DIR, 'data', 'intents_mega.json')  # ✅ MEGA DATASET!
 DATA_FILE = os.path.join(BASE_DIR, 'data.pth')
 
 # Load dữ liệu model đã train
@@ -51,36 +51,119 @@ else:
 # --- CÁC HÀM XỬ LÝ THÔNG MINH (DYNAMIC HANDLERS) ---
 
 def handle_schedule_query(user_context):
-    """Trả lời về lịch tập hôm nay"""
+    """Trả lời về lịch tập (Hỗ trợ hôm nay, ngày mai)"""
     if not user_context or not user_context.get('id'):
         return "Bạn cần đăng nhập để mình xem lịch giúp nhé! 🔒"
     
-    today = datetime.now().date()
-    # Query DB lấy lịch
-    schedules = UserSchedule.query.filter_by(User_id=user_context['id'], Date=today).all()
+    # Mặc định là hôm nay
+    target_date = datetime.now().date()
+    date_str = "hôm nay"
     
-    if not schedules:
+    # Lấy DayOfWeek (mon, tue, wed, thu, fri, sat, sun)
+    # FIX: Dữ liệu DB đang bị lệch 1 ngày (Mon trên UI = sun trong DB)
+    # Python weekday: 0=Mon, 1=Tue, ..., 6=Sun
+    # Mapping cần thiết: 0->sun, 1->mon, 2->tue...
+    
+    day_names = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+    
+    # Logic cũ: day_of_week = day_names[target_date.weekday()] -> Sai với DB hiện tại
+    
+    # Logic mới: Shift lùi 1 ngày
+    shifted_index = (target_date.weekday() - 1) % 7
+    day_of_week = day_names[shifted_index]
+    
+    # DEBUG: Log để kiểm tra
+    print(f"[DEBUG] Target date: {target_date}, Weekday: {target_date.weekday()}, Shifted Index: {shifted_index}, DayOfWeek (DB): {day_of_week}")
+    
+    # Query DB lấy lịch:
+    # 1. Lịch theo ngày cụ thể (Date)
+    daily_schedules = UserSchedule.query.filter_by(
+        User_id=user_context['id'], 
+        Date=target_date
+    ).all()
+    
+    # 2. Lịch tuần lặp lại (DayOfWeek) - cho lịch bận
+    weekly_schedules = UserSchedule.query.filter_by(
+        User_id=user_context['id'],
+        DayOfWeek=day_of_week
+    ).filter(UserSchedule.Date.is_(None)).all()  # Chỉ lấy lịch tuần (Date = NULL)
+    
+    print(f"[DEBUG] Daily schedules: {len(daily_schedules)}, Weekly schedules: {len(weekly_schedules)}")
+    for s in weekly_schedules:
+        print(f"[DEBUG] Weekly: DayOfWeek={s.DayOfWeek}, Period={s.Period}, Note={s.Note}, WorkoutId={s.WorkoutId}, MealId={s.MealId}")
+    
+    # Merge cả 2 loại lịch
+    all_schedules = daily_schedules + weekly_schedules
+    
+    if not all_schedules:
         return f"Hôm nay {user_context['name']} chưa có lịch nào cả. Bạn vào mục Planner để tạo lịch ngay nhé! 📅"
     
-    msg = f"Chào {user_context['name']}, lịch hôm nay của bạn đây:\n"
-    has_item = False
+    msg = f"📅 Lịch {date_str} của {user_context['name']}:\n\n"
     
-    for s in schedules:
+    # Tách lịch tập/ăn và lịch bận
+    workouts_meals = []
+    busy_slots = []
+    
+    for s in all_schedules:
         if s.WorkoutId:
             w = Workout.query.get(s.WorkoutId)
             if w:
-                msg += f"💪 Tập: {w.Name} ({s.Period})\n"
-                has_item = True
-        if s.MealId:
+                workouts_meals.append(f"💪 {s.Period}: Tập {w.Name}")
+        elif s.MealId:
             m = Meal.query.get(s.MealId)
             if m:
-                msg += f"🥗 Ăn: {m.Name} ({s.Period})\n"
-                has_item = True
-                
-    if not has_item:
+                workouts_meals.append(f"🥗 {s.Period}: Ăn {m.Name}")
+        elif s.Note:  # Lịch bận (có Note)
+            busy_slots.append(f"🚫 {s.Period}: {s.Note}")
+    
+    # Hiển thị lịch tập/ăn
+    if workouts_meals:
+        msg += "✅ LỊCH TẬP & ĂN:\n"
+        msg += "\n".join(workouts_meals) + "\n\n"
+    
+    # Hiển thị lịch bận
+    if busy_slots:
+        msg += "⏰ LỊCH BẬN:\n"
+        msg += "\n".join(busy_slots) + "\n\n"
+    
+    if not workouts_meals and not busy_slots:
         return "Lịch trống trơn à! Vào Planner tạo lịch đi nào! 🚀"
-        
+    
+    msg += "💡 Chúc bạn một ngày năng động!"
     return msg
+
+def handle_busy_schedule(user_context):
+    """Trả lời về lịch bận"""
+    if not user_context or not user_context.get('id'):
+        return "Bạn cần đăng nhập để mình xem lịch bận giúp nhé! 🔒"
+    
+    target_date = datetime.now().date()
+    day_names = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+    
+    # FIX: Shift lùi 1 ngày để khớp DB
+    shifted_index = (target_date.weekday() - 1) % 7
+    day_of_week = day_names[shifted_index]
+    
+    # Query lấy lịch bận (có Note và DayOfWeek)
+    busy_schedules = UserSchedule.query.filter_by(
+        User_id=user_context['id'], 
+        DayOfWeek=day_of_week
+    ).filter(
+        UserSchedule.Note.isnot(None),
+        UserSchedule.Date.is_(None)  # Chỉ lấy lịch tuần
+    ).all()
+    
+    if not busy_schedules:
+        return f"Hôm nay {user_context['name']} không có lịch bận nào. Bạn rảnh cả ngày, đi tập thôi! 💪"
+    
+    msg = f"⏰ Lịch bận hôm nay của {user_context['name']}:\n\n"
+    
+    for s in busy_schedules:
+        msg += f"🚫 {s.Period}: {s.Note}\n"
+    
+    msg += "\n💡 Những khung giờ còn lại bạn có thể sắp xếp tập luyện nhé!"
+    return msg
+
 
 def handle_my_stats(user_context):
     """Trả lời về thống kê tập luyện"""
@@ -184,9 +267,93 @@ def handle_greeting(user_context):
         return f"Chào {user_context['name']}! Rất vui được gặp lại bạn. Hôm nay bạn thấy trong người thế nào? 💪"
     return "Chào bạn! Tôi là MySportCoach AI. Tôi có thể giúp gì cho bạn hôm nay?"
 
+def handle_weather(user_context):
+    """Trả lời về thời tiết (Fake thông minh)"""
+    responses = [
+        "Dự báo thời tiết hôm nay rất đẹp để đi tập! 🌤️ Đừng lười biếng nhé!",
+        "Trời có thể mưa, nhưng tinh thần tập luyện thì không được ướt! ☔ Phòng gym luôn mở cửa.",
+        "Thời tiết này mà chạy bộ thì tuyệt vời. Nhớ mang giày êm nhé! 🏃‍♂️",
+        "Hôm nay trời hơi nóng, nhớ uống đủ nước khi tập nhé! 💧"
+    ]
+    return random.choice(responses)
+
+def handle_motivation(user_context):
+    """Động viên tinh thần"""
+    quotes = [
+        "Đừng dừng lại khi mệt mỏi, hãy dừng lại khi đã xong! 💪",
+        "Cơ bắp được sinh ra trong những rep cuối cùng. Cố lên!",
+        "Hôm nay đau đớn, ngày mai mạnh mẽ. No Pain No Gain! 🔥",
+        "Bạn không cần phải tuyệt vời để bắt đầu, nhưng bạn phải bắt đầu để trở nên tuyệt vời. 🚀",
+        f"{user_context.get('name', 'Bạn')} ơi, hãy nhớ lý do bạn bắt đầu hành trình này!"
+    ]
+    return random.choice(quotes)
+
+def handle_small_talk(user_context):
+    """Giao tiếp xã giao"""
+    responses = [
+        f"Mình vẫn đang trực chiến 24/7 để hỗ trợ {user_context.get('name', 'bạn')} đây! ⚡",
+        "Mình là AI nên không biết mệt, chỉ sợ bạn tập mệt thôi! 😆",
+        "Hôm nay bạn có chuyện gì vui không? Kể mình nghe với!",
+        "Mình đang học thêm nhiều bài tập mới để chỉ cho bạn nè. 📚"
+    ]
+    return random.choice(responses)
+
+def handle_suggest_meal(user_context):
+    """Gợi ý món ăn thông minh theo buổi"""
+    now = datetime.now()
+    hour = now.hour
+    
+    if 5 <= hour < 10:
+        period = "Bữa sáng"
+        options = [
+            "Yến mạch ngâm qua đêm (Overnight Oats) với chuối và hạt chia. 🥣",
+            "Trứng ốp la + Bánh mì đen + 1 ly sữa không đường. 🍳",
+            "Phở bò (ít bánh, nhiều thịt, không nước béo). 🍜",
+            "Sinh tố bơ chuối + Whey Protein. Nhanh gọn lẹ! 🥤"
+        ]
+    elif 10 <= hour < 14:
+        period = "Bữa trưa"
+        options = [
+            "Cơm gạo lứt + Ức gà xào nấm + Canh rau ngót. 🍚",
+            "Bún lứt trộn thịt bò + Rau sống. 🥗",
+            "Cá thu kho tộ + Cơm trắng + Dưa leo. 🐟",
+            "Sandwich ức gà + Salad. 🥪"
+        ]
+    elif 14 <= hour < 18:
+        period = "Bữa phụ chiều"
+        options = [
+            "1 hộp sữa chua Hy Lạp + Hạnh nhân. 🥛",
+            "1 quả táo + Bơ đậu phộng. 🍎",
+            "1 thanh Protein Bar. 🍫",
+            "1 quả chuối luộc. 🍌"
+        ]
+    else:
+        period = "Bữa tối"
+        options = [
+            "Salad cá ngừ + Trứng luộc. Nhẹ bụng dễ ngủ! 🥗",
+            "Thịt heo luộc cuốn bánh tráng (nhiều rau). 🌯",
+            "Ức gà nướng mật ong + Súp lơ luộc. 🍗",
+            "Canh bí đỏ thịt bằm. 🎃"
+        ]
+        
+    suggestion = random.choice(options)
+    return f"💡 Gợi ý {period} cho {user_context.get('name', 'bạn')}: {suggestion} Chúc ngon miệng!"
+
+def handle_suggest_workout(user_context):
+    """Gợi ý bài tập ngẫu nhiên"""
+    workouts = [
+        "🔥 Cardio đốt mỡ: Nhảy dây 10 phút + Burpees 3 hiệp (10 cái/hiệp).",
+        "🦵 Leg Day: Squat 4x12, Lunges 3x12, Calf Raise 4x15.",
+        "💪 Chest Day: Push-up 4xMax, Bench Press 4x10, Fly 3x12.",
+        "🐢 Active Recovery: Yoga 30 phút hoặc đi bộ nhẹ nhàng.",
+        "🍫 Abs Workout: Plank 3x1p, Crunch 3x20, Leg Raise 3x15."
+    ]
+    return f"Hôm nay thử bài này xem: {random.choice(workouts)} Cố lên! 💪"
+
 # Map Intent Tag -> Handler Function
 INTENT_HANDLERS = {
     "schedule": handle_schedule_query,
+    "busy_schedule": handle_busy_schedule,
     "stats": handle_my_stats,
     "greeting": handle_greeting,
     "my_info": handle_my_info,
@@ -195,7 +362,14 @@ INTENT_HANDLERS = {
     "current_date": handle_current_date,
     "identity": handle_my_info,
     "calc_tdee": handle_calc_tdee,
-    "calc_bmi": handle_calc_bmi
+    "calc_bmi": handle_calc_bmi,
+    "weather": handle_weather,
+    "motivation": handle_motivation,
+    "small_talk": handle_small_talk,
+    "love": handle_small_talk,
+    "funny": handle_small_talk,
+    "suggest_meal": handle_suggest_meal,
+    "suggest_workout": handle_suggest_workout
 }
 
 def get_response(msg, user_context=None):

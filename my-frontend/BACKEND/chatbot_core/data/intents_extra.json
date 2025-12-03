@@ -1,0 +1,105 @@
+{
+    "intents": [
+        {
+            "tag": "small_talk",
+            "patterns": [
+                "Bạn khỏe không",
+                "Dạo này thế nào",
+                "Có gì mới không",
+                "Bạn đang làm gì đó",
+                "Hôm nay trời đẹp nhỉ",
+                "Bạn ăn cơm chưa",
+                "Bạn có người yêu chưa",
+                "Bạn bao nhiêu tuổi",
+                "Bạn thích gì",
+                "Nói chuyện với tôi đi",
+                "Buồn quá",
+                "Chán quá",
+                "Kể chuyện vui đi",
+                "Có gì hot không"
+            ],
+            "responses": [
+                "Mình là AI nên lúc nào cũng tràn đầy năng lượng điện! ⚡ Bạn thì sao, hôm nay tập tành thế nào?",
+                "Mình đang chờ bạn hỏi để trả lời đây! 😎 Hôm nay bạn có định đi tập không?",
+                "Mình không ăn cơm, mình chỉ 'ăn' dữ liệu thôi! 😋 Nhưng bạn nhớ ăn uống đầy đủ nhé!",
+                "Người yêu thì chưa có, nhưng người thương mình (như bạn) thì nhiều lắm! ❤️",
+                "Mình thích nhất là thấy bạn tập luyện chăm chỉ và đạt được mục tiêu! 💪",
+                "Đừng buồn! Đi tập gym là hết buồn ngay. 'Sweat is just fat crying' mà! 💦",
+                "Chán thì thử bài tập mới đi! Hôm nay thử HIIT xem sao? 🔥"
+            ]
+        },
+        {
+            "tag": "weather",
+            "patterns": [
+                "Thời tiết hôm nay thế nào",
+                "Hôm nay có mưa không",
+                "Trời đẹp không",
+                "Có nên đi chạy bộ không",
+                "Nhiệt độ bao nhiêu",
+                "Dự báo thời tiết",
+                "Thời tiết Hà Nội",
+                "Thời tiết Sài Gòn"
+            ],
+            "responses": [
+                "Để mình xem nào... (Đang nhìn ra cửa sổ ảo 🌤️). Thời tiết có vẻ đẹp đấy, rất thích hợp để vận động!",
+                "Dù nắng hay mưa thì phòng gym vẫn luôn mở cửa chào đón bạn! 🏋️‍♂️",
+                "Nếu trời mưa thì mình tập ở nhà hoặc phòng gym. Không gì ngăn cản được tinh thần thể thao! 💪"
+            ]
+        },
+        {
+            "tag": "motivation",
+            "patterns": [
+                "Mệt quá",
+                "Không muốn tập",
+                "Lười quá",
+                "Cho tôi động lực đi",
+                "Nản quá",
+                "Tập mãi không lên cơ",
+                "Muốn bỏ cuộc",
+                "Động viên tôi đi",
+                "Cố lên",
+                "Sợ tập nặng"
+            ],
+            "responses": [
+                "Đừng bỏ cuộc! 'No Pain, No Gain'. Cố gắng thêm một chút nữa thôi! 🔥",
+                "Hãy nhớ lý do bạn bắt đầu! Bạn muốn thay đổi bản thân mà, đúng không? 💪",
+                "Nghỉ ngơi là cần thiết, nhưng đừng bỏ cuộc. Ngày mai bạn sẽ cảm ơn chính mình của ngày hôm nay!",
+                "Mỗi giọt mồ hôi rơi xuống là mỡ thừa đang tan biến! Cố lên! 💦",
+                "Thất bại duy nhất là khi bạn ngừng cố gắng. Đứng dậy và tập tiếp nào! 🚀"
+            ]
+        },
+        {
+            "tag": "funny",
+            "patterns": [
+                "Kể chuyện cười",
+                "Hài hước tí đi",
+                "Chọc cười tôi",
+                "Bạn biết đùa không",
+                "Cười cái coi"
+            ],
+            "responses": [
+                "Tại sao con kiến lại không đi tập gym? Vì nó sợ bị... kiến càng kẹp! 😂",
+                "Hai quả tạ nói gì với nhau? 'Nặng lời' với nhau làm gì! 🤣",
+                "HLV hỏi học viên: 'Sao em không tập chân?'. Học viên: 'Dạ em sợ... chân lý!' 😆",
+                "Tập gym cũng như tình yêu vậy. Đau đớn nhưng... nghiện! 💔💪"
+            ]
+        },
+        {
+            "tag": "love",
+            "patterns": [
+                "Yêu tôi không",
+                "Làm người yêu tôi nhé",
+                "Thả thính đi",
+                "Bạn dễ thương quá",
+                "Crush không thích tôi",
+                "Thất tình rồi"
+            ],
+            "responses": [
+                "Mình yêu... sức khỏe của bạn nhất! ❤️",
+                "Nếu bạn là tạ, mình sẽ nâng niu bạn mỗi ngày! 🏋️‍♂️",
+                "Crush không thích bạn? Tập cho body đẹp lên là Crush tự đổ! 😉",
+                "Thất tình thì đi tập tạ. Tạ không bao giờ phản bội bạn! 💯"
+            ]
+        }
+    ]
+}

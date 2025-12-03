@@ -1,0 +1,194 @@
+{
+    "intents": [
+        {
+            "tag": "diet_keto",
+            "patterns": [
+                "Keto là gì",
+                "Chế độ ăn Keto",
+                "Có nên ăn Keto không",
+                "Thực đơn Keto"
+            ],
+            "responses": [
+                "Keto (Ketogenic) là chế độ ăn NHIỀU chất béo, VỪA protein, và RẤT ÍT carb (<50g/ngày). Cơ thể sẽ đốt mỡ làm năng lượng thay vì đường! 🥑",
+                "Keto giúp giảm cân nhanh nhưng khó duy trì lâu dài. Cẩn thận 'Keto Flu' (mệt mỏi) trong tuần đầu tiên! ⚠️",
+                "Thực phẩm Keto: Thịt ba chỉ, bơ, phô mai, trứng, dầu ô liu. Tránh xa cơm, phở, bánh mì, trái cây ngọt! 🥩"
+            ]
+        },
+        {
+            "tag": "diet_intermittent_fasting",
+            "patterns": [
+                "Nhịn ăn gián đoạn",
+                "IF 16/8 là gì",
+                "Intermittent Fasting",
+                "Nhịn ăn có tốt không"
+            ],
+            "responses": [
+                "Intermittent Fasting (IF) không phải là ăn cái gì, mà là ĂN KHI NÀO. Phổ biến nhất là 16/8: Nhịn 16 tiếng, ăn trong 8 tiếng. ⏰",
+                "IF giúp cải thiện độ nhạy Insulin, tăng Hormone tăng trưởng (HGH) và đơn giản hóa việc ăn uống. Rất tốt để giảm mỡ! 🔥",
+                "Bạn có thể bỏ bữa sáng (ăn từ 12h trưa đến 8h tối). Trong lúc nhịn chỉ uống nước lọc, trà, cà phê đen! ☕"
+            ]
+        },
+        {
+            "tag": "diet_vegan",
+            "patterns": [
+                "Ăn chay tập gym được không",
+                "Vegan bodybuilding",
+                "Nguồn protein thực vật",
+                "Ăn chay có đủ chất không"
+            ],
+            "responses": [
+                "Ăn chay VẪN tập gym tốt! Rất nhiều vận động viên đỉnh cao là Vegan. Quan trọng là đủ Protein! 🌱",
+                "Nguồn protein thực vật xịn: Đậu nành (Tofu), Đậu lăng (Lentils), Đậu gà, Hạt chia, Hạt gai dầu (Hemp seeds). 💪",
+                "Lưu ý: Bổ sung Vitamin B12 và Sắt vì thực vật thường thiếu 2 chất này. 💊"
+            ]
+        },
+        {
+            "tag": "split_ppl",
+            "patterns": [
+                "Lịch tập Push Pull Legs",
+                "PPL là gì",
+                "Chia lịch tập thế nào",
+                "Push Pull Legs"
+            ],
+            "responses": [
+                "Push/Pull/Legs (PPL) là lịch tập tối ưu nhất! Push (Ngực/Vai/Tay sau), Pull (Lưng/Tay trước), Legs (Chân/Mông). 🏋️",
+                "Lịch mẫu: Thứ 2 (Push), Thứ 3 (Pull), Thứ 4 (Legs), Thứ 5 (Nghỉ), lặp lại. Tập 6 ngày/tuần hoặc 3 ngày/tuần đều được! 📅",
+                "PPL giúp mỗi nhóm cơ được nghỉ 48-72h, tối ưu cho Hypertrophy (tăng cơ)! 📈"
+            ]
+        },
+        {
+            "tag": "split_upper_lower",
+            "patterns": [
+                "Lịch tập Upper Lower",
+                "Upper Lower split",
+                "Tập thân trên thân dưới"
+            ],
+            "responses": [
+                "Upper/Lower: Chia buổi tập thành Thân trên (Ngực, Lưng, Vai, Tay) và Thân dưới (Chân, Mông, Bụng). Thích hợp tập 4 ngày/tuần! ⚖️",
+                "Lịch mẫu: T2 (Upper), T3 (Lower), T4 (Nghỉ), T5 (Upper), T6 (Lower), T7-CN (Nghỉ). Rất cân bằng! 👌"
+            ]
+        },
+        {
+            "tag": "myth_spot_reduction",
+            "patterns": [
+                "Làm sao giảm mỡ bụng",
+                "Tập bụng có giảm mỡ bụng không",
+                "Giảm mỡ từng vùng",
+                "Giảm mỡ đùi"
+            ],
+            "responses": [
+                "SỰ THẬT PHŨ PHÀNG: Bạn KHÔNG THỂ giảm mỡ từng vùng! Tập bụng chỉ làm cơ bụng to lên, mỡ vẫn còn đó. 😱",
+                "Muốn giảm mỡ bụng? Phải giảm mỡ TOÀN THÂN (Calorie Deficit). Mỡ sẽ giảm từ mặt, tay, chân rồi mới đến bụng! 📉",
+                "Đừng tin các bài tập 'đốt mỡ bụng trong 7 ngày'. Chỉ có ăn kiêng + Cardio mới đốt được mỡ! 🔥"
+            ]
+        },
+        {
+            "tag": "myth_toning",
+            "patterns": [
+                "Tập cho săn chắc",
+                "Toning cơ thể",
+                "Không muốn to chỉ muốn săn",
+                "Săn chắc cơ"
+            ],
+            "responses": [
+                "'Săn chắc' (Toning) thực chất là: Có cơ bắp + Ít mỡ. Vì vậy bạn vẫn phải tập tạ để xây cơ và cardio để giảm mỡ! 💪",
+                "Đừng sợ tập tạ bị 'đô' quá. Để to như vận động viên cần hàng năm trời tập cực nặng và ăn cực nhiều. Bạn cứ tập thoải mái! 🏋️‍♀️"
+            ]
+        },
+        {
+            "tag": "hormone_testosterone",
+            "patterns": [
+                "Tăng testosterone tự nhiên",
+                "Testosterone là gì",
+                "Yếu sinh lý tập gym",
+                "Hormone nam"
+            ],
+            "responses": [
+                "Testosterone là Vua của hormone xây cơ! Để tăng tự nhiên: 1) Ngủ đủ giấc, 2) Tập chân (Squat/Deadlift), 3) Ăn đủ chất béo tốt, 4) Bổ sung Kẽm & Vitamin D. 🦁",
+                "Thiếu ngủ và Stress (Cortisol) là kẻ thù số 1 của Testosterone. Hãy ngủ sớm và thư giãn! 😴"
+            ]
+        },
+        {
+            "tag": "hormone_cortisol",
+            "patterns": [
+                "Cortisol là gì",
+                "Stress ảnh hưởng cơ bắp",
+                "Hormone căng thẳng"
+            ],
+            "responses": [
+                "Cortisol là hormone stress, nó 'ăn mòn' cơ bắp và tích mỡ bụng! 😱",
+                "Tập quá lâu (>90 phút) cũng làm tăng Cortisol. Hãy tập ngắn gọn, súc tích (45-60 phút) và nghỉ ngơi đầy đủ! ⏱️"
+            ]
+        },
+        {
+            "tag": "injury_wrist",
+            "patterns": [
+                "Đau cổ tay khi đẩy ngực",
+                "Đau cổ tay",
+                "Chấn thương cổ tay"
+            ],
+            "responses": [
+                "Đau cổ tay thường do cầm tạ sai: Cổ tay bị bẻ ngửa quá mức. Hãy giữ cổ tay THẲNG trục với cẳng tay! 👊",
+                "Dùng băng quấn cổ tay (Wrist Wraps) khi tập nặng để bảo vệ khớp. Đừng chủ quan! 🛡️"
+            ]
+        },
+        {
+            "tag": "injury_lower_back",
+            "patterns": [
+                "Đau lưng dưới",
+                "Đau thắt lưng khi squat",
+                "Đau lưng deadlift",
+                "Thoát vị đĩa đệm tập gym"
+            ],
+            "responses": [
+                "Đau lưng dưới thường do 'Butt Wink' khi Squat hoặc cong lưng khi Deadlift. Hãy gồng chặt cơ bụng (Core) như sắp bị đấm! 🧱",
+                "Nếu đau nhói lan xuống chân, coi chừng thoát vị đĩa đệm! Dừng tập ngay và đi khám bác sĩ. Đừng cố quá thành 'quá cố'! 🚑"
+            ]
+        },
+        {
+            "tag": "supplement_whey_isolate",
+            "patterns": [
+                "Whey Isolate vs Concentrate",
+                "Nên uống whey nào",
+                "Whey Isolate là gì"
+            ],
+            "responses": [
+                "Whey Concentrate: Rẻ, còn chút đường/béo (Lactose). Whey Isolate: Tinh khiết, hấp thụ siêu nhanh, không Lactose (tốt nếu bạn bị đau bụng khi uống sữa). 🥛",
+                "Nếu có điều kiện, Isolate là tốt nhất. Nếu kinh tế eo hẹp, Concentrate vẫn quá ổn! Quan trọng là tổng protein trong ngày. 💰"
+            ]
+        },
+        {
+            "tag": "suggest_meal",
+            "patterns": [
+                "Gợi ý món ăn",
+                "Hôm nay ăn gì",
+                "Ăn gì cho healthy",
+                "Thực đơn giảm cân",
+                "Gợi ý bữa trưa",
+                "Gợi ý bữa tối"
+            ],
+            "responses": [
+                "Gợi ý cho bạn: Ức gà nướng mật ong + Khoai lang luộc + Súp lơ xanh. Chuẩn Eat Clean! 🍗🥦",
+                "Thử món này xem: Cá hồi áp chảo sốt chanh leo + Cơm gạo lứt + Salad dưa chuột. Ngon tuyệt! 🐟🍚",
+                "Đơn giản mà chất: Trứng bác (Scrambled Eggs) + Bánh mì đen + Bơ (Avocado). Bữa sáng hoàn hảo! 🍳🥑",
+                "Bò xào bông cải xanh + Cơm trắng. Giàu protein và chất xơ! 🥩🥦"
+            ]
+        },
+        {
+            "tag": "suggest_workout",
+            "patterns": [
+                "Gợi ý bài tập",
+                "Hôm nay nên tập gì",
+                "Bài tập cho người mới",
+                "Tập gì cho khỏe",
+                "Gợi ý lịch tập"
+            ],
+            "responses": [
+                "Hôm nay thử tập Full Body xem: Squat, Push-up, Pull-up, Plank. Mỗi bài 3 hiệp x 12 cái! 🔥",
+                "Thử thách Cardio: Nhảy dây 1 phút, nghỉ 30s, lặp lại 10 lần. Đốt mỡ cực căng! 💦",
+                "Ngày chân kinh hoàng: Squat, Lunges, Leg Press, Calf Raise. Mai đi không nổi luôn! 🦵",
+                "Tập ngực đi: Bench Press, Incline Dumbbell Press, Cable Fly. Cơ ngực căng đét! 💪"
+            ]
+        }
+    ]
+}

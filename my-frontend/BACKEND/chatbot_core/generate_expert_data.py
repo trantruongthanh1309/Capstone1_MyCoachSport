@@ -291,7 +291,7 @@ all_expert_intents = {
 }
 
 # Lưu file
-with open('intents_expert.json', 'w', encoding='utf-8') as f:
+with open('data/intents_expert.json', 'w', encoding='utf-8') as f:
     json.dump(all_expert_intents, f, ensure_ascii=False, indent=2)
 
 total_patterns = sum(len(intent['patterns']) for intent in all_expert_intents['intents'])

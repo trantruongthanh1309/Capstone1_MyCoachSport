@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify, session, current_app
 from models.social_models import Post, Comment, Like, Share, Conversation, Message
 from models.user_model import User
 from db import db
@@ -20,7 +20,7 @@ def get_posts():
         
         query = Post.query
         
-        # Nếu có filter sport thì lọc, nếu không thì lấy tất cả (hoặc ưu tiên sport của user nếu muốn)
+        # Nếu có filter sport thì lọc
         if sport_filter and sport_filter != 'All':
             query = query.filter(Post.Sport == sport_filter)
             
@@ -35,7 +35,8 @@ def get_posts():
             'current_page': page
         })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        current_app.logger.error(f"Error in get_posts: {str(e)}")
+        return jsonify({'error': 'Lỗi máy chủ nội bộ'}), 500
 
 
 @social_bp.route('/posts', methods=['POST'])
@@ -47,16 +48,25 @@ def create_post():
     
     try:
         data = request.get_json()
+        content = data.get('content')
+        image_url = data.get('image_url')
+
+        # Validation: Phải có nội dung hoặc ảnh
+        if not content and not image_url:
+            return jsonify({'error': 'Bài viết phải có nội dung hoặc ảnh'}), 400
+
         post = Post(
             User_id=user_id,
-            Content=data.get('content'),
+            Content=content,
             Title=data.get('title'),
             Sport=data.get('sport'),
             Topic=data.get('topic'),
-            ImageUrl=data.get('image_url')
+            ImageUrl=image_url
         )
         db.session.add(post)
         db.session.commit()
+        
+        current_app.logger.info(f"User {user_id} created post {post.Id}")
         
         return jsonify({
             'success': True,
@@ -64,7 +74,8 @@ def create_post():
         }), 201
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        current_app.logger.error(f"Error in create_post: {str(e)}")
+        return jsonify({'error': 'Không thể tạo bài viết'}), 500
 
 
 @social_bp.route('/posts/<int:post_id>', methods=['DELETE'])
@@ -82,10 +93,13 @@ def delete_post(post_id):
         db.session.delete(post)
         db.session.commit()
         
+        current_app.logger.info(f"User {user_id} deleted post {post_id}")
+        
         return jsonify({'success': True, 'message': 'Đã xóa bài viết'})
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        current_app.logger.error(f"Error in delete_post: {str(e)}")
+        return jsonify({'error': 'Không thể xóa bài viết'}), 500
 
 
 # ==================== COMMENTS ====================
@@ -102,7 +116,8 @@ def get_comments(post_id):
             'comments': [comment.to_dict() for comment in comments]
         })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        current_app.logger.error(f"Error in get_comments: {str(e)}")
+        return jsonify({'error': 'Lỗi khi lấy bình luận'}), 500
 
 
 @social_bp.route('/posts/<int:post_id>/comments', methods=['POST'])
@@ -114,10 +129,15 @@ def create_comment(post_id):
     
     try:
         data = request.get_json()
+        content = data.get('content')
+        
+        if not content:
+            return jsonify({'error': 'Nội dung bình luận không được để trống'}), 400
+
         comment = Comment(
             Post_id=post_id,
             User_id=user_id,
-            Content=data.get('content')
+            Content=content
         )
         db.session.add(comment)
         db.session.commit()
@@ -128,7 +148,8 @@ def create_comment(post_id):
         }), 201
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        current_app.logger.error(f"Error in create_comment: {str(e)}")
+        return jsonify({'error': 'Không thể bình luận'}), 500
 
 
 # ==================== LIKES ====================
@@ -156,7 +177,8 @@ def toggle_like(post_id):
             return jsonify({'success': True, 'liked': True})
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        current_app.logger.error(f"Error in toggle_like: {str(e)}")
+        return jsonify({'error': 'Lỗi xử lý like'}), 500
 
 
 # ==================== SHARES ====================
@@ -176,7 +198,8 @@ def share_post(post_id):
         return jsonify({'success': True, 'message': 'Đã chia sẻ bài viết'})
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        current_app.logger.error(f"Error in share_post: {str(e)}")
+        return jsonify({'error': 'Không thể chia sẻ'}), 500
 
 
 # ==================== MESSAGES ====================
@@ -198,7 +221,8 @@ def get_conversations():
             'conversations': [conv.to_dict(user_id) for conv in conversations]
         })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        current_app.logger.error(f"Error in get_conversations: {str(e)}")
+        return jsonify({'error': 'Lỗi lấy danh sách tin nhắn'}), 500
 
 
 @social_bp.route('/conversations/<int:user2_id>', methods=['GET'])
@@ -232,7 +256,8 @@ def get_or_create_conversation(user2_id):
         })
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        current_app.logger.error(f"Error in get_or_create_conversation: {str(e)}")
+        return jsonify({'error': 'Lỗi xử lý cuộc trò chuyện'}), 500
 
 
 @social_bp.route('/conversations/<int:conversation_id>/messages', methods=['POST'])
@@ -244,16 +269,22 @@ def send_message(conversation_id):
     
     try:
         data = request.get_json()
+        content = data.get('content')
+        
+        if not content:
+            return jsonify({'error': 'Nội dung tin nhắn không được để trống'}), 400
+
         message = Message(
             Conversation_id=conversation_id,
             Sender_id=user_id,
-            Content=data.get('content')
+            Content=content
         )
         db.session.add(message)
         
         # Cập nhật LastMessageAt
         conversation = Conversation.query.get(conversation_id)
-        conversation.LastMessageAt = datetime.utcnow()
+        if conversation:
+            conversation.LastMessageAt = datetime.utcnow()
         
         db.session.commit()
         
@@ -263,7 +294,8 @@ def send_message(conversation_id):
         }), 201
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        current_app.logger.error(f"Error in send_message: {str(e)}")
+        return jsonify({'error': 'Không thể gửi tin nhắn'}), 500
 
 
 @social_bp.route('/users/search', methods=['GET'])
@@ -287,4 +319,5 @@ def search_users():
             } for u in users]
         })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        current_app.logger.error(f"Error in search_users: {str(e)}")
+        return jsonify({'error': 'Lỗi tìm kiếm'}), 500

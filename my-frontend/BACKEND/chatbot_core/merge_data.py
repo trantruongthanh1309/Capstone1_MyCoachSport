@@ -1,11 +1,11 @@
 import json
 
 # Đọc file cũ
-with open('intents.json', 'r', encoding='utf-8') as f:
+with open('data/intents.json', 'r', encoding='utf-8') as f:
     old_data = json.load(f)
 
 # Đọc file mới
-with open('intents_extended.json', 'r', encoding='utf-8') as f:
+with open('data/intents_extended.json', 'r', encoding='utf-8') as f:
     new_data = json.load(f)
 
 # Merge
@@ -16,7 +16,7 @@ merged_data = {
 }
 
 # Lưu file merged
-with open('intents_full.json', 'w', encoding='utf-8') as f:
+with open('data/intents_full.json', 'w', encoding='utf-8') as f:
     json.dump(merged_data, f, ensure_ascii=False, indent=4)
 
 total_patterns = sum(len(intent['patterns']) for intent in merged_intents)

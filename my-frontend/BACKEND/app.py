@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from flask import Flask, jsonify, session
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
@@ -31,6 +32,10 @@ from api.routes.admin_routes.feedback import feedback_bp
 
 # Khởi tạo Flask app
 app = Flask(__name__)
+
+# Cấu hình Logger
+from utils.logger import setup_logger
+setup_logger(app)
 
 # Cấu hình kết nối cơ sở dữ liệu SQL Server
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mssql+pyodbc://sa:123@MSI\\SQLEXPRESS01/MySportCoachAI?driver=ODBC+Driver+17+for+SQL+Server'

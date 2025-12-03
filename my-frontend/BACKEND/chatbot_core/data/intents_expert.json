@@ -1,0 +1,173 @@
+{
+  "intents": [
+    {
+      "tag": "technique_squat",
+      "patterns": [
+        "Cách squat đúng",
+        "Squat sâu bao nhiêu",
+        "Tư thế squat",
+        "Squat an toàn",
+        "Squat bao nhiêu kg"
+      ],
+      "responses": [
+        "Squat đúng kỹ thuật: 1) Chân rộng bằng vai, 2) Ngực đứng thẳng, 3) Xuống đến khi đùi song song sàn (hoặc sâu hơn nếu được), 4) Đẩy qua gót chân. Gồng core! 🏋️",
+        "Squat sâu (ATG - Ass To Grass) tốt cho khớp gối NẾU bạn có độ linh hoạt. Nếu chưa, xuống song song là đủ! 💪",
+        "Lỗi phổ biến: Đầu gối vượt quá mũi chân, lưng vồ, gót chân nhấc lên. Hãy quay video để tự kiểm tra! 📹"
+      ]
+    },
+    {
+      "tag": "technique_deadlift",
+      "patterns": [
+        "Cách deadlift",
+        "Deadlift đúng kỹ thuật",
+        "Deadlift conventional vs sumo",
+        "Tư thế deadlift"
+      ],
+      "responses": [
+        "Deadlift = Vua bài tập! Kỹ thuật: 1) Tạ sát ống quyển, 2) Lưng thẳng (KHÔNG vồ!), 3) Gồng core, 4) Đẩy sàn bằng chân, kéo tạ lên. 🔥",
+        "Conventional (chân hẹp) vs Sumo (chân rộng): Chọn theo cảm giác thoải mái. Sumo dễ hơn với người chân dài! 🦵",
+        "Deadlift nguy hiểm NẾU sai tư thế. Luôn giữ lưng thẳng, không nhìn lên trời hay cúi đầu! ⚠️"
+      ]
+    },
+    {
+      "tag": "technique_bench_press",
+      "patterns": [
+        "Cách bench press",
+        "Đẩy ngực đúng",
+        "Bench press bao nhiêu kg",
+        "Tư thế bench press"
+      ],
+      "responses": [
+        "Bench Press: 1) Nằm ngửa, chân chạm sàn, 2) Vai co lại (retract), 3) Hạ tạ chạm ngực, 4) Đẩy lên mạnh. Đừng bounce tạ! 💪",
+        "Grip rộng = tập ngực nhiều hơn. Grip hẹp = tập tay sau (triceps) nhiều hơn. Thử cả hai! 🏋️",
+        "Lỗi: Vai đẩy lên (dễ chấn thương), mông nhấc khỏi ghế, tạ không chạm ngực. Hãy tập nhẹ để làm quen! ⚠️"
+      ]
+    },
+    {
+      "tag": "supplements_creatine",
+      "patterns": [
+        "Creatine là gì",
+        "Creatine có tốt không",
+        "Uống creatine khi nào",
+        "Creatine monohydrate"
+      ],
+      "responses": [
+        "Creatine = Thực phẩm bổ sung ĐƯỢC NGHIÊN CỨU NHIỀU NHẤT! Giúp tăng sức mạnh, sức bền. An toàn 100%! 💊",
+        "Liều dùng: 5g/ngày, uống bất cứ lúc nào (không cần loading phase). Uống với nước hoặc protein shake! 💧",
+        "Creatine Monohydrate = Rẻ nhất, hiệu quả nhất. Không cần mua loại đắt tiền! 💰"
+      ]
+    },
+    {
+      "tag": "supplements_bcaa",
+      "patterns": [
+        "BCAA là gì",
+        "BCAA có cần không",
+        "Uống BCAA khi nào"
+      ],
+      "responses": [
+        "BCAA (Branched-Chain Amino Acids) = 3 amino acid: Leucine, Isoleucine, Valine. Giảm mệt mỏi, tăng phục hồi! 💪",
+        "Nếu bạn ăn đủ protein (1.6-2g/kg), BCAA KHÔNG CẦN THIẾT. Tiết kiệm tiền mua thịt gà tốt hơn! 🍗",
+        "Uống BCAA trong lúc tập (intra-workout) nếu bạn tập lâu (>90 phút) hoặc tập đói. 🏋️"
+      ]
+    },
+    {
+      "tag": "cardio_vs_weights",
+      "patterns": [
+        "Cardio hay tạ",
+        "Nên tập cardio không",
+        "Cardio trước hay sau tập tạ",
+        "HIIT vs LISS"
+      ],
+      "responses": [
+        "Cardio + Tạ = Combo hoàn hảo! Tạ xây cơ, Cardio tốt cho tim mạch. Đừng bỏ qua cái nào! ❤️💪",
+        "Tập Tạ TRƯỚC, Cardio SAU. Vì tập tạ cần năng lượng tối đa. Cardio sau giúp đốt mỡ thêm! 🔥",
+        "HIIT (cường độ cao) đốt mỡ nhanh, LISS (cường độ thấp) dễ dàng hơn, ít stress. Kết hợp cả hai! 🏃"
+      ]
+    },
+    {
+      "tag": "meal_timing",
+      "patterns": [
+        "Ăn khi nào",
+        "Ăn trước hay sau tập",
+        "Bữa ăn trước tập",
+        "Bữa ăn sau tập",
+        "Anabolic window"
+      ],
+      "responses": [
+        "Trước tập (1-2h): Ăn Carb + Protein (cơm gà, yến mạch + trứng). Sau tập (30-60 phút): Protein + Carb (whey + chuối). 🍌",
+        "Anabolic Window (30 phút sau tập) KHÔNG quan trọng như người ta nghĩ. Tổng lượng protein/ngày mới quan trọng! 💡",
+        "Ăn 4-6 bữa nhỏ/ngày tốt hơn 2-3 bữa lớn. Giúp cơ thể hấp thụ protein đều đặn! 🍽️"
+      ]
+    },
+    {
+      "tag": "hydration",
+      "patterns": [
+        "Uống bao nhiêu nước",
+        "Nước quan trọng không",
+        "Uống nước khi tập",
+        "Thiếu nước"
+      ],
+      "responses": [
+        "Uống 2-3 lít nước/ngày. Khi tập, uống thêm 500ml-1 lít. Nước = 70% cơ thể, đừng thiếu! 💧",
+        "Thiếu nước 2% = Giảm 10-20% hiệu suất tập! Uống đều đặn, đừng đợi khát mới uống. 🚰",
+        "Nước lọc là tốt nhất. Nước tăng lực (energy drink) có đường, chỉ uống khi cần thiết! ⚡"
+      ]
+    },
+    {
+      "tag": "rest_days",
+      "patterns": [
+        "Có nên nghỉ không",
+        "Tập mỗi ngày được không",
+        "Nghỉ bao nhiêu ngày",
+        "Rest day"
+      ],
+      "responses": [
+        "Nghỉ ngơi = Lúc cơ phát triển! Tập 4-5 ngày/tuần, nghỉ 2-3 ngày là lý tưởng. Đừng overtrain! 😴",
+        "Tập mỗi ngày = Nguy cơ chấn thương, burnout. Cơ cần 48h để phục hồi hoàn toàn! ⏰",
+        "Rest day không = nằm không. Đi bộ nhẹ, yoga, stretching vẫn OK! Active recovery! 🧘"
+      ]
+    },
+    {
+      "tag": "body_types",
+      "patterns": [
+        "Ectomorph là gì",
+        "Mesomorph",
+        "Endomorph",
+        "Dáng người",
+        "Khó lên cơ"
+      ],
+      "responses": [
+        "3 dáng người: Ectomorph (gầy, khó lên cơ), Mesomorph (cơ bắp tự nhiên), Endomorph (dễ tăng cân). Bạn thuộc loại nào? 🤔",
+        "Ectomorph: Ăn NHIỀU (surplus 500 calo), tập nặng, ít cardio. Kiên nhẫn, cơ sẽ lên! 💪",
+        "Endomorph: Kiểm soát calo, tập cardio nhiều, ăn sạch. Bạn có tiềm năng cơ bắp lớn! 🔥"
+      ]
+    },
+    {
+      "tag": "plateau_breakthrough",
+      "patterns": [
+        "Không lên cơ nữa",
+        "Bị plateau",
+        "Tập mãi không tiến bộ",
+        "Đột phá"
+      ],
+      "responses": [
+        "Plateau = Bình thường! Giải pháp: 1) Tăng trọng lượng, 2) Thay đổi bài tập, 3) Tăng protein, 4) Ngủ đủ giấc. 💡",
+        "Progressive Overload = Chìa khóa! Mỗi tuần tăng 2.5-5kg hoặc thêm 1-2 rep. Cơ sẽ buộc phải lớn! 📈",
+        "Deload 1 tuần (giảm 50% volume) để cơ thể phục hồi hoàn toàn. Sau đó comeback mạnh mẽ hơn! 🔋"
+      ]
+    },
+    {
+      "tag": "form_vs_weight",
+      "patterns": [
+        "Tập nặng hay nhẹ",
+        "Form quan trọng không",
+        "Kỹ thuật hay trọng lượng"
+      ],
+      "responses": [
+        "Form (kỹ thuật) LUÔN LUÔN quan trọng hơn Weight (trọng lượng)! Tập sai = chấn thương + không hiệu quả. ⚠️",
+        "Nguyên tắc: Làm chủ form với trọng lượng nhẹ → Tăng dần trọng lượng khi form đã chuẩn. Đừng vội! 🐢",
+        "Ego lifting (tập nặng quá sức để khoe) = Ngu ngốc! Hãy tập thông minh, không phải tập nặng! 🧠"
+      ]
+    }
+  ]
+}

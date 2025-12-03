@@ -743,7 +743,7 @@ all_intents = {
 }
 
 # Lưu file
-with open('intents_extended.json', 'w', encoding='utf-8') as f:
+with open('data/intents_extended.json', 'w', encoding='utf-8') as f:
     json.dump(all_intents, f, ensure_ascii=False, indent=4)
 
 print(f"✅ Đã tạo file intents_extended.json với {len(all_intents['intents'])} intents!")

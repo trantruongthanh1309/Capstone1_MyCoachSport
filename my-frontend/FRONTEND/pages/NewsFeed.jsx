@@ -4,7 +4,9 @@ import PostCard from "../components/PostCard";
 import Messenger from "../components/Messenger";
 import "./NewsFeed.css";
 
-const API_BASE = "http://localhost:5000";
+import config from "../config";
+
+const API_BASE = config.API_BASE;
 
 const SPORTS_FILTER = [
     { id: "All", label: "🌐 Tất cả" },
@@ -68,10 +70,16 @@ export default function NewsFeed() {
     };
 
     const handleScroll = () => {
-        if (window.innerHeight + document.documentElement.scrollTop !== document.documentElement.offsetHeight || !hasMore || loading) return;
-        const nextPage = page + 1;
-        setPage(nextPage);
-        loadPosts(nextPage, selectedSport);
+        // Improved scroll detection
+        const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+        const scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
+        const clientHeight = document.documentElement.clientHeight || window.innerHeight;
+
+        if (scrollTop + clientHeight >= scrollHeight - 50 && hasMore && !loading) {
+            const nextPage = page + 1;
+            setPage(nextPage);
+            loadPosts(nextPage, selectedSport);
+        }
     };
 
     useEffect(() => {

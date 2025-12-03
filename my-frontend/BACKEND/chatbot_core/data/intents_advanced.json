@@ -1,0 +1,195 @@
+{
+    "intents": [
+        {
+            "tag": "nutrition_protein",
+            "patterns": [
+                "Protein là gì",
+                "Tôi cần bao nhiêu protein",
+                "Thực phẩm giàu protein",
+                "Whey protein có tốt không",
+                "Ăn protein khi nào",
+                "Protein cho người tập gym",
+                "Thịt gà hay thịt bò tốt hơn",
+                "Trứng có nhiều protein không",
+                "Protein shake",
+                "Casein protein"
+            ],
+            "responses": [
+                "Protein là 'vật liệu xây dựng' cơ bắp! Người tập gym cần 1.6-2.2g/kg cân nặng mỗi ngày. Nguồn tốt: Thịt gà, cá, trứng, đậu, sữa. 💪",
+                "Whey Protein hấp thụ nhanh, uống sau tập. Casein hấp thụ chậm, uống trước ngủ. Nhưng thực phẩm tự nhiên vẫn là tốt nhất! 🥩",
+                "Trứng gà = siêu thực phẩm! 1 quả có ~6g protein + đầy đủ amino acid. Ăn cả lòng đỏ để hấp thụ tốt nhất nhé! 🍳"
+            ]
+        },
+        {
+            "tag": "nutrition_carbs",
+            "patterns": [
+                "Carb là gì",
+                "Nên ăn carb không",
+                "Carb tốt và carb xấu",
+                "Gạo lứt hay gạo trắng",
+                "Khoai lang tốt không",
+                "Cắt carb để giảm cân",
+                "Low carb diet",
+                "Ăn carb khi nào"
+            ],
+            "responses": [
+                "Carb = Năng lượng! Không phải kẻ thù. Chọn carb phức (gạo lứt, khoai lang, yến mạch) thay vì carb đơn (đường, bánh ngọt). 🍠",
+                "Cắt carb hoàn toàn = mất năng lượng tập. Hãy ăn carb vào sáng và trước/sau tập để tối ưu hiệu suất! ⚡",
+                "Khoai lang = Vua carb cho dân gym! Giàu chất xơ, vitamin A, GI thấp. Ăn luộc hoặc nướng là ngon nhất! 🔥"
+            ]
+        },
+        {
+            "tag": "nutrition_fat",
+            "patterns": [
+                "Chất béo có tốt không",
+                "Ăn mỡ có béo không",
+                "Omega 3 là gì",
+                "Dầu ô liu",
+                "Bơ tốt cho sức khỏe",
+                "Chất béo tốt",
+                "Trans fat là gì"
+            ],
+            "responses": [
+                "Chất béo KHÔNG phải kẻ thù! Cơ thể cần chất béo tốt (Omega-3, Omega-6) từ cá hồi, hạt chia, bơ, dầu ô liu. 🥑",
+                "Tránh Trans Fat (đồ chiên, bánh công nghiệp). Ưu tiên chất béo không bão hòa đơn (MUFA) và đa (PUFA). 🐟",
+                "Omega-3 giảm viêm, tốt cho tim mạch và não bộ. Ăn cá hồi, cá thu 2-3 lần/tuần hoặc uống dầu cá! 💊"
+            ]
+        },
+        {
+            "tag": "injury_prevention",
+            "patterns": [
+                "Làm sao tránh chấn thương",
+                "Đau lưng khi tập",
+                "Đau vai",
+                "Đau đầu gối",
+                "Bị căng cơ",
+                "Chấn thương phổ biến",
+                "Warm up quan trọng không"
+            ],
+            "responses": [
+                "Khởi động (Warm-up) 5-10 phút LUÔN LUÔN! Tăng nhiệt độ cơ, giảm 50% nguy cơ chấn thương. Đừng bỏ qua! 🔥",
+                "Đau lưng thường do tư thế sai khi Squat/Deadlift. Hãy gồng Core, giữ lưng thẳng, không vồ lưng! 🏋️",
+                "Đau vai? Kiểm tra tư thế Bench Press. Vai phải co lại, không đẩy vai lên. Tập Rotator Cuff để phòng ngừa! 💪"
+            ]
+        },
+        {
+            "tag": "recovery_sleep",
+            "patterns": [
+                "Ngủ bao nhiêu tiếng",
+                "Tầm quan trọng của giấc ngủ",
+                "Ngủ ít có ảnh hưởng không",
+                "Mất ngủ",
+                "Ngủ sâu",
+                "Recovery"
+            ],
+            "responses": [
+                "Ngủ = Lúc cơ bắp phát triển! Cần 7-9 tiếng/đêm. Thiếu ngủ = giảm Testosterone, tăng Cortisol (hormone stress). 😴",
+                "Ngủ sâu (Deep Sleep) là giai đoạn cơ thể tiết Growth Hormone để sửa chữa cơ. Tắt điện thoại, tối đèn để ngủ ngon! 🌙",
+                "Mất ngủ? Thử: Tắt màn hình 1h trước ngủ, uống trà thảo mộc, thiền 10 phút. Tránh caffeine sau 3h chiều! ☕"
+            ]
+        },
+        {
+            "tag": "stress_management",
+            "patterns": [
+                "Stress quá",
+                "Căng thẳng",
+                "Lo âu",
+                "Áp lực công việc",
+                "Làm sao giảm stress",
+                "Burnout"
+            ],
+            "responses": [
+                "Tập gym = Giảm stress tự nhiên! Khi tập, cơ thể tiết Endorphin (hormone hạnh phúc). Đi tập ngay khi stress! 💪",
+                "Thở sâu 4-7-8: Hít vào 4 giây, giữ 7 giây, thở ra 8 giây. Lặp lại 5 lần. Não sẽ thư giãn ngay! 🧘",
+                "Burnout? Nghỉ ngơi KHÔNG phải yếu đuối. Hãy deload (giảm cường độ tập) 1 tuần để cơ thể phục hồi. 🔋"
+            ]
+        },
+        {
+            "tag": "philosophy_life",
+            "patterns": [
+                "Ý nghĩa cuộc sống",
+                "Sống thế nào cho đúng",
+                "Triết lý sống",
+                "Hạnh phúc là gì",
+                "Thành công là gì"
+            ],
+            "responses": [
+                "Cuộc sống giống như tập gym: Không có shortcut, chỉ có consistency (kiên trì). Mỗi ngày tiến bộ 1% là đủ! 📈",
+                "Hạnh phúc không phải đích đến, mà là hành trình. Tận hưởng từng buổi tập, từng bữa ăn healthy! 😊",
+                "Thành công = Khi bạn tốt hơn chính mình ngày hôm qua. Đừng so sánh với người khác! 🏆"
+            ]
+        },
+        {
+            "tag": "compliment",
+            "patterns": [
+                "Khen tôi đi",
+                "Tôi đẹp không",
+                "Tôi giỏi không",
+                "Động viên tôi"
+            ],
+            "responses": [
+                "Bạn tuyệt vời lắm! Việc bạn đang cố gắng tập luyện đã chứng tỏ bạn là người có ý chí mạnh mẽ rồi! 💪",
+                "Bạn đẹp nhất khi tự tin! Và người tập gym luôn tỏa sáng năng lượng tích cực. Keep shining! ✨",
+                "Bạn đang làm rất tốt rồi! Mỗi giọt mồ hôi là một bước tiến gần hơn đến phiên bản tốt nhất của chính mình! 🔥"
+            ]
+        },
+        {
+            "tag": "science_anatomy",
+            "patterns": [
+                "Cơ bắp hoạt động thế nào",
+                "Hypertrophy là gì",
+                "Sao cơ to lên",
+                "Cơ nhanh cơ chậm",
+                "ATP là gì"
+            ],
+            "responses": [
+                "Cơ to lên qua 3 giai đoạn: 1) Tập nặng tạo vi chấn thương, 2) Ăn protein để sửa chữa, 3) Ngủ để cơ phát triển lớn hơn (Hypertrophy). 💪",
+                "Cơ có 2 loại sợi: Type I (chậm, bền) cho marathon, Type II (nhanh, mạnh) cho sprint/tạ. Tập nặng kích thích Type II! ⚡",
+                "ATP = 'pin' của cơ bắp. Creatine giúp tái tạo ATP nhanh hơn → Nâng được nặng hơn, nhiều rep hơn! 🔋"
+            ]
+        },
+        {
+            "tag": "trends_fitness",
+            "patterns": [
+                "HIIT là gì",
+                "CrossFit",
+                "Calisthenics",
+                "Functional training",
+                "Xu hướng fitness mới"
+            ],
+            "responses": [
+                "HIIT (High Intensity Interval Training) = Tập cực nặng 20-30s, nghỉ 10s, lặp lại. Đốt mỡ cực mạnh, tiết kiệm thời gian! 🔥",
+                "CrossFit = Kết hợp Cardio + Strength + Gymnastics. Rất intense, phù hợp người thích thử thách! 💪",
+                "Calisthenics = Tập với trọng lượng cơ thể (Pull-up, Push-up, Dips). Xây dựng sức mạnh thực chiến! 🤸"
+            ]
+        },
+        {
+            "tag": "relationship_advice",
+            "patterns": [
+                "Làm sao có người yêu",
+                "Crush không thích tôi",
+                "Chia tay rồi",
+                "Tình yêu",
+                "Hẹn hò"
+            ],
+            "responses": [
+                "Muốn có người yêu? Hãy yêu bản thân trước! Tập gym, ăn healthy, tự tin lên → Người khác sẽ bị thu hút tự nhiên! 😎",
+                "Crush không thích? Đừng buồn! Hãy tập cho body đẹp lên, thành công hơn. Người xứng đáng sẽ đến! 💪",
+                "Chia tay? Đau đớn là bình thường. Nhưng đừng để nó phá hỏng sức khỏe. Đi tập để giải tỏa, bạn sẽ mạnh mẽ hơn! 🔥"
+            ]
+        },
+        {
+            "tag": "jokes_fitness",
+            "patterns": [
+                "Kể chuyện cười về gym",
+                "Joke về fitness",
+                "Hài hước"
+            ],
+            "responses": [
+                "Tại sao dân gym không bao giờ nói dối? Vì họ luôn 'thật thà' với cân nặng! 😂",
+                "Bạn biết sự khác biệt giữa người tập gym và người không tập? Người tập gym có thể mang 10 túi đồ một lúc! 💪😆",
+                "Tôi hỏi HLV: 'Bao giờ tôi có 6 múi?'. HLV: 'Khi nào bạn bỏ 6 lon bia mỗi tối!' 🍺😅"
+            ]
+        }
+    ]
+}

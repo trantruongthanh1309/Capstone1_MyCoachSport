@@ -6,11 +6,11 @@ class Post(db.Model):
     
     Id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     User_id = db.Column(db.Integer, db.ForeignKey('Users.Id'), nullable=False)
-    Content = db.Column(db.Text, nullable=False)
-    Title = db.Column(db.String(255))  # ✅ Tiêu đề bài viết
-    Sport = db.Column(db.String(50))   # ✅ Môn thể thao (Football, Gym, Yoga...)
-    Topic = db.Column(db.String(50))   # ✅ Chủ đề (Workout, Nutrition...)
-    ImageUrl = db.Column(db.Text)      # URL hoặc base64 của ảnh
+    Content = db.Column(db.UnicodeText, nullable=False)  # ✅ NVARCHAR(MAX) - Hỗ trợ tiếng Việt
+    Title = db.Column(db.Unicode(255))   # ✅ NVARCHAR(255) - Tiêu đề bài viết
+    Sport = db.Column(db.Unicode(50))    # ✅ NVARCHAR(50) - Môn thể thao
+    Topic = db.Column(db.Unicode(50))    # ✅ NVARCHAR(50) - Chủ đề
+    ImageUrl = db.Column(db.UnicodeText) # ✅ NVARCHAR(MAX) - URL hoặc base64 của ảnh
     CreatedAt = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     UpdatedAt = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -45,7 +45,7 @@ class Comment(db.Model):
     Id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     Post_id = db.Column(db.Integer, db.ForeignKey('SocialPosts.Id'), nullable=False)
     User_id = db.Column(db.Integer, db.ForeignKey('Users.Id'), nullable=False)
-    Content = db.Column(db.Text, nullable=False)
+    Content = db.Column(db.UnicodeText, nullable=False)  # ✅ NVARCHAR(MAX)
     CreatedAt = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     
     # Relationships
@@ -134,7 +134,7 @@ class Message(db.Model):
     Id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     Conversation_id = db.Column(db.Integer, db.ForeignKey('Conversations.Id'), nullable=False)
     Sender_id = db.Column(db.Integer, db.ForeignKey('Users.Id'), nullable=False)
-    Content = db.Column(db.Text, nullable=False)
+    Content = db.Column(db.UnicodeText, nullable=False)  # ✅ NVARCHAR(MAX)
     IsRead = db.Column(db.Boolean, default=False)
     CreatedAt = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     
