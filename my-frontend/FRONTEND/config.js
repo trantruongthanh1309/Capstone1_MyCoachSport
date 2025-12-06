@@ -1,5 +1,5 @@
 const config = {
-    API_BASE: "http://localhost:5000"
+    API_BASE: "" // Dùng relative URL - Vite proxy sẽ tự chuyển
 };
 
 export default config;

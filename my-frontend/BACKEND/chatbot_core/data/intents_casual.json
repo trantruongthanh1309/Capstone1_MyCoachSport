@@ -1,0 +1,131 @@
+{
+    "intents": [
+        {
+            "tag": "casual_greeting",
+            "patterns": [
+                "chào buổi sáng",
+                "chào buổi chiều",
+                "chào buổi tối",
+                "good morning",
+                "good afternoon",
+                "xin chào",
+                "hi",
+                "hello",
+                "hey"
+            ],
+            "responses": [
+                "Chào bạn! Hôm nay bạn thế nào? 😊",
+                "Xin chào! Rất vui được gặp bạn!",
+                "Hi! Tôi có thể giúp gì cho bạn hôm nay?"
+            ]
+        },
+        {
+            "tag": "how_are_you",
+            "patterns": [
+                "bạn khỏe không",
+                "bạn thế nào",
+                "how are you",
+                "bạn có khỏe không",
+                "dạo này thế nào"
+            ],
+            "responses": [
+                "Tôi vẫn khỏe, cảm ơn bạn! Còn bạn thì sao? 😊",
+                "Tôi luôn sẵn sàng giúp bạn! Bạn có cần gì không?",
+                "Tôi rất tốt! Bạn hôm nay tập luyện chưa?"
+            ]
+        },
+        {
+            "tag": "feeling_good",
+            "patterns": [
+                "tôi khỏe",
+                "tôi ổn",
+                "tôi tốt",
+                "tôi vui",
+                "tôi hạnh phúc",
+                "tuyệt vời"
+            ],
+            "responses": [
+                "Tuyệt vời! Hãy giữ vững tinh thần đó nhé! 💪",
+                "Thật tốt! Năng lượng tích cực sẽ giúp bạn tập luyện hiệu quả hơn!",
+                "Vui quá! Hôm nay tập gì chưa?"
+            ]
+        },
+        {
+            "tag": "feeling_bad",
+            "patterns": [
+                "tôi mệt",
+                "tôi buồn",
+                "tôi không khỏe",
+                "tôi stress",
+                "tôi áp lực",
+                "tôi chán nản"
+            ],
+            "responses": [
+                "Tôi hiểu bạn đang cảm thấy vậy. Hãy nghỉ ngơi và chăm sóc bản thân nhé! 💙",
+                "Đừng lo! Mọi thứ sẽ ổn thôi. Thử đi bộ nhẹ hoặc yoga để thư giãn xem sao?",
+                "Tôi ở đây để hỗ trợ bạn. Bạn muốn nói chuyện về điều gì không?"
+            ]
+        },
+        {
+            "tag": "thank_you",
+            "patterns": [
+                "cảm ơn",
+                "thanks",
+                "thank you",
+                "cảm ơn bạn",
+                "cảm ơn nhiều"
+            ],
+            "responses": [
+                "Không có gì! Tôi luôn sẵn sàng giúp bạn! 😊",
+                "Rất vui được hỗ trợ bạn!",
+                "Đó là nhiệm vụ của tôi mà! 💪"
+            ]
+        },
+        {
+            "tag": "goodbye",
+            "patterns": [
+                "tạm biệt",
+                "bye",
+                "goodbye",
+                "hẹn gặp lại",
+                "see you"
+            ],
+            "responses": [
+                "Tạm biệt! Hẹn gặp lại bạn sớm nhé! 👋",
+                "Bye! Nhớ tập luyện đều đặn nhé!",
+                "See you! Chúc bạn một ngày tuyệt vời!"
+            ]
+        },
+        {
+            "tag": "weather_query",
+            "patterns": [
+                "thời tiết hôm nay",
+                "hôm nay trời thế nào",
+                "có mưa không",
+                "trời có nắng không",
+                "nhiệt độ bao nhiêu",
+                "thời tiết ở",
+                "mưa không",
+                "nắng không"
+            ],
+            "responses": [
+                "Để tôi kiểm tra thời tiết cho bạn..."
+            ],
+            "context": [
+                "weather"
+            ]
+        },
+        {
+            "tag": "what_can_you_do",
+            "patterns": [
+                "bạn làm được gì",
+                "bạn có thể giúp gì",
+                "bạn biết gì",
+                "what can you do"
+            ],
+            "responses": [
+                "Tôi có thể:\n- Xem lịch tập/ăn của bạn\n- Tư vấn dinh dưỡng và tập luyện\n- Kiểm tra thời tiết\n- Tính BMI, TDEE\n- Động viên tinh thần\nVà còn nhiều thứ khác nữa! 💪"
+            ]
+        }
+    ]
+}

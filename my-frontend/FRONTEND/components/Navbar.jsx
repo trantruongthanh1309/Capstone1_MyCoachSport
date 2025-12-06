@@ -1,11 +1,34 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import NotificationBell from "./NotificationBell";
 import "./Navbar.css";
 
 export default function Navbar() {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [userData, setUserData] = useState({
+    name: "Người dùng",
+    email: "user@example.com",
+    avatar: "https://png.pngtree.com/png-vector/20191110/ourmid/pngtree-avatar-icon-profile-icon-member-login-vector-isolated-png-image_1978396.jpg"
+  });
   const navigate = useNavigate();
+
+  // Fetch user data khi component mount
+  useEffect(() => {
+    fetch('/api/auth/me', {
+      credentials: 'include'
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setUserData({
+            name: data.name || "Người dùng",
+            email: data.email || "user@example.com",
+            avatar: data.avatar || "https://png.pngtree.com/png-vector/20191110/ourmid/pngtree-avatar-icon-profile-icon-member-login-vector-isolated-png-image_1978396.jpg"
+          });
+        }
+      })
+      .catch(err => console.error("Lỗi fetch user:", err));
+  }, []);
 
   const toggleProfileDropdown = () => {
     setShowProfileDropdown(!showProfileDropdown);
@@ -67,7 +90,7 @@ export default function Navbar() {
             {/* Hồ sơ người dùng */}
             <div className="profile-wrapper" onClick={toggleProfileDropdown}>
               <img
-                src="https://png.pngtree.com/png-vector/20191110/ourmid/pngtree-avatar-icon-profile-icon-member-login-vector-isolated-png-image_1978396.jpg"
+                src={userData.avatar}
                 alt="Profile"
                 className="profile-img"
               />
@@ -79,13 +102,13 @@ export default function Navbar() {
               <div className="profile-dropdown">
                 <div className="profile-header">
                   <img
-                    src="https://png.pngtree.com/png-vector/20191110/ourmid/pngtree-avatar-icon-profile-icon-member-login-vector-isolated-png-image_1978396.jpg"
+                    src={userData.avatar}
                     alt="Profile"
                     className="profile-dropdown-img"
                   />
                   <div className="profile-info">
-                    <h4>Người dùng</h4>
-                    <p>user@example.com</p>
+                    <h4>{userData.name}</h4>
+                    <p>{userData.email}</p>
                   </div>
                 </div>
                 <ul className="profile-menu">

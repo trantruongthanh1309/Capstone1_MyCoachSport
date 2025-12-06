@@ -1,192 +1,114 @@
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-import os
+from flask import current_app, render_template_string
+from flask_mail import Mail, Message
+from threading import Thread
+# Xóa import app để tránh circular import
+from db import db
+from models.notification_log import NotificationLog
+from datetime import datetime
 
-# --- CẤU HÌNH EMAIL ---
-# BẠN HÃY SỬA LẠI 2 DÒNG DƯỚI ĐÂY:
-SENDER_EMAIL = "mysportcoach.ai@gmail.com" # Email giả lập, hãy thay bằng email thật
-SENDER_PASSWORD = "xxxx xxxx xxxx xxxx" # App Password 16 ký tự
+mail = Mail()
 
-SMTP_SERVER = "smtp.gmail.com"
-SMTP_PORT = 587
+def send_async_email(app, msg):
+    with app.app_context():
+        try:
+            mail.send(msg)
+            print(f"✅ Email sent to {msg.recipients}")
+        except Exception as e:
+            print(f"❌ Failed to send email: {e}")
 
-def send_notification_email(to_email, subject, body):
-    if "xxxx" in SENDER_PASSWORD:
-        print("⚠️ Chưa cấu hình Email Password. Bỏ qua gửi mail.")
-        return False
-
+def send_email(subject, recipient, html_body):
     try:
-        msg = MIMEMultipart()
-        msg['From'] = "MySportCoach AI <" + SENDER_EMAIL + ">"
-        msg['To'] = to_email
-        msg['Subject'] = subject
-
-        msg.attach(MIMEText(body, 'plain'))
-
-        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-        server.starttls()
-        server.login(SENDER_EMAIL, SENDER_PASSWORD)
-        text = msg.as_string()
-        server.sendmail(SENDER_EMAIL, to_email, text)
-        server.quit()
-        print(f"📧 Đã gửi email đến {to_email}")
-        return True
+        msg = Message(subject, recipients=[recipient])
+        msg.html = html_body
+        # Chạy thread riêng để không block server
+        Thread(target=send_async_email, args=(current_app._get_current_object(), msg)).start()
     except Exception as e:
-        print(f"❌ Lỗi gửi email: {e}")
-        return False
+        print(f"❌ Error preparing email: {e}")
 
+# --- Templates ---
 
-def send_otp_email(recipient_email, otp_code, purpose="reset"):
+def send_otp_email(user_email, otp, purpose="reset"):
+    if purpose == "reset":
+        subject = "🔑 Mã OTP đặt lại mật khẩu của bạn"
+        title = "Yêu cầu đặt lại mật khẩu"
+        msg_content = f"Mã OTP của bạn là: <strong style='font-size: 24px; color: #007bff;'>{otp}</strong>"
+        note = "Mã này sẽ hết hạn trong 10 phút."
+    elif purpose == "register":
+        subject = "🎉 Xác thực đăng ký tài khoản MySportCoach AI"
+        title = "Chào mừng bạn đến với MySportCoach AI!"
+        msg_content = f"Mã OTP xác thực của bạn là: <strong style='font-size: 24px; color: #28a745;'>{otp}</strong>"
+        note = "Mã này sẽ hết hạn trong 10 phút. Vui lòng nhập mã để hoàn tất đăng ký."
+    else:
+        subject = "🔐 Mã OTP xác thực"
+        title = "Xác thực tài khoản"
+        msg_content = f"Mã xác thực của bạn là: <strong>{otp}</strong>"
+        note = ""
+
+    html = f"""
+    <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+        <h2 style="color: #333;">{title}</h2>
+        <p>Xin chào,</p>
+        <p>{msg_content}</p>
+        <p>{note}</p>
+        <p>Nếu bạn không yêu cầu mã này, vui lòng bỏ qua.</p>
+        <br>
+        <p>- MySportCoach AI Team</p>
+    </div>
     """
-    Gửi mã OTP qua email với HTML template đẹp
-    
-    Args:
-        recipient_email: Email người nhận
-        otp_code: Mã OTP 6 số
-        purpose: "reset" hoặc "register"
+    send_email(subject, user_email, html)
+    return True
+
+def send_welcome_email(user_email, user_name):
+    subject = "Chào mừng đến với MySportCoach AI! 🚀"
+    html = f"""
+    <div style="font-family: Arial, sans-serif; color: #333;">
+        <h2>Xin chào {user_name}! 👋</h2>
+        <p>Cảm ơn bạn đã đăng ký tài khoản tại <strong>MySportCoach AI</strong>.</p>
+        <p>Chúng tôi sẽ giúp bạn lên lịch tập luyện và dinh dưỡng chuẩn xác nhất.</p>
+        <br>
+        <p>Truy cập ngay: <a href="http://192.168.1.111:5173">MySportCoach Dashboard</a></p>
+        <p>Chúc bạn tập luyện hiệu quả!</p>
+    </div>
     """
-    if "xxxx" in SENDER_PASSWORD:
-        print("⚠️ Chưa cấu hình Email Password. Bỏ qua gửi mail.")
-        print(f"📧 [DEV MODE] OTP cho {recipient_email}: {otp_code}")
-        return True  # Return True trong dev mode để test
+    send_email(subject, user_email, html)
+
+def send_reset_password_email(user_email, reset_link):
+    subject = "🔒 Yêu cầu đặt lại mật khẩu"
+    html = f"""
+    <div style="font-family: Arial, sans-serif;">
+        <p>Bạn vừa yêu cầu đặt lại mật khẩu.</p>
+        <p>Vui lòng click vào link dưới đây để đổi mật khẩu (hết hạn trong 15 phút):</p>
+        <p><a href="{reset_link}" style="padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">Đặt lại mật khẩu</a></p>
+        <p>Nếu không phải bạn, vui lòng bỏ qua email này.</p>
+    </div>
+    """
+    send_email(subject, user_email, html)
+
+def send_schedule_reminder(user, schedule_item, type="Workout"):
+    """
+    Gửi email nhắc nhở lịch tập hoặc ăn
+    type: 'Workout' hoặc 'Meal'
+    """
+    if type == "Workout":
+        subject = f"💪 Nhắc nhở: Lịch tập {schedule_item['title']} sắp tới!"
+        content = f"Bạn có lịch tập <strong>{schedule_item['title']}</strong> vào lúc <strong>{schedule_item['time']}</strong>."
+    else:
+        subject = f"🍽️ Nhắc nhở: Đã đến giờ ăn {schedule_item['title']}!"
+        content = f"Đừng quên bữa ăn: <strong>{schedule_item['title']}</strong> ({schedule_item['calories']} kcal) lúc <strong>{schedule_item['time']}</strong>."
+
+    html = f"""
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+        <h2 style="color: #2c3e50;">{subject}</h2>
+        <p style="font-size: 16px;">Chào {user.Name},</p>
+        <p style="font-size: 16px;">{content}</p>
+        <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-left: 4px solid #007bff;">
+            <p style="margin: 0;"><strong>Thời gian:</strong> {schedule_item['time']}</p>
+            <p style="margin: 5px 0 0;"><strong>Ghi chú:</strong> Hãy chuẩn bị sẵn sàng nhé!</p>
+        </div>
+        <a href="http://192.168.1.111:5173/planner" style="display: inline-block; padding: 10px 20px; background: #28a745; color: white; text-decoration: none; border-radius: 5px;">Xem lịch trình</a>
+    </div>
+    """
     
-    try:
-        # Tạo email message
-        msg = MIMEMultipart('alternative')
-        msg['From'] = f"MySportCoach AI <{SENDER_EMAIL}>"
-        msg['To'] = recipient_email
-        
-        if purpose == "reset":
-            msg['Subject'] = "🔐 Mã xác thực đặt lại mật khẩu - MyCoachSport"
-            title = "Đặt lại mật khẩu"
-            description = "Bạn đã yêu cầu đặt lại mật khẩu. Sử dụng mã OTP dưới đây để tiếp tục:"
-        else:
-            msg['Subject'] = "🎉 Chào mừng đến với MyCoachSport - Mã xác thực"
-            title = "Xác thực tài khoản"
-            description = "Cảm ơn bạn đã đăng ký! Sử dụng mã OTP dưới đây để hoàn tất đăng ký:"
-        
-        # HTML template đẹp
-        html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <style>
-                body {{
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    margin: 0;
-                    padding: 20px;
-                }}
-                .container {{
-                    max-width: 600px;
-                    margin: 0 auto;
-                    background: white;
-                    border-radius: 20px;
-                    overflow: hidden;
-                    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-                }}
-                .header {{
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    padding: 40px 20px;
-                    text-align: center;
-                    color: white;
-                }}
-                .header h1 {{
-                    margin: 0;
-                    font-size: 28px;
-                    font-weight: 700;
-                }}
-                .content {{
-                    padding: 40px 30px;
-                    text-align: center;
-                }}
-                .content p {{
-                    color: #555;
-                    font-size: 16px;
-                    line-height: 1.6;
-                    margin-bottom: 30px;
-                }}
-                .otp-box {{
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: white;
-                    font-size: 42px;
-                    font-weight: bold;
-                    letter-spacing: 10px;
-                    padding: 25px;
-                    border-radius: 15px;
-                    display: inline-block;
-                    margin: 20px 0;
-                    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
-                }}
-                .warning {{
-                    background: #fff3cd;
-                    border-left: 4px solid #ffc107;
-                    padding: 15px;
-                    margin: 20px 0;
-                    border-radius: 5px;
-                    color: #856404;
-                    font-size: 14px;
-                }}
-                .footer {{
-                    background: #f8f9fa;
-                    padding: 20px;
-                    text-align: center;
-                    color: #6c757d;
-                    font-size: 14px;
-                }}
-                .icon {{
-                    font-size: 60px;
-                    margin-bottom: 20px;
-                }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <div class="icon">🏋️‍♂️</div>
-                    <h1>MyCoachSport AI</h1>
-                </div>
-                <div class="content">
-                    <h2 style="color: #333; margin-bottom: 20px;">{title}</h2>
-                    <p>{description}</p>
-                    
-                    <div class="otp-box">
-                        {otp_code}
-                    </div>
-                    
-                    <div class="warning">
-                        ⏰ <strong>Lưu ý:</strong> Mã OTP này có hiệu lực trong <strong>10 phút</strong>. 
-                        Không chia sẻ mã này với bất kỳ ai!
-                    </div>
-                    
-                    <p style="margin-top: 30px; font-size: 14px; color: #888;">
-                        Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email này.
-                    </p>
-                </div>
-                <div class="footer">
-                    <p>© 2025 MyCoachSport AI - Your Personal Fitness Coach</p>
-                    <p>Email này được gửi tự động, vui lòng không trả lời.</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
-        
-        # Attach HTML
-        msg.attach(MIMEText(html, 'html'))
-        
-        # Gửi email
-        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-        server.starttls()
-        server.login(SENDER_EMAIL, SENDER_PASSWORD)
-        server.send_message(msg)
-        server.quit()
-        
-        print(f"✅ Email OTP đã gửi thành công đến {recipient_email}")
-        return True
-        
-    except Exception as e:
-        print(f"❌ Lỗi gửi email: {str(e)}")
-        return False
+    # Check log để không gửi trùng (Double check logic nên ở scheduler, nhưng check ở đây cho chắc)
+    # Ở đây chúng ta chỉ gửi. Logic check sẽ nằm ở Scheduler.
+    send_email(subject, user.Email, html)

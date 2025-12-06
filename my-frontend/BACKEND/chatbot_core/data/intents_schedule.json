@@ -1,0 +1,44 @@
+{
+    "intents": [
+        {
+            "tag": "check_today_schedule",
+            "patterns": [
+                "hôm nay tôi tập gì",
+                "lịch tập hôm nay",
+                "hôm nay có lịch tập không",
+                "cho tôi xem lịch hôm nay",
+                "lịch của tôi hôm nay",
+                "hôm nay tôi có buổi tập nào",
+                "tôi tập gì hôm nay",
+                "lịch tập của tôi",
+                "xem lịch tập",
+                "lịch tập trong ngày",
+                "hôm nay ăn gì",
+                "bữa ăn hôm nay",
+                "thực đơn hôm nay"
+            ],
+            "responses": [
+                "Để tôi kiểm tra lịch hôm nay cho bạn..."
+            ],
+            "context": [
+                "schedule"
+            ]
+        },
+        {
+            "tag": "check_week_schedule",
+            "patterns": [
+                "lịch tuần này",
+                "lịch tập tuần này",
+                "xem lịch cả tuần",
+                "tuần này tôi tập gì",
+                "lịch tập trong tuần"
+            ],
+            "responses": [
+                "Để tôi xem lịch cả tuần cho bạn..."
+            ],
+            "context": [
+                "schedule"
+            ]
+        }
+    ]
+}
