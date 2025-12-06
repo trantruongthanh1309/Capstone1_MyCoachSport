@@ -189,7 +189,11 @@ body {
   margin-left: 280px;
   transition: all 0.3s ease;
   min-height: 100vh;
-  /* Remove any background or padding that might restrict content */
+  /* Ghi đè style global của thẻ <main> trong index.css */
+  max-width: 100%;
+  margin-top: 0;
+  padding: 0;
+  display: block;
 }
 
 .admin-main.expanded {

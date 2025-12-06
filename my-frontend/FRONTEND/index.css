@@ -1,121 +1,128 @@
-header {
-  position: sticky;
-  top: 0;
-  background: #111;
-  color: #fff;
-  padding: 12px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+/* Global CSS Reset & Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-header .logo {
-  color: #00b4d8;
-  font-weight: bold;
+html,
+body {
+  height: 100%;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #ffffff;
+  color: #1f2937;
+  line-height: 1.6;
 }
 
-header nav a {
-  color: #fff;
-  text-decoration: none;
-  margin-left: 16px;
-}
-
-header nav a:hover {
-  color: #ffba08;
-}
-
-main {
-  max-width: 960px;
-  margin: 24px auto;
-  padding: 0 16px;
+/* App Container */
+.app-container {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  align-items: center;
+  min-height: 100vh;
 }
 
-.clock {
-  font-size: 2rem;
-  font-weight: bold;
-}
-
-.date {
-  opacity: 0.8;
-}
-
-.weather {
-  background: #fff;
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
-  display: flex;
-  gap: 16px;
-  align-items: center;
-}
-
-.chat {
-  background: #fff;
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  width: 100%;
-  max-width: 680px;
-}
-
-.chat h3 { margin: 0 0 10px; }
-
-.chatBody {
-  height: 200px;
-  overflow-y: auto;
-  background: #f9f9f9;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.msg {
-  max-width: 75%;
-  padding: 8px 12px;
-  border-radius: 12px;
-}
-
-.msg.you {
-  align-self: flex-end;
-  background: #00b4d8;
-  color: #fff;
-}
-
-.msg.bot {
-  align-self: flex-start;
-  background: #eee;
-}
-
-.chatSend {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.chatSend input {
+.main-content {
   flex: 1;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 10px;
+  padding-top: 70px;
 }
 
-.chatSend button {
-  background: #ffba08;
-  border: none;
-  padding: 10px 14px;
-  border-radius: 10px;
+.main-content.admin-mode {
+  padding: 0;
+  padding-top: 0;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Common Button Styles */
+button {
+  font-family: inherit;
   cursor: pointer;
+  border: none;
+  outline: none;
 }
 
-footer {
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Common Input Styles */
+input,
+textarea,
+select {
+  font-family: inherit;
+  outline: none;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #94a3b8;
+}
+
+/* Links */
+a {
+  color: #3b82f6;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Utility Classes */
+.text-center {
   text-align: center;
-  padding: 20px;
-  color: #666;
+}
+
+.mt-1 {
+  margin-top: 0.5rem;
+}
+
+.mt-2 {
+  margin-top: 1rem;
+}
+
+.mt-3 {
+  margin-top: 1.5rem;
+}
+
+.mb-1 {
+  margin-bottom: 0.5rem;
+}
+
+.mb-2 {
+  margin-bottom: 1rem;
+}
+
+.mb-3 {
+  margin-bottom: 1.5rem;
+}
+
+.p-1 {
+  padding: 0.5rem;
+}
+
+.p-2 {
+  padding: 1rem;
+}
+
+.p-3 {
+  padding: 1.5rem;
 }

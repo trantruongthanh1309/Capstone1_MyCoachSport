@@ -1,391 +1,282 @@
 import { useEffect, useMemo, useState } from "react";
-
-const LS_KEY = "msc_social_fb_v1";
+import ImageUploader from "../components/ImageUploader";
+import { useToast } from "../contexts/ToastContext";
 
 // Styles CSS améliorés
 const styles = `
   @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes slideInLeft {
-    from {
-      opacity: 0;
-      transform: translateX(-30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-
-  @keyframes slideInRight {
-    from {
-      opacity: 0;
-      transform: translateX(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-
-  @keyframes pulse {
-    0%, 100% {
-      transform: scale(1);
-    }
-    50% {
-      transform: scale(1.05);
-    }
-  }
-
-  @keyframes shimmer {
-    0% {
-      background-position: -1000px 0;
-    }
-    100% {
-      background-position: 1000px 0;
-    }
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   .fb-wrap {
     min-height: 100vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #f0f2f5;
     padding: 20px;
+    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
   }
 
   .fb-grid {
     display: grid;
     grid-template-columns: 280px 1fr 280px;
-    gap: 24px;
-    max-width: 1400px;
+    gap: 32px;
+    max-width: 1200px;
     margin: 0 auto;
   }
 
-  .fb-left {
-    animation: slideInLeft 0.6s ease-out;
-  }
-
-  .fb-center {
-    animation: fadeInUp 0.6s ease-out 0.1s both;
-  }
-
-  .fb-right {
-    animation: slideInRight 0.6s ease-out;
-  }
-
+  /* --- Cards --- */
   .fb-card {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
-    padding: 20px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     margin-bottom: 20px;
-    transition: all 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    overflow: hidden;
   }
 
-  .fb-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-  }
-
+  /* --- Avatar --- */
   .fb-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    cursor: pointer;
+  }
+  
+  .fb-avatar-lg {
     width: 48px;
     height: 48px;
-    border-radius: 50%;
-    border: 3px solid #667eea;
-    transition: all 0.3s ease;
-    cursor: pointer;
   }
 
-  .fb-avatar:hover {
-    transform: scale(1.1) rotate(5deg);
-    border-color: #764ba2;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-  }
-
-  .fb-avatar-s {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 2px solid #667eea;
-  }
-
-  .fb-menu {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .fb-menu-item {
+  /* --- Left Sidebar --- */
+  .fb-left .fb-menu-item {
     display: flex;
     align-items: center;
+    gap: 12px;
     padding: 12px 16px;
-    text-decoration: none;
-    color: #333;
-    border-radius: 12px;
-    transition: all 0.3s ease;
-    font-weight: 500;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .fb-menu-item::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    width: 0;
-    background: linear-gradient(90deg, #667eea, #764ba2);
-    transition: width 0.3s ease;
-    z-index: -1;
-  }
-
-  .fb-menu-item:hover {
-    color: white;
-    transform: translateX(8px);
-  }
-
-  .fb-menu-item:hover::before {
-    width: 100%;
-  }
-
-  .fb-input, .fb-textarea {
-    width: 100%;
-    padding: 12px 16px;
-    border-radius: 12px;
-    border: 2px solid #e0e0e0;
-    transition: all 0.3s ease;
-    font-size: 14px;
-    background: white;
-  }
-
-  .fb-input:focus, .fb-textarea:focus {
-    border-color: #667eea;
-    outline: none;
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-    transform: translateY(-2px);
-  }
-
-  .fb-textarea {
-    resize: none;
-    font-family: inherit;
-  }
-
-  .fb-btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 12px;
-    cursor: pointer;
+    color: #050505;
     font-weight: 600;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-  }
-
-  .fb-btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-  }
-
-  .fb-btn-primary:active {
-    transform: translateY(0);
-  }
-
-  .fb-btn {
-    background: #667eea;
-    color: white;
-    border: none;
-    padding: 8px 16px;
     border-radius: 8px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: all 0.3s ease;
+    transition: background 0.2s;
+    text-decoration: none;
+  }
+  .fb-left .fb-menu-item:hover {
+    background: #e4e6eb;
   }
 
-  .fb-btn:hover {
-    background: #764ba2;
-    transform: scale(1.05);
+  /* --- Composer (New Design) --- */
+  .composer-container {
+    padding: 16px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    margin-bottom: 24px;
   }
 
-  .fb-btn-ghost {
+  .composer-top {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .composer-input-area {
+    flex: 1;
+    background: #f0f2f5;
+    border-radius: 20px;
+    padding: 8px 16px;
+    cursor: text;
+    transition: background 0.2s;
+  }
+  
+  .composer-input-area:focus-within {
+    background: #e4e6eb;
+  }
+
+  .composer-textarea {
+    width: 100%;
     background: transparent;
     border: none;
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: 500;
-    color: #666;
+    resize: none;
+    font-size: 1.05rem;
+    outline: none;
+    min-height: 24px;
+    max-height: 200px;
+    color: #050505;
+    padding-top: 4px;
   }
 
-  .fb-btn-ghost:hover {
-    background: rgba(102, 126, 234, 0.1);
-    color: #667eea;
-    transform: scale(1.05);
+  .composer-divider {
+    height: 1px;
+    background: #e4e6eb;
+    margin: 8px 0;
   }
 
-  .fb-composer-actions {
-    display: flex;
-    gap: 12px;
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px solid #f0f0f0;
-  }
-
-  .fb-chip {
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    border: none;
-    padding: 8px 16px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.3s ease;
-  }
-
-  .fb-chip:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-  }
-
-  .fb-post {
-    margin-bottom: 24px;
-    animation: fadeInUp 0.5s ease-out;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .fb-post::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-    animation: shimmer 2s infinite;
-  }
-
-  .fb-post-text {
-    font-size: 16px;
-    line-height: 1.6;
-    color: #333;
-    margin: 16px 0;
-  }
-
-  .fb-post-img {
-    width: 100%;
-    border-radius: 12px;
-    margin-top: 16px;
-    transition: all 0.3s ease;
-    cursor: pointer;
-  }
-
-  .fb-post-img:hover {
-    transform: scale(1.02);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  }
-
-  .fb-post-stats {
+  .composer-actions {
     display: flex;
     justify-content: space-between;
-    padding: 12px 0;
-    margin: 12px 0;
-    border-top: 1px solid #f0f0f0;
-    border-bottom: 1px solid #f0f0f0;
-    font-size: 14px;
-    color: #666;
+    align-items: center;
+    padding-top: 4px;
   }
 
-  .fb-post-actions {
+  .composer-btn-group {
     display: flex;
-    gap: 12px;
-    justify-content: space-around;
-    padding: 8px 0;
+    gap: 4px;
   }
 
-  .fb-comment-box {
-    margin-top: 20px;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    padding: 16px;
-    border-radius: 12px;
-    animation: fadeInUp 0.3s ease-out;
-  }
-
-  .fb-comments {
-    margin-top: 16px;
+  .composer-action-btn {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .fb-comment {
-    display: flex;
-    gap: 12px;
-    animation: fadeInUp 0.4s ease-out;
-  }
-
-  .fb-comment-bubble {
-    background: white;
-    padding: 12px 16px;
-    border-radius: 16px;
-    max-width: 70%;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
-  }
-
-  .fb-comment-bubble:hover {
-    transform: translateX(4px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-
-  .fb-comment-author {
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: #65676b;
     font-weight: 600;
-    color: #667eea;
-    margin-bottom: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s;
   }
 
-  .fb-contact {
+  .composer-action-btn:hover {
+    background: #f2f2f2;
+  }
+
+  .icon-photo { color: #45bd62; font-size: 20px; }
+  .icon-tag { color: #1877f2; font-size: 20px; }
+  .icon-feeling { color: #f7b928; font-size: 20px; }
+
+  .btn-post {
+    background: #1877f2;
+    color: white;
+    border: none;
+    padding: 8px 24px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  
+  .btn-post:hover {
+    background: #166fe5;
+  }
+  
+  .btn-post:disabled {
+    background: #e4e6eb;
+    color: #bcc0c4;
+    cursor: not-allowed;
+  }
+
+  /* --- Post --- */
+  .fb-post {
+    padding: 0;
+    animation: fadeInUp 0.5s ease-out;
+  }
+  
+  .post-header {
+    padding: 12px 16px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  
+  .post-author-name {
+    font-weight: 600;
+    color: #050505;
+    font-size: 15px;
+  }
+  
+  .post-time {
+    font-size: 13px;
+    color: #65676b;
+  }
+  
+  .post-content {
+    padding: 4px 16px 16px;
+    font-size: 15px;
+    color: #050505;
+    line-height: 1.5;
+  }
+  
+  .post-image-container {
+    width: 100%;
+    background: #f0f2f5;
+    display: flex;
+    justify-content: center;
+    cursor: pointer;
+  }
+  
+  .post-image {
+    max-width: 100%;
+    max-height: 600px;
+    object-fit: contain;
+  }
+  
+  .post-stats {
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    color: #65676b;
+    font-size: 14px;
+    border-bottom: 1px solid #e4e6eb;
+  }
+  
+  .post-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    padding: 4px;
+  }
+  
+  .post-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    color: #65676b;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  
+  .post-action-btn:hover {
+    background: #f0f2f5;
+  }
+  
+  .post-action-btn.liked {
+    color: #1877f2;
+  }
+
+  /* --- Right Sidebar --- */
+  .fb-right .fb-card {
+    padding: 16px;
+  }
+  .contact-item {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 10px;
-    border-radius: 10px;
-    transition: all 0.3s ease;
+    padding: 8px;
+    border-radius: 8px;
     cursor: pointer;
-    margin-bottom: 8px;
+    transition: background 0.2s;
   }
-
-  .fb-contact:hover {
-    background: rgba(102, 126, 234, 0.1);
-    transform: translateX(4px);
+  .contact-item:hover {
+    background: #e4e6eb;
   }
-
-  .dot {
+  .status-dot {
     width: 10px;
     height: 10px;
+    background: #31a24c;
     border-radius: 50%;
-    background: #ccc;
-    display: inline-block;
-  }
-
-  .dot.online {
-    background: #4caf50;
-    box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
-    animation: pulse 2s infinite;
+    border: 2px solid white;
+    position: absolute;
+    bottom: 0;
+    right: 0;
   }
 
   .sticky {
@@ -397,7 +288,6 @@ const styles = `
     .fb-grid {
       grid-template-columns: 1fr;
     }
-    
     .fb-left, .fb-right {
       display: none;
     }
@@ -406,152 +296,198 @@ const styles = `
 
 // Hàm tạo avatar ngẫu nhiên
 const avatar = (name = "U") =>
-  `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=667eea&color=fff&bold=true`;
+  `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff&bold=true`;
 
 // Phần Left Sidebar
-function LeftSidebar() {
+function LeftSidebar({ user }) {
   return (
     <aside className="fb-left sticky">
-      <div className="fb-card">
-        <div className="flex items-center gap-3">
-          <img className="fb-avatar" src={avatar("Bạn")} alt="" />
-          <div>
-            <div className="font-semibold text-gray-800">Bạn</div>
-            <div className="text-gray-500 text-sm">Xem trang cá nhân</div>
-          </div>
+      <div className="fb-menu">
+        <div className="fb-menu-item">
+          <img className="fb-avatar" src={user?.avatar || avatar(user?.name || "Bạn")} alt="" />
+          <span>{user?.name || "Người dùng"}</span>
         </div>
-      </div>
-
-      <div className="fb-card">
-        <div className="fb-menu">
-          <a className="fb-menu-item" href="#!">🏋️‍♂️ Bài tập</a>
-          <a className="fb-menu-item" href="#!">🍽 Thực đơn</a>
-          <a className="fb-menu-item" href="#!">📈 Tiến độ</a>
-          <a className="fb-menu-item" href="#!">⭐ Đã lưu</a>
-        </div>
+        <a className="fb-menu-item" href="#!">
+          <span style={{ fontSize: '24px' }}>👥</span> Bạn bè
+        </a>
+        <a className="fb-menu-item" href="#!">
+          <span style={{ fontSize: '24px' }}>🏋️‍♂️</span> Nhóm tập luyện
+        </a>
+        <a className="fb-menu-item" href="#!">
+          <span style={{ fontSize: '24px' }}>🏪</span> Marketplace
+        </a>
+        <a className="fb-menu-item" href="#!">
+          <span style={{ fontSize: '24px' }}>📺</span> Watch
+        </a>
+        <a className="fb-menu-item" href="#!">
+          <span style={{ fontSize: '24px' }}>⭐</span> Đã lưu
+        </a>
       </div>
     </aside>
   );
 }
 
-// Phần Composer - nơi người dùng tạo bài đăng mới
-function Composer({ onPost }) {
-  const [name, setName] = useState("Bạn");
+// Phần Composer - Thiết kế mới
+function Composer({ onPost, user }) {
   const [text, setText] = useState("");
   const [img, setImg] = useState("");
+  const [showUploader, setShowUploader] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const submit = () => {
     const t = text.trim();
-    if (!t) return;
+    if (!t && !img) return;
     onPost({
-      id: Date.now(),
-      author: name || "Bạn",
-      avatar: avatar(name),
-      text: t,
-      image: img.trim(),
-      createdAt: new Date().toISOString(),
-      likes: 0,
-      comments: [],
+      content: t,
+      image_url: img,
     });
-    setText(""); setImg("");
+    setText("");
+    setImg("");
+    setShowUploader(false);
+    setIsExpanded(false);
+  };
+
+  const handleImageUpload = (url) => {
+    setImg(url);
+    setShowUploader(false);
   };
 
   return (
-    <div className="fb-card">
-      <div className="flex items-center gap-3 mb-3">
-        <img className="fb-avatar" src={avatar(name)} alt="" />
-        <input
-          className="fb-input"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Tên hiển thị"
+    <div className="composer-container">
+      <div className="composer-top">
+        <img
+          className="fb-avatar fb-avatar-lg"
+          src={user?.avatar || avatar(user?.name || "Bạn")}
+          alt=""
         />
-      </div>
-
-      <div>
-        <textarea
-          className="fb-textarea"
-          rows={3}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Bạn đang nghĩ gì?"
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && e.ctrlKey) {
-              submit();
-            }
-          }}
-        />
-        <div className="flex gap-2 mt-2">
-          <input
-            className="fb-input flex-1"
-            value={img}
-            onChange={(e) => setImg(e.target.value)}
-            placeholder="Link ảnh (tuỳ chọn)"
+        <div className="composer-input-area">
+          <textarea
+            className="composer-textarea"
+            rows={isExpanded || text ? 3 : 1}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onFocus={() => setIsExpanded(true)}
+            placeholder={`Bạn đang nghĩ gì thế, ${user?.name?.split(' ').pop() || 'bạn'}?`}
           />
-          <button className="fb-btn-primary" onClick={submit}>Đăng</button>
         </div>
       </div>
 
-      <div className="fb-composer-actions">
-        <button className="fb-chip">📷 Ảnh</button>
-        <button className="fb-chip">🎥 Video</button>
-        <button className="fb-chip">🏷 Hashtag</button>
+      {/* Image Preview */}
+      {img && (
+        <div className="mb-3 relative rounded-lg overflow-hidden border border-gray-200">
+          <img src={img} alt="Preview" className="w-full max-h-80 object-cover" />
+          <button
+            onClick={() => setImg("")}
+            className="absolute top-2 right-2 bg-white rounded-full p-1 shadow hover:bg-gray-100"
+          >
+            ❌
+          </button>
+        </div>
+      )}
+
+      {/* Uploader Area */}
+      {showUploader && (
+        <div className="mb-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm font-semibold text-gray-600">Thêm ảnh vào bài viết</span>
+            <button onClick={() => setShowUploader(false)} className="text-gray-500 hover:text-gray-700">✕</button>
+          </div>
+          <ImageUploader onUploadSuccess={handleImageUpload} />
+        </div>
+      )}
+
+      <div className="composer-divider"></div>
+
+      <div className="composer-actions">
+        <div className="composer-btn-group">
+          <button className="composer-action-btn" onClick={() => setShowUploader(!showUploader)}>
+            <span className="icon-photo">📷</span> Ảnh/Video
+          </button>
+          <button className="composer-action-btn">
+            <span className="icon-tag">🏷</span> Gắn thẻ
+          </button>
+          <button className="composer-action-btn">
+            <span className="icon-feeling">😊</span> Cảm xúc
+          </button>
+        </div>
+
+        <button
+          className="btn-post"
+          onClick={submit}
+          disabled={!text.trim() && !img}
+        >
+          Đăng
+        </button>
       </div>
     </div>
   );
 }
 
 // Phần hiển thị bài đăng
-function Post({ post, onLike, onComment, onDelete }) {
+function Post({ post, onLike, onComment, onDelete, currentUser }) {
   const time = useMemo(
-    () => new Date(post.createdAt).toLocaleString("vi-VN"),
-    [post.createdAt]
+    () => new Date(post.created_at).toLocaleString("vi-VN"),
+    [post.created_at]
   );
   const [showCmt, setShowCmt] = useState(false);
   const [cmt, setCmt] = useState("");
 
+  const isAuthor = currentUser && currentUser.id === post.user_id;
+
   return (
     <article className="fb-card fb-post">
-      <header className="flex items-center gap-3">
-        <img className="fb-avatar" src={post.avatar} alt="" />
-        <div>
-          <div className="font-semibold text-gray-800">{post.author}</div>
-          <div className="text-xs text-gray-500">{time}</div>
+      <div className="post-header">
+        <img className="fb-avatar" src={post.user_avatar || avatar(post.user_name)} alt="" />
+        <div className="flex-1">
+          <div className="post-author-name">{post.user_name}</div>
+          <div className="post-time">{time}</div>
         </div>
-        <div className="ml-auto">
-          <button className="fb-btn-ghost" onClick={() => onDelete(post.id)}>⋯</button>
-        </div>
-      </header>
-
-      <p className="fb-post-text">{post.text}</p>
-      {post.image && (
-        <img
-          className="fb-post-img"
-          src={post.image}
-          alt=""
-          onError={(e) => (e.currentTarget.style.display = "none")}
-        />
-      )}
-
-      <div className="fb-post-stats">
-        <span>👍 {post.likes}</span>
-        <span>💬 {post.comments.length} bình luận</span>
+        {isAuthor && (
+          <button className="fb-btn-ghost" onClick={() => onDelete(post.id)}>🗑️</button>
+        )}
       </div>
 
-      <div className="fb-post-actions">
-        <button className="fb-btn-ghost" onClick={() => onLike(post.id)}>👍 Thích</button>
-        <button className="fb-btn-ghost" onClick={() => setShowCmt((v) => !v)}>💬 Bình luận</button>
-        <button className="fb-btn-ghost" onClick={() => alert("Chia sẻ (demo)")}>↗ Chia sẻ</button>
+      <div className="post-content">{post.content}</div>
+
+      {post.image_url && (
+        <div className="post-image-container">
+          <img
+            className="post-image"
+            src={post.image_url}
+            alt=""
+            onError={(e) => (e.currentTarget.style.display = "none")}
+          />
+        </div>
+      )}
+
+      <div className="post-stats">
+        <span>👍 {post.likes_count}</span>
+        <span>💬 {post.comments_count} bình luận</span>
+      </div>
+
+      <div className="post-actions-grid">
+        <button
+          className={`post-action-btn ${post.is_liked ? 'liked' : ''}`}
+          onClick={() => onLike(post.id)}
+        >
+          <span>{post.is_liked ? '👍 Đã thích' : '👍 Thích'}</span>
+        </button>
+        <button className="post-action-btn" onClick={() => setShowCmt((v) => !v)}>
+          <span>💬 Bình luận</span>
+        </button>
+        <button className="post-action-btn" onClick={() => alert("Chia sẻ (demo)")}>
+          <span>↗ Chia sẻ</span>
+        </button>
       </div>
 
       {showCmt && (
-        <div className="fb-comment-box">
+        <div className="p-4 bg-gray-50 border-t border-gray-100">
           <div className="flex gap-2">
             <input
               className="fb-input flex-1"
               value={cmt}
               onChange={(e) => setCmt(e.target.value)}
-              placeholder="Viết bình luận…"
+              placeholder="Viết bình luận công khai..."
               onKeyDown={(e) => {
                 if (e.key === "Enter" && cmt.trim()) {
                   onComment(post.id, cmt.trim());
@@ -560,7 +496,8 @@ function Post({ post, onLike, onComment, onDelete }) {
               }}
             />
             <button
-              className="fb-btn"
+              className="btn-post"
+              style={{ padding: '8px 16px' }}
               onClick={() => {
                 if (!cmt.trim()) return;
                 onComment(post.id, cmt.trim());
@@ -569,18 +506,6 @@ function Post({ post, onLike, onComment, onDelete }) {
             >
               Gửi
             </button>
-          </div>
-
-          <div className="fb-comments">
-            {post.comments.map((cm, i) => (
-              <div key={i} className="fb-comment">
-                <img className="fb-avatar-s" src={avatar(cm.author)} alt="" />
-                <div className="fb-comment-bubble">
-                  <div className="fb-comment-author">{cm.author}</div>
-                  <div>{cm.text}</div>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       )}
@@ -593,20 +518,27 @@ function RightSidebar() {
   return (
     <aside className="fb-right sticky">
       <div className="fb-card">
-        <div className="font-semibold mb-3 text-gray-800">Liên hệ</div>
-        <div className="fb-contact"><span className="dot online" /> Linh</div>
-        <div className="fb-contact"><span className="dot online" /> Vũ</div>
-        <div className="fb-contact"><span className="dot" /> Khang</div>
-        <div className="fb-contact"><span className="dot" /> Huy</div>
-      </div>
-
-      <div className="fb-card">
-        <div className="font-semibold mb-3 text-gray-800">Đang thịnh hành</div>
-        <ul className="list-none text-sm text-gray-700 space-y-2">
-          <li className="fb-contact">#calisthenics</li>
-          <li className="fb-contact">#football_drills</li>
-          <li className="fb-contact">#lean_bulk_meal</li>
-        </ul>
+        <div className="font-semibold mb-3 text-gray-600 text-lg">Người liên hệ</div>
+        <div className="contact-item">
+          <div className="relative">
+            <img className="fb-avatar" src={avatar("Linh")} alt="" />
+            <div className="status-dot"></div>
+          </div>
+          <span className="font-medium">Linh</span>
+        </div>
+        <div className="contact-item">
+          <div className="relative">
+            <img className="fb-avatar" src={avatar("Vũ")} alt="" />
+            <div className="status-dot"></div>
+          </div>
+          <span className="font-medium">Vũ</span>
+        </div>
+        <div className="contact-item">
+          <div className="relative">
+            <img className="fb-avatar" src={avatar("Khang")} alt="" />
+          </div>
+          <span className="font-medium">Khang</span>
+        </div>
       </div>
     </aside>
   );
@@ -615,62 +547,137 @@ function RightSidebar() {
 // Social Feed chính
 export default function Social() {
   const [posts, setPosts] = useState([]);
+  const [user, setUser] = useState(null);
+  const toast = useToast();
 
+  // Fetch user info
   useEffect(() => {
-    const saved = localStorage.getItem(LS_KEY);
-    if (saved) setPosts(JSON.parse(saved));
-    else {
-      const seed = [
-        {
-          id: 1,
-          author: "Linh",
-          avatar: avatar("Linh"),
-          text: "Drill tăng tốc 6×30m, nghỉ 60s – thấy đùi hơi mỏi 😅",
-          image: "",
-          createdAt: new Date(Date.now() - 3600e3).toISOString(),
-          likes: 4,
-          comments: [{ author: "Bạn", text: "Gắt đó!" }],
-        },
-        {
-          id: 2,
-          author: "Bạn",
-          avatar: avatar("Bạn"),
-          text: "Bữa trưa tăng cơ: ức gà 150g + khoai lang 200g + salad 🥗",
-          image: "",
-          createdAt: new Date().toISOString(),
-          likes: 6,
-          comments: [],
-        },
-      ];
-      setPosts(seed);
-      localStorage.setItem(LS_KEY, JSON.stringify(seed));
-    }
+    const fetchUser = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/profile", { credentials: "include" });
+        const data = await res.json();
+        if (!data.error) {
+          setUser({
+            id: data.Id,
+            name: data.Name,
+            avatar: data.Avatar
+          });
+        }
+      } catch (err) {
+        console.error("Error fetching user:", err);
+      }
+    };
+    fetchUser();
   }, []);
 
-  const persist = (next) => {
-    setPosts(next);
-    localStorage.setItem(LS_KEY, JSON.stringify(next));
+  // Fetch posts
+  const fetchPosts = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/social/posts?page=1&per_page=20", { credentials: "include" });
+      const data = await res.json();
+      if (data.success) {
+        setPosts(data.posts);
+      }
+    } catch (err) {
+      console.error("Error fetching posts:", err);
+    }
   };
 
-  const addPost = (p) => persist([p, ...posts]);
-  const likePost = (id) =>
-    persist(posts.map((p) => (p.id === id ? { ...p, likes: p.likes + 1 } : p)));
-  const addComment = (id, text) =>
-    persist(
-      posts.map((p) =>
-        p.id === id ? { ...p, comments: [...p.comments, { author: "Bạn", text }] } : p
-      )
-    );
-  const delPost = (id) => persist(posts.filter((p) => p.id !== id));
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const addPost = async (postData) => {
+    try {
+      const res = await fetch("http://localhost:5000/api/social/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(postData)
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Đăng bài thành công!");
+        fetchPosts(); // Reload posts
+      } else {
+        toast.error(data.error || "Lỗi khi đăng bài");
+      }
+    } catch (err) {
+      toast.error("Lỗi kết nối");
+    }
+  };
+
+  const likePost = async (id) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/social/posts/${id}/like`, {
+        method: "POST",
+        credentials: "include"
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Optimistic update or reload
+        setPosts(posts.map(p => {
+          if (p.id === id) {
+            return {
+              ...p,
+              likes_count: data.liked ? p.likes_count + 1 : p.likes_count - 1,
+              is_liked: data.liked
+            };
+          }
+          return p;
+        }));
+      }
+    } catch (err) {
+      console.error("Error liking post:", err);
+    }
+  };
+
+  const addComment = async (id, text) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/social/posts/${id}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ content: text })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Đã bình luận!");
+        // Reload posts to update comment count (or fetch comments separately)
+        fetchPosts();
+      }
+    } catch (err) {
+      toast.error("Lỗi khi bình luận");
+    }
+  };
+
+  const delPost = async (id) => {
+    if (!window.confirm("Bạn có chắc muốn xóa bài viết này?")) return;
+    try {
+      const res = await fetch(`http://localhost:5000/api/social/posts/${id}`, {
+        method: "DELETE",
+        credentials: "include"
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Đã xóa bài viết");
+        setPosts(posts.filter(p => p.id !== id));
+      } else {
+        toast.error(data.error || "Không thể xóa");
+      }
+    } catch (err) {
+      toast.error("Lỗi kết nối");
+    }
+  };
 
   return (
     <>
       <style>{styles}</style>
       <main className="fb-wrap">
         <div className="fb-grid">
-          <LeftSidebar />
+          <LeftSidebar user={user} />
           <section className="fb-center">
-            <Composer onPost={addPost} />
+            <Composer onPost={addPost} user={user} />
             {posts.map((p) => (
               <Post
                 key={p.id}
@@ -678,6 +685,7 @@ export default function Social() {
                 onLike={likePost}
                 onComment={addComment}
                 onDelete={delPost}
+                currentUser={user}
               />
             ))}
           </section>

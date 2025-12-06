@@ -1,150 +1,85 @@
-/* Cấu trúc chung của trang */
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
+/* App.css - Layout & Navigation Only */
 
-.app-container {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.main-content {
-  flex-grow: 1;  /* Chiếm không gian còn lại */
-  padding: 20px;
-}
-
-/* Navbar */
+/* Navbar - Fixed at top */
 .navbar {
-  background-color: #111;
+  background-color: #1e293b;
   color: white;
-  padding: 16px;
+  padding: 16px 24px;
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  z-index: 100;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .navbar-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
 .navbar-links {
   display: flex;
-  gap: 20px;
+  gap: 24px;
+  align-items: center;
 }
 
 .navbar-link {
-  font-size: 16px;
-  color: white;
+  font-size: 15px;
+  font-weight: 500;
+  color: #e2e8f0;
   text-decoration: none;
-  transition: color 0.3s ease;
+  transition: color 0.2s ease;
+  padding: 8px 12px;
+  border-radius: 6px;
 }
 
 .navbar-link:hover {
-  color: #ffba08;
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
 }
 
-/* Footer */
-.footer {
-  background-color: #111;
-  color: #bbb;
-  padding: 20px;
-  text-align: center;
-  font-size: 14px;
-  margin-top: auto;  /* Đảm bảo Footer luôn nằm dưới cùng */
+.navbar-link.active {
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.15);
 }
 
-.notification {
+/* Profile Menu */
+.profile-menu {
   position: relative;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  margin-left: 20px;
 }
 
-.notification .badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  background-color: red;
-  color: white;
+.profile-img {
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  padding: 4px 8px;
-  font-size: 12px;
-}
-
-.notification-dropdown {
-  display: none;
-  position: absolute;
-  top: 35px;
-  right: 0;
-  background-color: #fff;
-  color: black;
-  padding: 10px;
-  width: 250px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  z-index: 1000;
-}
-
-.notification:hover .notification-dropdown {
-  display: block;
-}
-
-.notification-dropdown ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.notification-dropdown ul li {
-  padding: 8px 0;
-  border-bottom: 1px solid #eee;
-  font-size: 14px;
-}
-
-.notification-dropdown ul li:last-child {
-  border-bottom: none;
-}
-
-.mark-all-read {
-  background-color: #00b4d8;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 8px;
-  margin-top: 10px;
   cursor: pointer;
+  border: 2px solid #3b82f6;
+  transition: transform 0.2s;
 }
 
-.mark-all-read:hover {
-  background-color: #0097b3;
+.profile-img:hover {
+  transform: scale(1.05);
 }
 
-/* Cải thiện phong cách cho menu hồ sơ */
 .profile-dropdown {
   display: none;
   position: absolute;
-  top: 50px;
+  top: 55px;
   right: 0;
-  background-color: white;
-  border: 1px solid #ddd;
-  padding: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  padding: 8px 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   width: 200px;
   border-radius: 8px;
-  z-index: 1000;
+  z-index: 1001;
 }
 
-.profile-img:hover + .profile-dropdown {
+.profile-menu:hover .profile-dropdown {
   display: block;
 }
 
@@ -155,19 +90,43 @@ html, body {
 }
 
 .profile-dropdown ul li {
-  padding: 8px 0;
+  padding: 0;
+}
+
+.profile-dropdown ul li a,
+.profile-dropdown ul li button {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
   font-size: 14px;
+  color: #e2e8f0;
+  background: transparent;
+  border: none;
+  text-align: left;
+  transition: background 0.2s;
 }
 
-.profile-dropdown ul li:hover {
-  background-color: #f0f0f0;
-}
-
-.profile-dropdown ul li a {
-  color: black;
+.profile-dropdown ul li a:hover,
+.profile-dropdown ul li button:hover {
+  background-color: rgba(59, 130, 246, 0.1);
   text-decoration: none;
 }
 
-.profile-dropdown ul li a:hover {
-  text-decoration: underline;
+/* Footer */
+.footer {
+  background-color: #1e293b;
+  color: #94a3b8;
+  padding: 24px;
+  text-align: center;
+  font-size: 14px;
+  margin-top: auto;
+  border-top: 1px solid #334155;
+}
+
+.footer a {
+  color: #3b82f6;
+}
+
+.footer a:hover {
+  color: #60a5fa;
 }

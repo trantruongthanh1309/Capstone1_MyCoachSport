@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, session
-from functools import wraps
+from .admin_middleware import require_admin
 from models.user_model import User
 from models.account_model import Account
 from db import db
@@ -7,17 +7,12 @@ from sqlalchemy import or_
 
 users_admin_bp = Blueprint('users_admin', __name__)
 
-def admin_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        if session.get('role') != 'admin':
-            return jsonify({'success': False, 'error': 'Unauthorized'}), 403
-        return f(*args, **kwargs)
-    return decorated
-
 @users_admin_bp.route('/api/admin/users', methods=['GET'])
-@admin_required
 def get_users():
+    auth_error = require_admin()
+    if auth_error:
+        return auth_error
+
     try:
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 20, type=int)
@@ -70,8 +65,11 @@ def get_users():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @users_admin_bp.route('/api/admin/filters/sports', methods=['GET'])
-@admin_required
 def get_sports_filter():
+    auth_error = require_admin()
+    if auth_error:
+        return auth_error
+
     try:
         sports = db.session.query(User.Sport).distinct().filter(User.Sport.isnot(None)).all()
         return jsonify({'success': True, 'data': [s[0] for s in sports if s[0]]}), 200
@@ -79,8 +77,11 @@ def get_sports_filter():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @users_admin_bp.route('/api/admin/filters/goals', methods=['GET'])
-@admin_required
 def get_goals_filter():
+    auth_error = require_admin()
+    if auth_error:
+        return auth_error
+
     try:
         goals = db.session.query(User.Goal).distinct().filter(User.Goal.isnot(None)).all()
         return jsonify({'success': True, 'data': [g[0] for g in goals if g[0]]}), 200
@@ -88,8 +89,11 @@ def get_goals_filter():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @users_admin_bp.route('/api/admin/users/<int:user_id>', methods=['PUT'])
-@admin_required
 def update_user(user_id):
+    auth_error = require_admin()
+    if auth_error:
+        return auth_error
+
     try:
         user = User.query.get_or_404(user_id)
         data = request.get_json()
@@ -116,8 +120,11 @@ def update_user(user_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @users_admin_bp.route('/api/admin/users/<int:user_id>', methods=['DELETE'])
-@admin_required
 def delete_user(user_id):
+    auth_error = require_admin()
+    if auth_error:
+        return auth_error
+
     try:
         user = User.query.get_or_404(user_id)
         account = Account.query.filter_by(User_id=user_id).first()

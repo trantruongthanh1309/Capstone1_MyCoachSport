@@ -92,12 +92,24 @@ export default function NewsFeed() {
     };
 
     return (
-        <div className="newsfeed-container">
+    <div className="newsfeed-container">
             {/* Left Column: Feed */}
             <div className="feed-column">
+        {/* Hero header */}
+        <header className="feed-hero">
+          <div className="feed-hero-left">
+            <h1 className="feed-hero-title">Bảng tin thể thao</h1>
+            <p className="feed-hero-subtitle">
+              Chia sẻ hành trình luyện tập, truyền cảm hứng cho cộng đồng MySportCoach AI.
+            </p>
+          </div>
+          <div className="feed-hero-right">
+            <span className="feed-hero-pill">🚀 Mỗi ngày một câu chuyện mới</span>
+          </div>
+        </header>
 
-                {/* Sport Filter Bar */}
-                <div className="sport-filter-bar">
+        {/* Sport Filter Bar */}
+        <div className="sport-filter-bar">
                     {SPORTS_FILTER.map(sport => (
                         <div
                             key={sport.id}

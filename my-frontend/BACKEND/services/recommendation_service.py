@@ -21,6 +21,30 @@ class SmartRecommendationEngine:
         self.disliked = self._parse_list(self.user.DislikedIngredients)
         self.forbidden_ingredients = set(a.lower() for a in self.allergies + self.disliked)
 
+        # ✅ LOAD PREFERENCES (Like/Dislike) từ bảng Logs
+        self.liked_meals = set()
+        self.disliked_meals = set()
+        self.liked_workouts = set()
+        self.disliked_workouts = set()
+        self._load_preferences()
+
+    def _load_preferences(self):
+        """Đọc logs để biết user thích/ghét gì"""
+        logs = Log.query.filter_by(User_id=self.user_id).all()
+        for log in logs:
+            if log.FeedbackType == 'liked':
+                if log.Meal_id: self.liked_meals.add(log.Meal_id)
+                if log.Workout_id: self.liked_workouts.add(log.Workout_id)
+            elif log.FeedbackType == 'disliked':
+                if log.Meal_id: self.disliked_meals.add(log.Meal_id)
+                if log.Workout_id: self.disliked_workouts.add(log.Workout_id)
+        
+        print(f"❤️ [PREFERENCES] User {self.user_id}:")
+        print(f"   👍 Liked Meals: {self.liked_meals}")
+        print(f"   👎 Disliked Meals: {self.disliked_meals}")
+        print(f"   👍 Liked Workouts: {self.liked_workouts}")
+        print(f"   👎 Disliked Workouts: {self.disliked_workouts}")
+
     def _parse_list(self, json_str):
         try:
             if not json_str: return []
@@ -45,7 +69,14 @@ class SmartRecommendationEngine:
         return busy
 
     def _score_workout(self, workout, slot):
+        # ✅ CHECK PREFERENCES
+        if workout.Id in self.disliked_workouts:
+            return -1000 # Né ngay lập tức
+        
         score = 50
+        
+        if workout.Id in self.liked_workouts:
+            score += 50 # Ưu tiên cực cao
         
         # 1. Sport Match (Quan trọng nhất: +50)
         user_sport = (self.user.Sport or "").lower()
@@ -86,6 +117,10 @@ class SmartRecommendationEngine:
         return score
 
     def _score_meal(self, meal, time_slot):
+        # ✅ CHECK PREFERENCES
+        if meal.Id in self.disliked_meals:
+            return -1000 # Né ngay lập tức
+        
         # 1. Allergy Check (Tuyệt đối)
         if meal.IngredientTags:
             ingredients = set(i.strip().lower() for i in meal.IngredientTags.split(','))
@@ -93,6 +128,9 @@ class SmartRecommendationEngine:
                 return -1000
 
         score = 50
+        
+        if meal.Id in self.liked_meals:
+            score += 50 # Ưu tiên cực cao
         
         # 2. Timing Match (Quan trọng nhất: +40)
         # Kiểm tra cả MealTiming (AI mới) và MealType (Dữ liệu cũ)
@@ -162,8 +200,13 @@ class SmartRecommendationEngine:
         return score
 
     def _get_user_profile_hash(self):
-        """Tạo hash từ thông tin user để phát hiện thay đổi"""
-        profile_str = f"{self.user.Sport}_{self.user.Goal}_{self.user.Allergies}_{self.user.DislikedIngredients}"
+        """Tạo hash từ thông tin user VÀ Lịch Bận để phát hiện thay đổi"""
+        # Lấy thông tin busy slots hiện tại
+        busy_slots = self._get_busy_slots()
+        busy_str = ",".join(sorted(list(busy_slots)))
+        
+        # Hash bao gồm: Sport + Goal + Allergies + Disliked + BUSY SLOTS
+        profile_str = f"{self.user.Sport}_{self.user.Goal}_{self.user.Allergies}_{self.user.DislikedIngredients}_{busy_str}"
         return hashlib.md5(profile_str.encode()).hexdigest()
     
     def _has_profile_changed(self):
@@ -311,33 +354,44 @@ class SmartRecommendationEngine:
         schedule = []
         
         print(f"💪 [WORKOUT] Checking workout slots...")
-        workout_slot = None
         
-        # ✅ FIX: Ưu tiên Sáng -> Tối -> Chiều để lịch tập đều đặn, không bị lỏm chỏm
-        priority_slots = ["morning", "evening", "afternoon"]
+        # ✅ FIX: Tạo 2 workouts/ngày (sáng + tối) thay vì chỉ 1
+        workout_slots = []
         
-        for slot in priority_slots:
-            if slot not in busy_slots:
-                workout_slot = slot
-                print(f"   ✅ Selected workout slot: {slot}")
-                break
-            else:
-                print(f"   ⏭️ Skipped {slot} (busy)")
+        # Ưu tiên sáng và tối
+        if "morning" not in busy_slots:
+            workout_slots.append("morning")
+            print(f"   ✅ Morning workout slot available")
+        else:
+            print(f"   ⏭️ Skipped morning (busy)")
         
-        selected_workout = None
-        if workout_slot:
-            all_workouts = Workout.query.all()
-            scored_workouts = [(w, self._score_workout(w, workout_slot)) for w in all_workouts]
+        if "evening" not in busy_slots:
+            workout_slots.append("evening")
+            print(f"   ✅ Evening workout slot available")
+        else:
+            print(f"   ⏭️ Skipped evening (busy)")
+        
+        # Nếu không có cả 2 slot, thử afternoon
+        if len(workout_slots) < 2 and "afternoon" not in busy_slots:
+            workout_slots.append("afternoon")
+            print(f"   ✅ Afternoon workout slot available (backup)")
+        
+        # Tạo workout cho mỗi slot
+        all_workouts = Workout.query.all()
+        
+        for slot in workout_slots:
+            scored_workouts = [(w, self._score_workout(w, slot)) for w in all_workouts]
             scored_workouts.sort(key=lambda x: x[1], reverse=True)
             
             top_workouts = scored_workouts[:5]
             if top_workouts:
                 selected_workout = random.choice(top_workouts)[0]
                 schedule.append({
-                    "time": f"{workout_slot}_slot",
+                    "time": f"{slot}_slot",
                     "type": "workout",
                     "data": self._serialize_workout(selected_workout)
                 })
+                print(f"   ✅ Added {slot} workout: {selected_workout.Name}")
 
         periods = ["morning", "afternoon", "evening"]
         time_map = {

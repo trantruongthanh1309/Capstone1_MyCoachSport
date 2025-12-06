@@ -1,7 +1,9 @@
 import { useState } from "react";
 import "../pages/NewsFeed.css";
 
-const API_BASE = "http://localhost:5000";
+import config from "../config";
+
+const API_BASE = config.API_BASE;
 
 const TOPICS = [
     { id: "Workout", label: "💪 Tập luyện", color: "#ef4444" },
@@ -30,7 +32,10 @@ export default function CreatePost({ onPostCreated, userAvatar }) {
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async () => {
-        if (!content.trim() || !title.trim()) return;
+        if (!content.trim()) {
+            alert("Vui lòng nhập nội dung bài viết trước khi đăng.");
+            return;
+        }
 
         setLoading(true);
         try {
@@ -39,7 +44,8 @@ export default function CreatePost({ onPostCreated, userAvatar }) {
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
                 body: JSON.stringify({
-                    title,
+                    // Tiêu đề có thể rỗng, backend xử lý mặc định nếu cần
+                    title: title.trim() || null,
                     content,
                     image_url: imageUrl,
                     topic: selectedTopic.id,
@@ -48,13 +54,22 @@ export default function CreatePost({ onPostCreated, userAvatar }) {
             });
 
             const data = await res.json();
-            if (data.success) {
-                onPostCreated(data.post);
+            console.log("📝 Post creation response:", data);
+
+            if (res.ok && data.success) {
+                alert("✅ Bài viết đã được gửi! Admin sẽ duyệt trong thời gian sớm nhất.");
+                // ONLY add to UI if backend confirms success
+                if (data.post) {
+                    onPostCreated(data.post);
+                }
                 setIsOpen(false);
                 resetForm();
+            } else {
+                alert(`❌ Lỗi: ${data.message || 'Không thể đăng bài. Vui lòng thử lại.'}`);
             }
         } catch (err) {
-            console.error("Error creating post:", err);
+            console.error("❌ Error creating post:", err);
+            alert("❌ Lỗi kết nối! Vui lòng kiểm tra internet và thử lại.");
         } finally {
             setLoading(false);
         }
@@ -164,7 +179,7 @@ export default function CreatePost({ onPostCreated, userAvatar }) {
                             <button
                                 className="post-submit-btn"
                                 onClick={handleSubmit}
-                                disabled={!content.trim() || !title.trim() || loading}
+                                disabled={!content.trim() || loading}
                                 style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)' }}
                             >
                                 {loading ? "Đang đăng..." : "Đăng bài ngay 🚀"}

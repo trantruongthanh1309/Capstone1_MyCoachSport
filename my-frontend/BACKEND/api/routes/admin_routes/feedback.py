@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from .admin_middleware import require_admin
-from models.log import Log
+from models.feedback import Feedback
+from models.user_model import User
 from db import db
 
 feedback_bp = Blueprint('feedback_admin', __name__)
@@ -14,18 +15,15 @@ def get_feedback():
     try:
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 20, type=int)
+        status = request.args.get('status', '')
         
-        pagination = Log.query.order_by(Log.Date.desc()).paginate(page=page, per_page=per_page, error_out=False)
+        query = Feedback.query
+        if status and status != 'all':
+            query = query.filter(Feedback.Status == status)
+            
+        pagination = query.order_by(Feedback.CreatedAt.desc()).paginate(page=page, per_page=per_page, error_out=False)
         
-        feedbacks = [{
-            'id': l.Id,
-            'user_id': l.User_id,
-            'meal_id': l.Meal_id,
-            'workout_id': l.Workout_id,
-            'rating': l.Rating,
-            'notes': l.Notes,
-            'date': l.Date.isoformat() if l.Date else None
-        } for l in pagination.items]
+        feedbacks = [f.to_dict() for f in pagination.items]
         
         return jsonify({
             'success': True,
@@ -40,6 +38,26 @@ def get_feedback():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@feedback_bp.route('/api/admin/feedback/<int:feedback_id>/resolve', methods=['POST'])
+def resolve_feedback(feedback_id):
+    auth_error = require_admin()
+    if auth_error:
+        return auth_error
+    
+    try:
+        feedback = Feedback.query.get_or_404(feedback_id)
+        data = request.get_json()
+        reply = data.get('reply', '')
+        
+        feedback.Status = 'resolved'
+        feedback.Response = reply
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Feedback resolved'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @feedback_bp.route('/api/admin/feedback/<int:feedback_id>', methods=['DELETE'])
 def delete_feedback(feedback_id):
     auth_error = require_admin()
@@ -47,11 +65,33 @@ def delete_feedback(feedback_id):
         return auth_error
     
     try:
-        log = Log.query.get_or_404(feedback_id)
-        db.session.delete(log)
+        feedback = Feedback.query.get_or_404(feedback_id)
+        db.session.delete(feedback)
         db.session.commit()
         
         return jsonify({'success': True, 'message': 'Feedback deleted'}), 200
     except Exception as e:
         db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@feedback_bp.route('/api/admin/feedback/stats', methods=['GET'])
+def get_feedback_stats():
+    auth_error = require_admin()
+    if auth_error:
+        return auth_error
+    
+    try:
+        total = Feedback.query.count()
+        pending = Feedback.query.filter_by(Status='pending').count()
+        resolved = Feedback.query.filter_by(Status='resolved').count()
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'total': total,
+                'pending': pending,
+                'resolved': resolved
+            }
+        }), 200
+    except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500

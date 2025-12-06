@@ -18,6 +18,37 @@ def get_schedule():
     
     try:
         schedule = build_daily_schedule(user_id, date)
+        
+        # Thêm schedule_id và is_completed cho mỗi item từ UserPlans
+        for item in schedule.get('schedule', []):
+            # Lấy từ UserPlans table
+            query = text("""
+                SELECT TOP 1 Id, IsCompleted 
+                FROM UserPlans 
+                WHERE UserId = :user_id 
+                AND Date = :date 
+                AND Type = :item_type 
+                AND (MealId = :meal_id OR WorkoutId = :workout_id)
+            """)
+            
+            item_type = item.get('type')  # 'meal' hoặc 'workout'
+            item_id = item.get('data', {}).get('Id')
+            
+            result = db.session.execute(query, {
+                'user_id': user_id,
+                'date': date,
+                'item_type': item_type,
+                'meal_id': item_id if item_type == 'meal' else None,
+                'workout_id': item_id if item_type == 'workout' else None
+            }).first()
+            
+            if result:
+                item['schedule_id'] = result.Id
+                item['is_completed'] = bool(result.IsCompleted) if result.IsCompleted is not None else False
+            else:
+                item['schedule_id'] = None
+                item['is_completed'] = False
+        
         return jsonify(schedule)
     except Exception as e:
         print("Lỗi AI:", str(e))

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import "./Planner.css";
 import "./PlannerEnhanced.css";
 import "./PlannerCompact.css";
+import "./PlannerComplete.css";
 import SwapButton from "../components/SwapButton";
 import { useToast } from "../contexts/ToastContext";
 
@@ -20,7 +21,7 @@ export default function Planner() {
   const getMonday = (date) => {
     const d = new Date(date);
     const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Nếu Chủ nhật thì lùi 6 ngày, không thì tính từ Thứ 2
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
     return new Date(d.setDate(diff));
   };
 
@@ -34,7 +35,6 @@ export default function Planner() {
     return dates;
   };
 
-  // Mảng tên ngày theo thứ tự JavaScript getDay() (0=CN, 1=T2, 2=T3...)
   const getDayName = (dateStr) => {
     const dayNames = [
       "Chủ nhật",
@@ -55,7 +55,7 @@ export default function Planner() {
   const fetchWeeklyPlan = async () => {
     setLoading(true);
     setError("");
-    const monday = getMonday(new Date()); // Bắt đầu từ Thứ 2
+    const monday = getMonday(new Date());
     const dates = getDates(monday, 7);
     const plan = {};
 
@@ -100,18 +100,38 @@ export default function Planner() {
     if (item.type === "meal") {
       setDetailItem({
         title: item.data.Name,
-        content: `Calo: ${item.data.Kcal || 0} kcal\nProtein: ${item.data.Protein || 0
-          }g\nCarb: ${item.data.Carb || 0}g\nFat: ${item.data.Fat || 0}g`,
+        content: `Calo: ${item.data.Kcal || 0} kcal\nProtein: ${item.data.Protein || 0}g\nCarb: ${item.data.Carb || 0}g\nFat: ${item.data.Fat || 0}g`,
       });
     } else {
       setDetailItem({
         title: item.data.Name,
-        content: `Môn: ${item.data.Sport || "N/A"}\nNhóm cơ: ${item.data.MuscleGroups || "N/A"
-          }\nThời gian: ${item.data.Duration_min || 0} phút\nCường độ: ${item.data.Intensity || "N/A"
-          }\nDụng cụ: ${item.data.Equipment || "N/A"}`,
+        content: `Môn: ${item.data.Sport || "N/A"}\nNhóm cơ: ${item.data.MuscleGroups || "N/A"}\nThời gian: ${item.data.Duration_min || 0} phút\nCường độ: ${item.data.Intensity || "N/A"}\nDụng cụ: ${item.data.Equipment || "N/A"}`,
       });
     }
     setShowDetail(true);
+  };
+
+  const handleComplete = async (scheduleId) => {
+    try {
+      const res = await fetch('http://localhost:5000/api/leaderboard/complete-schedule-item', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ schedule_id: scheduleId })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        toast.success(data.message);
+        fetchWeeklyPlan();
+      } else {
+        toast.error(data.error || 'Lỗi khi hoàn thành');
+      }
+    } catch (err) {
+      console.error('Error completing item:', err);
+      toast.error('Lỗi kết nối');
+    }
   };
 
   useEffect(() => {
@@ -183,23 +203,34 @@ export default function Planner() {
                               <span className="meta-badge">🔥 {mealItem.data.Kcal} kcal</span>
                               <span className="meta-badge">💪 {mealItem.data.Protein}g</span>
                             </div>
-                            <div className="item-actions">
+
+                            {/* Nút Hoàn Thành - To và nổi bật */}
+                            <button
+                              className={`btn-complete ${mealItem.is_completed ? 'completed' : ''}`}
+                              onClick={() => handleComplete(mealItem.schedule_id)}
+                              disabled={mealItem.is_completed}
+                            >
+                              {mealItem.is_completed ? '✅ Đã ăn' : '☑️ Hoàn thành'}
+                            </button>
+
+                            {/* Các nút phụ - Nhỏ và gọn */}
+                            <div className="item-actions-compact">
                               <button
-                                className="action-btn like-btn"
+                                className="action-btn-small like"
                                 onClick={() => sendFeedback(mealItem.data.Id, "meal", 5)}
                                 title="Thích"
                               >
                                 👍
                               </button>
                               <button
-                                className="action-btn dislike-btn"
+                                className="action-btn-small dislike"
                                 onClick={() => sendFeedback(mealItem.data.Id, "meal", 2)}
                                 title="Không thích"
                               >
                                 👎
                               </button>
                               <button
-                                className="action-btn info-btn"
+                                className="action-btn-small info"
                                 onClick={() => showItemDetail(mealItem)}
                                 title="Chi tiết"
                               >
@@ -263,23 +294,34 @@ export default function Planner() {
                             <span className="meta-badge">⏱️ {workoutItem.data.Duration_min} phút</span>
                             <span className="meta-badge">💪 {workoutItem.data.Intensity}</span>
                           </div>
-                          <div className="item-actions">
+
+                          {/* Nút Hoàn Thành - To và nổi bật */}
+                          <button
+                            className={`btn-complete ${workoutItem.is_completed ? 'completed' : ''}`}
+                            onClick={() => handleComplete(workoutItem.schedule_id)}
+                            disabled={workoutItem.is_completed}
+                          >
+                            {workoutItem.is_completed ? '✅ Đã tập' : '☑️ Hoàn thành'}
+                          </button>
+
+                          {/* Các nút phụ - Nhỏ và gọn */}
+                          <div className="item-actions-compact">
                             <button
-                              className="action-btn like-btn"
+                              className="action-btn-small like"
                               onClick={() => sendFeedback(workoutItem.data.Id, "workout", 5)}
                               title="Thích"
                             >
                               👍
                             </button>
                             <button
-                              className="action-btn dislike-btn"
+                              className="action-btn-small dislike"
                               onClick={() => sendFeedback(workoutItem.data.Id, "workout", 2)}
                               title="Không thích"
                             >
                               👎
                             </button>
                             <button
-                              className="action-btn info-btn"
+                              className="action-btn-small info"
                               onClick={() => showItemDetail(workoutItem)}
                               title="Chi tiết"
                             >
@@ -316,23 +358,34 @@ export default function Planner() {
                             <span className="meta-badge">⏱️ {workoutItem.data.Duration_min} phút</span>
                             <span className="meta-badge">💪 {workoutItem.data.Intensity}</span>
                           </div>
-                          <div className="item-actions">
+
+                          {/* Nút Hoàn Thành - To và nổi bật */}
+                          <button
+                            className={`btn-complete ${workoutItem.is_completed ? 'completed' : ''}`}
+                            onClick={() => handleComplete(workoutItem.schedule_id)}
+                            disabled={workoutItem.is_completed}
+                          >
+                            {workoutItem.is_completed ? '✅ Đã tập' : '☑️ Hoàn thành'}
+                          </button>
+
+                          {/* Các nút phụ - Nhỏ và gọn */}
+                          <div className="item-actions-compact">
                             <button
-                              className="action-btn like-btn"
+                              className="action-btn-small like"
                               onClick={() => sendFeedback(workoutItem.data.Id, "workout", 5)}
                               title="Thích"
                             >
                               👍
                             </button>
                             <button
-                              className="action-btn dislike-btn"
+                              className="action-btn-small dislike"
                               onClick={() => sendFeedback(workoutItem.data.Id, "workout", 2)}
                               title="Không thích"
                             >
                               👎
                             </button>
                             <button
-                              className="action-btn info-btn"
+                              className="action-btn-small info"
                               onClick={() => showItemDetail(workoutItem)}
                               title="Chi tiết"
                             >
@@ -375,4 +428,3 @@ export default function Planner() {
     </div>
   );
 }
-

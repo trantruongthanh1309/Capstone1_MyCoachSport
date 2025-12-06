@@ -11,6 +11,7 @@ class Post(db.Model):
     Sport = db.Column(db.Unicode(50))    # ✅ NVARCHAR(50) - Môn thể thao
     Topic = db.Column(db.Unicode(50))    # ✅ NVARCHAR(50) - Chủ đề
     ImageUrl = db.Column(db.UnicodeText) # ✅ NVARCHAR(MAX) - URL hoặc base64 của ảnh
+    Status = db.Column(db.Unicode(20), nullable=False, default='Pending')  # ✅ Pending/Approved/Rejected
     CreatedAt = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     UpdatedAt = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

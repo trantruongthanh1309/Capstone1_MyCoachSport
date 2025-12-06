@@ -1,0 +1,303 @@
+/* Enhanced Daily Briefing Modal CSS - Horizontal Cards with Hover */
+.daily-briefing-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(15px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.daily-briefing-content {
+    background: linear-gradient(145deg, #0f0f1e, #1a1a2e);
+    width: 92%;
+    max-width: 750px;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 24px;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.7), 0 0 40px rgba(78, 205, 196, 0.15);
+    color: #fff;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    animation: slideUp 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+/* Phase-based headers */
+.daily-briefing-header {
+    padding: 25px 30px 20px;
+    color: white;
+    text-align: center;
+    position: relative;
+    border-radius: 24px 24px 0 0;
+}
+
+.daily-briefing-header.phase-morning {
+    background: linear-gradient(135deg, #FF9966, #FF5E62);
+}
+
+.daily-briefing-header.phase-noon {
+    background: linear-gradient(135deg, #FDBB2D, #22C1C3);
+}
+
+.daily-briefing-header.phase-afternoon {
+    background: linear-gradient(135deg, #3a7bd5, #3a6073);
+}
+
+.daily-briefing-header.phase-evening {
+    background: linear-gradient(135deg, #4b6cb7, #182848);
+}
+
+.daily-briefing-header h2 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin: 0;
+    line-height: 1.3;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.phase-subtitle {
+    margin-top: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    opacity: 0.95;
+    letter-spacing: 0.5px;
+}
+
+.daily-briefing-body {
+    padding: 25px 30px;
+}
+
+.briefing-section {
+    margin-bottom: 25px;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #4ECDC4;
+    margin-bottom: 18px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid rgba(78, 205, 196, 0.3);
+}
+
+.section-title .emoji {
+    margin-right: 10px;
+    font-size: 1.3rem;
+}
+
+/* HORIZONTAL CARD LAYOUT */
+.item-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.briefing-item {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+    border-radius: 16px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    position: relative;
+}
+
+/* Hover Effect - Scale + Glow */
+.briefing-item:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 12px 30px rgba(78, 205, 196, 0.25);
+    border-color: rgba(78, 205, 196, 0.4);
+    background: linear-gradient(135deg, rgba(78, 205, 196, 0.1), rgba(255, 255, 255, 0.05));
+}
+
+.briefing-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.briefing-item:hover::before {
+    left: 100%;
+}
+
+.item-icon {
+    width: 70px;
+    height: 70px;
+    flex-shrink: 0;
+    border-radius: 14px 0 0 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    transition: transform 0.3s ease;
+}
+
+.briefing-item:hover .item-icon {
+    transform: scale(1.15) rotate(5deg);
+}
+
+.briefing-item.meal .item-icon {
+    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+}
+
+.briefing-item.workout .item-icon {
+    background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+}
+
+.item-details {
+    flex: 1;
+    padding: 16px 20px;
+}
+
+.item-name {
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: #fff;
+    margin-bottom: 6px;
+    transition: color 0.3s ease;
+}
+
+.briefing-item:hover .item-name {
+    color: #4ECDC4;
+}
+
+.item-subtext {
+    font-size: 0.95rem;
+    color: #bbb;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.item-subtext::before {
+    content: '•';
+    color: #4ECDC4;
+    font-weight: bold;
+}
+
+/* Footer */
+.daily-briefing-footer {
+    padding: 20px 30px 25px;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.btn-close,
+.btn-view-all {
+    padding: 12px 28px;
+    font-size: 1rem;
+    font-weight: 700;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.btn-close {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-close:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+}
+
+.btn-view-all {
+    background: linear-gradient(135deg, #4ECDC4, #44A08D);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(78, 205, 196, 0.4);
+}
+
+.btn-view-all:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(78, 205, 196, 0.6);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #888;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.empty-state p {
+    margin: 0 0 8px;
+    font-size: 1rem;
+}
+
+.sub-empty {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(40px) scale(0.95);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+/* Scrollbar styling */
+.daily-briefing-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.daily-briefing-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+.daily-briefing-content::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #4ECDC4, #44A08D);
+    border-radius: 10px;
+}
+
+.daily-briefing-content::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #44A08D, #4ECDC4);
+}

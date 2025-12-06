@@ -39,7 +39,8 @@ def get_profile():
         "Weight_kg": user.Weight_kg,
         "Sport": user.Sport,
         "Goal": user.Goal,
-        "Sessions_per_week": user.Sessions_per_week
+        "Sessions_per_week": user.Sessions_per_week,
+        "Avatar": user.Avatar
     })
 
 
@@ -63,6 +64,9 @@ def update_profile(user_id):
         user.Sport = data.get('sport', user.Sport)
         user.Goal = data.get('goal', user.Goal)
         user.Sessions_per_week = data.get('sessions_per_week', user.Sessions_per_week)
+        
+        if 'avatar' in data:
+            user.Avatar = data['avatar']
 
         db.session.commit()
         print("✅ Hồ sơ đã được lưu vào cơ sở dữ liệu.")

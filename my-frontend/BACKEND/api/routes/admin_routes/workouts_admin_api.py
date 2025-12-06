@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify
 from .admin_middleware import require_admin
 from models.workout import Workout
 from db import db
@@ -15,10 +16,19 @@ def get_workouts():
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 20, type=int)
         search = request.args.get('search', '')
+        sport = request.args.get('sport', '')
+        difficulty = request.args.get('difficulty', '')
         
         query = Workout.query
         if search:
             query = query.filter(Workout.Name.contains(search))
+        if sport:
+            query = query.filter(Workout.SportTags.contains(sport))
+        if difficulty:
+            query = query.filter(Workout.Difficulty == difficulty)
+            
+        # Order by ID desc
+        query = query.order_by(Workout.Id.desc())
         
         pagination = query.paginate(page=page, per_page=per_page, error_out=False)
         
@@ -26,8 +36,9 @@ def get_workouts():
             'id': w.Id,
             'name': w.Name,
             'duration_min': w.Duration_min,
-            'sport': w.Sport,
-            'intensity': w.Intensity,
+            'kcal': w.CalorieBurn,
+            'difficulty': w.Difficulty,
+            'sport_tags': w.SportTags,
             'equipment': w.Equipment,
             'tags': w.Tags
         } for w in pagination.items]
@@ -57,8 +68,9 @@ def create_workout():
         new_workout = Workout(
             Name=data.get('name'),
             Duration_min=data.get('duration_min'),
-            Sport=data.get('sport'),
-            Intensity=data.get('intensity'),
+            CalorieBurn=data.get('kcal'),
+            Difficulty=data.get('difficulty'),
+            SportTags=data.get('sport_tags', ''),
             Equipment=data.get('equipment', ''),
             Tags=data.get('tags', '')
         )
@@ -83,8 +95,9 @@ def update_workout(workout_id):
         
         workout.Name = data.get('name', workout.Name)
         workout.Duration_min = data.get('duration_min', workout.Duration_min)
-        workout.Sport = data.get('sport', workout.Sport)
-        workout.Intensity = data.get('intensity', workout.Intensity)
+        workout.CalorieBurn = data.get('kcal', workout.CalorieBurn)
+        workout.Difficulty = data.get('difficulty', workout.Difficulty)
+        workout.SportTags = data.get('sport_tags', workout.SportTags)
         workout.Equipment = data.get('equipment', workout.Equipment)
         workout.Tags = data.get('tags', workout.Tags)
         
@@ -119,6 +132,28 @@ def get_workouts_stats():
     
     try:
         total = Workout.query.count()
-        return jsonify({'success': True, 'data': {'total': total}}), 200
+        return jsonify({'success': True, 'total': total}), 200
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@workouts_admin_bp.route('/api/admin/workouts/filters/sports', methods=['GET'])
+def get_workout_sports_filter():
+    auth_error = require_admin()
+    if auth_error:
+        return auth_error
+    try:
+        sports = ['football', 'basketball', 'gym', 'running', 'swimming', 'yoga']
+        return jsonify(sports), 200
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@workouts_admin_bp.route('/api/admin/workouts/filters/difficulties', methods=['GET'])
+def get_workout_difficulties_filter():
+    auth_error = require_admin()
+    if auth_error:
+        return auth_error
+    try:
+        difficulties = ['easy', 'medium', 'hard']
+        return jsonify(difficulties), 200
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500

@@ -1,289 +1,328 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
-import "./Leaderboard.css";
+import { useState, useEffect } from 'react';
+import { useToast } from '../contexts/ToastContext';
+import ImageUploader from '../components/ImageUploader';
+import './Leaderboard.css';
 
 export default function Leaderboard() {
-  const [leaderboard, setLeaderboard] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("all"); // all, workouts, challenges
-  const [searchTerm, setSearchTerm] = useState("");
+  const [rankings, setRankings] = useState([]);
+  const [myStats, setMyStats] = useState(null);
+  const [achievements, setAchievements] = useState([]);
+  const [activeTab, setActiveTab] = useState('rankings'); // rankings, achievements
+  const [showLogModal, setShowLogModal] = useState(false);
+  const toast = useToast();
+
+  // Workout form state
+  const [workoutForm, setWorkoutForm] = useState({
+    workout_name: '',
+    sport: '',
+    duration_minutes: 30,
+    calories_burned: 0,
+    difficulty: 'Medium'
+  });
 
   useEffect(() => {
-    fetchLeaderboard();
+    fetchRankings();
+    fetchMyStats();
+    fetchAchievements();
   }, []);
 
-  const fetchLeaderboard = async () => {
+  const fetchRankings = async () => {
     try {
-      setLoading(true);
-      console.log("🔄 Fetching leaderboard data...");
-
-      const response = await axios.get("http://localhost:5000/api/leaderboard");
-      console.log("📦 Response received:", response);
-      console.log("📊 Response data:", response.data);
-
-      if (response.data.success) {
-        console.log("✅ Success! Data:", response.data.data);
-        console.log("📈 Total users:", response.data.total);
-        setLeaderboard(response.data.data);
-      } else {
-        console.error("❌ API returned success=false");
+      const res = await fetch('http://localhost:5000/api/leaderboard/rankings', {
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (data.success) {
+        setRankings(data.rankings);
       }
-    } catch (error) {
-      console.error("❌ Error fetching leaderboard:", error);
-      console.error("Error details:", error.response?.data);
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching rankings:', err);
     }
   };
 
-  const getFilteredData = () => {
-    let filtered = [...leaderboard];
-
-    // Apply search filter
-    if (searchTerm) {
-      filtered = filtered.filter(user =>
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.sport.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+  const fetchMyStats = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/leaderboard/my-stats', {
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMyStats(data);
+      }
+    } catch (err) {
+      console.error('Error fetching stats:', err);
     }
+  };
 
-    // Apply category filter and re-sort
-    if (filter === "workouts") {
-      filtered.sort((a, b) => b.workoutsCompleted - a.workoutsCompleted);
-    } else if (filter === "challenges") {
-      filtered.sort((a, b) => b.challengesCompleted - a.challengesCompleted);
+  const fetchAchievements = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/leaderboard/achievements', {
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAchievements(data.achievements);
+      }
+    } catch (err) {
+      console.error('Error fetching achievements:', err);
     }
-
-    return filtered;
   };
 
-  const getRankClass = (rank) => {
-    if (rank === 1) return "rank-gold";
-    if (rank === 2) return "rank-silver";
-    if (rank === 3) return "rank-bronze";
-    return "";
+  const handleLogWorkout = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('http://localhost:5000/api/leaderboard/log-workout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(workoutForm)
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(data.message);
+        setShowLogModal(false);
+        setWorkoutForm({
+          workout_name: '',
+          sport: '',
+          duration_minutes: 30,
+          calories_burned: 0,
+          difficulty: 'Medium'
+        });
+        fetchRankings();
+        fetchMyStats();
+        fetchAchievements();
+      } else {
+        toast.error(data.error || 'Lỗi khi ghi nhận bài tập');
+      }
+    } catch (err) {
+      toast.error('Lỗi kết nối');
+    }
   };
 
-  const getLevelBadge = (level, color) => {
-    const badges = {
-      "Legend": "👑",
-      "Master": "⭐",
-      "Expert": "💎",
-      "Advanced": "🔥",
-      "Beginner": "🌱"
-    };
-    return { icon: badges[level] || "🌱", color };
+  const getRankColor = (rank) => {
+    if (rank === 1) return '#FFD700'; // Gold
+    if (rank === 2) return '#C0C0C0'; // Silver
+    if (rank === 3) return '#CD7F32'; // Bronze
+    return '#4a5568';
   };
 
-  const filteredData = getFilteredData();
-
-  if (loading) {
-    return (
-      <div className="leaderboard-loading">
-        <div className="loading-spinner"></div>
-        <p>Đang tải bảng xếp hạng...</p>
-      </div>
-    );
-  }
+  const getRankIcon = (rank) => {
+    if (rank === 1) return '👑';
+    if (rank === 2) return '🥈';
+    if (rank === 3) return '🥉';
+    return `#${rank}`;
+  };
 
   return (
-    <div className="leaderboard-page">
-      {/* Hero Section */}
-      <div className="leaderboard-hero">
-        <div className="hero-content">
-          <h1 className="hero-title">
-            <span className="trophy-icon">🏆</span>
-            Bảng Xếp Hạng
-          </h1>
-          <p className="hero-subtitle">
-            Cạnh tranh với các vận động viên hàng đầu và leo lên vị trí số 1!
-          </p>
-        </div>
-        <div className="hero-stats">
-          <div className="stat-card">
-            <div className="stat-icon">👥</div>
-            <div className="stat-value">{leaderboard.length}</div>
-            <div className="stat-label">Vận Động Viên</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon">💪</div>
-            <div className="stat-value">
-              {leaderboard.reduce((sum, u) => sum + u.workoutsCompleted, 0)}
-            </div>
-            <div className="stat-label">Bài Tập Hoàn Thành</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon">🎯</div>
-            <div className="stat-value">
-              {leaderboard.reduce((sum, u) => sum + u.challengesCompleted, 0)}
-            </div>
-            <div className="stat-label">Thử Thách Hoàn Thành</div>
-          </div>
-        </div>
+    <div className="leaderboard-container">
+      {/* Header */}
+      <div className="leaderboard-header">
+        <h1 className="leaderboard-title">🏆 Bảng Xếp Hạng</h1>
+        <p className="leaderboard-subtitle">Cạnh tranh và chinh phục đỉnh cao!</p>
+        <button className="btn-log-workout" onClick={() => setShowLogModal(true)}>
+          ➕ Ghi nhận bài tập
+        </button>
       </div>
 
-      {/* Filters */}
-      <div className="leaderboard-controls">
-        <div className="search-box">
-          <span className="search-icon">🔍</span>
-          <input
-            type="text"
-            placeholder="Tìm kiếm vận động viên..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div className="filter-buttons">
-          <button
-            className={`filter-btn ${filter === "all" ? "active" : ""}`}
-            onClick={() => setFilter("all")}
-          >
-            <span className="filter-icon">🏅</span>
-            Tổng Điểm
-          </button>
-          <button
-            className={`filter-btn ${filter === "workouts" ? "active" : ""}`}
-            onClick={() => setFilter("workouts")}
-          >
-            <span className="filter-icon">💪</span>
-            Bài Tập
-          </button>
-          <button
-            className={`filter-btn ${filter === "challenges" ? "active" : ""}`}
-            onClick={() => setFilter("challenges")}
-          >
-            <span className="filter-icon">🎯</span>
-            Thử Thách
-          </button>
-        </div>
-      </div>
-
-      {/* Top 3 Podium */}
-      {filter === "all" && leaderboard.length >= 3 && (
-        <div className="podium-section">
-          <div className="podium">
-            {/* 2nd Place */}
-            <div className="podium-item podium-second">
-              <div className="podium-avatar">
-                <div className="avatar-circle silver">
-                  {leaderboard[1].name.charAt(0).toUpperCase()}
-                </div>
-                <div className="rank-badge silver">🥈</div>
-              </div>
-              <h3 className="podium-name">{leaderboard[1].name}</h3>
-              <p className="podium-points">{leaderboard[1].totalPoints} điểm</p>
-              <div className="podium-stand silver-stand">
-                <div className="stand-number">2</div>
+      {/* My Stats Card */}
+      {myStats && (
+        <div className="my-stats-card">
+          <div className="stats-row">
+            <div className="stat-item">
+              <div className="stat-icon">🏅</div>
+              <div className="stat-content">
+                <div className="stat-label">Hạng</div>
+                <div className="stat-value">#{myStats.rank || 'N/A'}</div>
               </div>
             </div>
-
-            {/* 1st Place */}
-            <div className="podium-item podium-first">
-              <div className="podium-avatar">
-                <div className="avatar-circle gold">
-                  {leaderboard[0].name.charAt(0).toUpperCase()}
-                </div>
-                <div className="rank-badge gold">🥇</div>
-                <div className="crown">👑</div>
-              </div>
-              <h3 className="podium-name">{leaderboard[0].name}</h3>
-              <p className="podium-points">{leaderboard[0].totalPoints} điểm</p>
-              <div className="podium-stand gold-stand">
-                <div className="stand-number">1</div>
+            <div className="stat-item">
+              <div className="stat-icon">⭐</div>
+              <div className="stat-content">
+                <div className="stat-label">Điểm</div>
+                <div className="stat-value">{myStats.stats.total_points}</div>
               </div>
             </div>
-
-            {/* 3rd Place */}
-            <div className="podium-item podium-third">
-              <div className="podium-avatar">
-                <div className="avatar-circle bronze">
-                  {leaderboard[2].name.charAt(0).toUpperCase()}
-                </div>
-                <div className="rank-badge bronze">🥉</div>
+            <div className="stat-item">
+              <div className="stat-icon">💪</div>
+              <div className="stat-content">
+                <div className="stat-label">Bài tập</div>
+                <div className="stat-value">{myStats.stats.total_workouts}</div>
               </div>
-              <h3 className="podium-name">{leaderboard[2].name}</h3>
-              <p className="podium-points">{leaderboard[2].totalPoints} điểm</p>
-              <div className="podium-stand bronze-stand">
-                <div className="stand-number">3</div>
+            </div>
+            <div className="stat-item">
+              <div className="stat-icon">🔥</div>
+              <div className="stat-content">
+                <div className="stat-label">Streak</div>
+                <div className="stat-value">{myStats.stats.current_streak} ngày</div>
               </div>
+            </div>
+            <div className="stat-item">
+              <div className="stat-icon">📊</div>
+              <div className="stat-content">
+                <div className="stat-label">Level</div>
+                <div className="stat-value">{myStats.stats.level}</div>
+              </div>
+            </div>
+          </div>
+          <div className="exp-bar">
+            <div className="exp-label">EXP: {myStats.stats.experience} / 1000</div>
+            <div className="exp-progress">
+              <div
+                className="exp-fill"
+                style={{ width: `${(myStats.stats.experience / 1000) * 100}%` }}
+              ></div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Leaderboard Table */}
-      <div className="leaderboard-table-container">
-        <table className="leaderboard-table">
-          <thead>
-            <tr>
-              <th>Hạng</th>
-              <th>Vận Động Viên</th>
-              <th>Cấp Độ</th>
-              <th>Môn Thể Thao</th>
-              <th>Điểm</th>
-              <th>Bài Tập</th>
-              <th>Thử Thách</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredData.length > 0 ? (
-              filteredData.map((user, index) => {
-                const displayRank = filter === "all" ? user.rank : index + 1;
-                const levelBadge = getLevelBadge(user.level, user.levelColor);
-
-                return (
-                  <tr key={user.userId} className={getRankClass(displayRank)}>
-                    <td className="rank-cell">
-                      <div className="rank-number">
-                        {user.badge || displayRank}
-                      </div>
-                    </td>
-                    <td className="user-cell">
-                      <div className="user-info">
-                        <div className="user-avatar">
-                          {user.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="user-details">
-                          <div className="user-name">{user.name}</div>
-                          <div className="user-goal">{user.goal}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="level-cell">
-                      <div className={`level-badge level-${user.levelColor}`}>
-                        <span className="level-icon">{levelBadge.icon}</span>
-                        <span className="level-text">{user.level}</span>
-                      </div>
-                    </td>
-                    <td className="sport-cell">
-                      <span className="sport-tag">{user.sport}</span>
-                    </td>
-                    <td className="points-cell">
-                      <div className="points-value">{user.totalPoints}</div>
-                    </td>
-                    <td className="workouts-cell">
-                      <div className="stat-badge workout-badge">
-                        💪 {user.workoutsCompleted}
-                      </div>
-                    </td>
-                    <td className="challenges-cell">
-                      <div className="stat-badge challenge-badge">
-                        🎯 {user.challengesCompleted}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            ) : (
-              <tr>
-                <td colSpan="7" className="no-data">
-                  Không tìm thấy kết quả phù hợp
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      {/* Tabs */}
+      <div className="tabs">
+        <button
+          className={`tab ${activeTab === 'rankings' ? 'active' : ''}`}
+          onClick={() => setActiveTab('rankings')}
+        >
+          🏆 Xếp hạng
+        </button>
+        <button
+          className={`tab ${activeTab === 'achievements' ? 'active' : ''}`}
+          onClick={() => setActiveTab('achievements')}
+        >
+          🎖️ Thành tựu
+        </button>
       </div>
+
+      {/* Content */}
+      {activeTab === 'rankings' && (
+        <div className="rankings-list">
+          {rankings.map((user, index) => (
+            <div key={user.user_id} className="ranking-card">
+              <div className="rank-badge" style={{ background: getRankColor(user.rank) }}>
+                {getRankIcon(user.rank)}
+              </div>
+              <img
+                src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.user_name)}&background=random`}
+                alt={user.user_name}
+                className="user-avatar"
+              />
+              <div className="user-info">
+                <div className="user-name">{user.user_name}</div>
+                <div className="user-sport">{user.sport || 'Thể thao'}</div>
+              </div>
+              <div className="user-stats-inline">
+                <div className="stat-mini">
+                  <span className="stat-mini-icon">⭐</span>
+                  <span className="stat-mini-value">{user.total_points}</span>
+                </div>
+                <div className="stat-mini">
+                  <span className="stat-mini-icon">💪</span>
+                  <span className="stat-mini-value">{user.total_workouts}</span>
+                </div>
+                <div className="stat-mini">
+                  <span className="stat-mini-icon">🔥</span>
+                  <span className="stat-mini-value">{user.current_streak}</span>
+                </div>
+                <div className="stat-mini">
+                  <span className="stat-mini-icon">📊</span>
+                  <span className="stat-mini-value">Lv.{user.level}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {activeTab === 'achievements' && (
+        <div className="achievements-grid">
+          {achievements.map((achievement) => (
+            <div
+              key={achievement.id}
+              className={`achievement-card ${achievement.unlocked ? 'unlocked' : 'locked'}`}
+            >
+              <div className="achievement-icon">{achievement.icon}</div>
+              <div className="achievement-name">{achievement.name}</div>
+              <div className="achievement-desc">{achievement.description}</div>
+              <div className="achievement-reward">+{achievement.points_reward} điểm</div>
+              {achievement.unlocked && (
+                <div className="achievement-unlocked-badge">✅ Đã mở khóa</div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Log Workout Modal */}
+      {showLogModal && (
+        <div className="modal-overlay" onClick={() => setShowLogModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Ghi nhận bài tập</h2>
+              <button className="modal-close" onClick={() => setShowLogModal(false)}>✕</button>
+            </div>
+            <form onSubmit={handleLogWorkout}>
+              <div className="form-group">
+                <label>Tên bài tập *</label>
+                <input
+                  type="text"
+                  value={workoutForm.workout_name}
+                  onChange={(e) => setWorkoutForm({ ...workoutForm, workout_name: e.target.value })}
+                  placeholder="VD: Chạy bộ buổi sáng"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Môn thể thao</label>
+                <select
+                  value={workoutForm.sport}
+                  onChange={(e) => setWorkoutForm({ ...workoutForm, sport: e.target.value })}
+                >
+                  <option value="">-- Chọn môn --</option>
+                  <option value="Bóng đá">Bóng đá</option>
+                  <option value="Bơi lội">Bơi lội</option>
+                  <option value="Chạy bộ">Chạy bộ</option>
+                  <option value="Gym">Gym</option>
+                  <option value="Yoga">Yoga</option>
+                  <option value="Cầu lông">Cầu lông</option>
+                  <option value="Bóng rổ">Bóng rổ</option>
+                </select>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Thời gian (phút)</label>
+                  <input
+                    type="number"
+                    value={workoutForm.duration_minutes}
+                    onChange={(e) => setWorkoutForm({ ...workoutForm, duration_minutes: parseInt(e.target.value) })}
+                    min="1"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Calo đốt cháy</label>
+                  <input
+                    type="number"
+                    value={workoutForm.calories_burned}
+                    onChange={(e) => setWorkoutForm({ ...workoutForm, calories_burned: parseInt(e.target.value) })}
+                    min="0"
+                  />
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Độ khó</label>
+                <select
+                  value={workoutForm.difficulty}
+                  onChange={(e) => setWorkoutForm({ ...workoutForm, difficulty: e.target.value })}
+                >
+                  <option value="Easy">Dễ (x1.0)</option>
+                  <option value="Medium">Trung bình (x1.5)</option>
+                  <option value="Hard">Khó (x2.0)</option>
+                  <option value="Expert">Chuyên gia (x3.0)</option>
+                </select>
+              </div>
+              <button type="submit" className="btn-submit">Ghi nhận</button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

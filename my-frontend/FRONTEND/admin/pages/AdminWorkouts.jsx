@@ -9,14 +9,14 @@ const AdminWorkouts = () => {
     sports: [],
     difficulties: []
   });
-  
+
   // Pagination & Filters
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSport, setSelectedSport] = useState('');
   const [selectedDifficulty, setSelectedDifficulty] = useState('');
-  
+
   // Modal
   const [showModal, setShowModal] = useState(false);
   const [editingWorkout, setEditingWorkout] = useState(null);
@@ -42,14 +42,16 @@ const AdminWorkouts = () => {
         difficulty: selectedDifficulty
       });
 
-      const response = await fetch(`http://localhost:5000/api/admin/workouts?${params}`, {
+      const response = await fetch(`/api/admin/workouts?${params}`, {
         credentials: 'include'
       });
 
       if (response.ok) {
         const data = await response.json();
-        setWorkouts(data.workouts || []);
-        setTotalPages(data.pages || 1);
+        if (data.success) {
+          setWorkouts(data.data || []);
+          setTotalPages(data.pagination?.pages || 1);
+        }
       } else {
         console.error('Failed to fetch workouts');
       }
@@ -63,12 +65,14 @@ const AdminWorkouts = () => {
   // Fetch stats
   const fetchStats = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/admin/workouts/stats', {
+      const response = await fetch('/api/admin/workouts/stats', {
         credentials: 'include'
       });
       if (response.ok) {
         const data = await response.json();
-        setStats(data);
+        if (data.success) {
+          setStats(data);
+        }
       }
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -79,15 +83,15 @@ const AdminWorkouts = () => {
   const fetchFilters = async () => {
     try {
       const [sportsRes, difficultiesRes] = await Promise.all([
-        fetch('http://localhost:5000/api/admin/workouts/filters/sports', { credentials: 'include' }),
-        fetch('http://localhost:5000/api/admin/workouts/filters/difficulties', { credentials: 'include' })
+        fetch('/api/admin/workouts/filters/sports', { credentials: 'include' }),
+        fetch('/api/admin/workouts/filters/difficulties', { credentials: 'include' })
       ]);
 
       if (sportsRes.ok) {
         const sports = await sportsRes.json();
         setFilters(prev => ({ ...prev, sports }));
       }
-      
+
       if (difficultiesRes.ok) {
         const difficulties = await difficultiesRes.json();
         setFilters(prev => ({ ...prev, difficulties }));
@@ -111,11 +115,11 @@ const AdminWorkouts = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const url = editingWorkout
-      ? `http://localhost:5000/api/admin/workouts/${editingWorkout.id}`
-      : 'http://localhost:5000/api/admin/workouts';
-    
+      ? `/api/admin/workouts/${editingWorkout.id}`
+      : '/api/admin/workouts';
+
     const method = editingWorkout ? 'PUT' : 'POST';
 
     try {
@@ -159,7 +163,7 @@ const AdminWorkouts = () => {
     if (!confirm('Bạn có chắc muốn xóa workout này?')) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/workouts/${id}`, {
+      const response = await fetch(`/api/admin/workouts/${id}`, {
         method: 'DELETE',
         credentials: 'include'
       });

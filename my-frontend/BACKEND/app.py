@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from flask import Flask, jsonify, session
-from flask_cors import CORS
+from flask_cors import CORS  # type: ignore[import]
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine
 from api.leaderboard import leaderboard_bp  
@@ -107,9 +107,20 @@ app.register_blueprint(chatbot_bp, url_prefix='/api/bot')
 app.register_blueprint(smart_swap_bp, url_prefix='/api/smart-swap')
 app.register_blueprint(settings_bp, url_prefix='/api/settings')
 app.register_blueprint(social_bp)  # ✅ Social Media endpoints
+from api.routes.admin_routes.settings_admin_api import settings_admin_bp
+app.register_blueprint(settings_admin_bp)
 
 from api.notifications import notifications_bp
 app.register_blueprint(notifications_bp, url_prefix='/api/notifications')
+
+from api.upload import upload_bp
+app.register_blueprint(upload_bp, url_prefix='/api')
+
+from api.leaderboard_new import leaderboard_bp
+app.register_blueprint(leaderboard_bp)
+
+from api.diary import diary_bp
+app.register_blueprint(diary_bp, url_prefix='/api/diary')
 
 if __name__ == "__main__":
     # Khởi chạy Scheduler (Thông báo & Email)

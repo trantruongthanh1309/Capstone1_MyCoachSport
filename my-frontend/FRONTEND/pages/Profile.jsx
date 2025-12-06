@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import "./Profile.css";
 import { useToast } from "../contexts/ToastContext";
+import ImageUploader from "../components/ImageUploader";
 
 export default function Profile() {
   const toast = useToast();
@@ -14,6 +15,7 @@ export default function Profile() {
     activity: "Vừa phải (3-5 ngày/tuần)",
     goal: "Duy trì cân nặng",
     sport: "Bóng đá",
+    avatar: "https://scontent.fdad3-6.fna.fbcdn.net/v/t39.30808-6/502146546_1398928527897385_7313017022900260020_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeH4YsIHxcYTMqx2z1giIot1-wWF3OqloOX7BYXc6qWg5djHXbAsMzwKd7ZNYlGPlStCnZjUBYnvCCQAKtMEliqS&_nc_ohc=mDibpFMF-hAQ7kNvwFnj7gZ&_nc_oc=AdlrVnC7KepvDk-8dc3WSouO7dp_CvLKA3RnKOYiuJbv7yZdMKv0udKzHf7nRBK_jetdXBwOmAPmPQCzke3siUN1&_nc_zt=23&_nc_ht=scontent.fdad3-6.fna&_nc_gid=HVl7nfmhRBwnwoq09Z2-_g&oh=00_AfifDlVn8smWIsDLmmLqfZSBOBENrEVhVUM4NBwYcxAwKA&oe=690D6F68"
   });
 
   const [isEditing, setIsEditing] = useState(false);
@@ -38,6 +40,7 @@ export default function Profile() {
             sport: data.Sport,
             goal: data.Goal,
             activity: data.Activity || "Vừa phải (3-5 ngày/tuần)",
+            avatar: data.Avatar || profile.avatar
           });
         } else {
           console.warn("Lỗi:", data.error);
@@ -78,6 +81,7 @@ export default function Profile() {
         sport: profile.sport,
         goal: profile.goal,
         sessions_per_week: sessions,
+        avatar: profile.avatar
       }),
     })
       .then((res) => {
@@ -93,6 +97,10 @@ export default function Profile() {
         console.error("❌ Lỗi khi gửi request:", err);
         toast.error("❌ Có lỗi xảy ra khi lưu hồ sơ.");
       });
+  };
+
+  const handleAvatarUpload = (url) => {
+    setProfile({ ...profile, avatar: url });
   };
 
   // Tính toán BMI và TDEE
@@ -129,13 +137,17 @@ export default function Profile() {
           <div className="avatar-section">
             <div className="avatar-box">
               <img
-
-                src="https://scontent.fdad3-6.fna.fbcdn.net/v/t39.30808-6/502146546_1398928527897385_7313017022900260020_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeH4YsIHxcYTMqx2z1giIot1-wWF3OqloOX7BYXc6qWg5djHXbAsMzwKd7ZNYlGPlStCnZjUBYnvCCQAKtMEliqS&_nc_ohc=mDibpFMF-hAQ7kNvwFnj7gZ&_nc_oc=AdlrVnC7KepvDk-8dc3WSouO7dp_CvLKA3RnKOYiuJbv7yZdMKv0udKzHf7nRBK_jetdXBwOmAPmPQCzke3siUN1&_nc_zt=23&_nc_ht=scontent.fdad3-6.fna&_nc_gid=HVl7nfmhRBwnwoq09Z2-_g&oh=00_AfifDlVn8smWIsDLmmLqfZSBOBENrEVhVUM4NBwYcxAwKA&oe=690D6F68"
+                src={profile.avatar}
                 alt="Avatar"
                 className="avatar"
               />
               <div className="avatar-ring"></div>
             </div>
+            {isEditing && (
+              <div className="mt-4">
+                <ImageUploader onUploadSuccess={handleAvatarUpload} />
+              </div>
+            )}
             <h3 className="avatar-name">{profile.name}</h3>
             <p className="avatar-info">{profile.sex}, {profile.age} tuổi</p>
           </div>

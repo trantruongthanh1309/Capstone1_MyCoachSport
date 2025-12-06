@@ -22,18 +22,19 @@ export default function App() {
   const location = useLocation();
 
   // Ẩn Navbar ở trang Login, Register, ForgotPassword VÀ tất cả trang Admin
+  const isAdminPage = location.pathname.startsWith("/admin");
   const hideNavbar =
     location.pathname === "/" ||
     location.pathname === "/login" ||
     location.pathname === "/register" ||
     location.pathname === "/forgot-password" ||
-    location.pathname.startsWith("/admin");
+    isAdminPage;
 
   return (
     <ToastProvider>
       <div className="app-container">
         {!hideNavbar && <Navbar />}
-        <div className="main-content">
+        <div className={`main-content ${isAdminPage ? "admin-mode" : ""}`}>
           <Routes>
             {/* Public - Auth Pages */}
             <Route path="/" element={<Login />} />

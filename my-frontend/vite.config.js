@@ -10,6 +10,14 @@ export default defineConfig({
         target: 'http://127.0.0.1:5000',
         changeOrigin: true,
         secure: false,
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            // Forward cookies from browser to backend
+            if (req.headers.cookie) {
+              proxyReq.setHeader('Cookie', req.headers.cookie);
+            }
+          });
+        },
       },
     },
   },

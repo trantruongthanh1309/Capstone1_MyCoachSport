@@ -7,86 +7,42 @@ const AdminFeedback = () => {
   const [filter, setFilter] = useState('all'); // all, pending, resolved
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [stats, setStats] = useState({ total: 0, pending: 0, resolved: 0 });
 
   useEffect(() => {
     fetchFeedbacks();
+    fetchStats();
   }, [filter]);
 
   const fetchFeedbacks = async () => {
     setLoading(true);
-    
-    // Mock data - Thay bằng API call thực
-    setTimeout(() => {
-      const mockData = [
-        {
-          id: 1,
-          userName: 'Nguyễn Văn A',
-          userEmail: 'nguyenvana@email.com',
-          type: 'bug',
-          title: 'Lỗi không load được meal plan',
-          message: 'Khi tôi click vào meal plan thì trang bị trắng, không load được gì cả. Mong admin kiểm tra.',
-          status: 'pending',
-          priority: 'high',
-          createdAt: '2025-11-12 10:30',
-          response: null
-        },
-        {
-          id: 2,
-          userName: 'Trần Thị B',
-          userEmail: 'tranthib@email.com',
-          type: 'feature',
-          title: 'Đề xuất thêm chế độ Dark mode',
-          message: 'Ứng dụng rất hay nhưng nếu có dark mode thì tuyệt vời hơn, nhìn dễ chịu hơn khi tập buổi tối.',
-          status: 'resolved',
-          priority: 'medium',
-          createdAt: '2025-11-11 15:20',
-          response: 'Cảm ơn góp ý! Chúng tôi sẽ triển khai trong phiên bản tiếp theo.'
-        },
-        {
-          id: 3,
-          userName: 'Lê Văn C',
-          userEmail: 'levanc@email.com',
-          type: 'general',
-          title: 'App rất tốt!',
-          message: 'Cảm ơn team đã tạo ra app này. Đã giúp mình giảm được 5kg trong 2 tháng!',
-          status: 'resolved',
-          priority: 'low',
-          createdAt: '2025-11-10 09:15',
-          response: 'Cảm ơn bạn đã tin tùng và sử dụng MySportCoach! 💪'
-        },
-        {
-          id: 4,
-          userName: 'Phạm Thị D',
-          userEmail: 'phamthid@email.com',
-          type: 'bug',
-          title: 'Video workout không play được',
-          message: 'Video hướng dẫn bài tập không chạy được trên iPhone 12 của mình.',
-          status: 'pending',
-          priority: 'high',
-          createdAt: '2025-11-12 14:45',
-          response: null
-        },
-        {
-          id: 5,
-          userName: 'Hoàng Văn E',
-          userEmail: 'hoangvane@email.com',
-          type: 'feature',
-          title: 'Muốn kết nối với Apple Watch',
-          message: 'Mình dùng Apple Watch, có thể sync dữ liệu workout không ạ?',
-          status: 'pending',
-          priority: 'medium',
-          createdAt: '2025-11-12 16:00',
-          response: null
-        }
-      ];
-
-      const filtered = filter === 'all' 
-        ? mockData 
-        : mockData.filter(f => f.status === filter);
-
-      setFeedbacks(filtered);
+    try {
+      const res = await fetch(`/api/admin/feedback?status=${filter}`, {
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (data.success) {
+        setFeedbacks(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching feedbacks:', error);
+    } finally {
       setLoading(false);
-    }, 500);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const res = await fetch('/api/admin/feedback/stats', {
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
   };
 
   const handleViewDetails = (feedback) => {
@@ -94,26 +50,68 @@ const AdminFeedback = () => {
     setShowModal(true);
   };
 
-  const handleResolve = (id) => {
-    setFeedbacks(prev => 
-      prev.map(f => f.id === id ? { ...f, status: 'resolved' } : f)
-    );
-    alert('✅ Đã đánh dấu feedback là đã xử lý!');
-  };
-
-  const handleDelete = (id) => {
-    if (confirm('Bạn có chắc muốn xóa feedback này?')) {
-      setFeedbacks(prev => prev.filter(f => f.id !== id));
-      alert('🗑️ Đã xóa feedback!');
+  const handleResolve = async (id) => {
+    try {
+      const res = await fetch(`/api/admin/feedback/${id}/resolve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ reply: 'Resolved without reply' })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('✅ Đã đánh dấu feedback là đã xử lý!');
+        fetchFeedbacks();
+        fetchStats();
+      } else {
+        alert('❌ Lỗi: ' + data.error);
+      }
+    } catch (error) {
+      alert('❌ Lỗi: ' + error.message);
     }
   };
 
-  const handleReply = (id, reply) => {
-    setFeedbacks(prev =>
-      prev.map(f => f.id === id ? { ...f, response: reply, status: 'resolved' } : f)
-    );
-    setShowModal(false);
-    alert('✅ Đã gửi phản hồi!');
+  const handleDelete = async (id) => {
+    if (confirm('Bạn có chắc muốn xóa feedback này?')) {
+      try {
+        const res = await fetch(`/api/admin/feedback/${id}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('🗑️ Đã xóa feedback!');
+          fetchFeedbacks();
+          fetchStats();
+        } else {
+          alert('❌ Lỗi: ' + data.error);
+        }
+      } catch (error) {
+        alert('❌ Lỗi: ' + error.message);
+      }
+    }
+  };
+
+  const handleReply = async (id, reply) => {
+    try {
+      const res = await fetch(`/api/admin/feedback/${id}/resolve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ reply })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('✅ Đã gửi phản hồi!');
+        setShowModal(false);
+        fetchFeedbacks();
+        fetchStats();
+      } else {
+        alert('❌ Lỗi: ' + data.error);
+      }
+    } catch (error) {
+      alert('❌ Lỗi: ' + error.message);
+    }
   };
 
   const getTypeLabel = (type) => {
@@ -132,12 +130,6 @@ const AdminFeedback = () => {
       low: { label: 'Thấp', color: 'green' }
     };
     return priorities[priority] || priorities.low;
-  };
-
-  const stats = {
-    total: feedbacks.length,
-    pending: feedbacks.filter(f => f.status === 'pending').length,
-    resolved: feedbacks.filter(f => f.status === 'resolved').length
   };
 
   return (
@@ -197,10 +189,10 @@ const AdminFeedback = () => {
               <div key={feedback.id} className="feedback-card">
                 <div className="feedback-card-header">
                   <div className="user-info">
-                    <div className="user-avatar">{feedback.userName[0]}</div>
+                    <div className="user-avatar">{feedback.user_name?.[0] || '?'}</div>
                     <div>
-                      <div className="user-name">{feedback.userName}</div>
-                      <div className="user-email">{feedback.userEmail}</div>
+                      <div className="user-name">{feedback.user_name}</div>
+                      <div className="user-email">{feedback.user_email}</div>
                     </div>
                   </div>
                   <div className="feedback-meta">
@@ -227,7 +219,7 @@ const AdminFeedback = () => {
                 </div>
 
                 <div className="feedback-card-footer">
-                  <span className="feedback-date">📅 {feedback.createdAt}</span>
+                  <span className="feedback-date">📅 {new Date(feedback.created_at).toLocaleString('vi-VN')}</span>
                   <div className="feedback-actions">
                     <button
                       onClick={() => handleViewDetails(feedback)}
@@ -292,7 +284,7 @@ const FeedbackModal = ({ feedback, onClose, onReply }) => {
           <div className="feedback-detail">
             <div className="detail-row">
               <strong>Người gửi:</strong>
-              <span>{feedback.userName} ({feedback.userEmail})</span>
+              <span>{feedback.user_name} ({feedback.user_email})</span>
             </div>
             <div className="detail-row">
               <strong>Loại:</strong>

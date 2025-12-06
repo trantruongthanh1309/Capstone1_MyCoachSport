@@ -10,7 +10,7 @@ social_bp = Blueprint('social', __name__, url_prefix='/api/social')
 
 @social_bp.route('/posts', methods=['GET'])
 def get_posts():
-    """Lấy danh sách bài viết (newsfeed)"""
+    """Lấy danh sách bài viết (chỉ bài đã duyệt)"""
     try:
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 10, type=int)
@@ -18,9 +18,9 @@ def get_posts():
         
         sport_filter = request.args.get('sport')
         
-        query = Post.query
+        # CHỈ LẤY BÀI ĐÃ ĐƯỢC DUYỆT
+        query = Post.query.filter(Post.Status == 'Approved')
         
-        # Nếu có filter sport thì lọc
         if sport_filter and sport_filter != 'All':
             query = query.filter(Post.Sport == sport_filter)
             
@@ -41,19 +41,18 @@ def get_posts():
 
 @social_bp.route('/posts', methods=['POST'])
 def create_post():
-    """Tạo bài viết mới"""
+    """Tạo bài viết mới - cần admin duyệt"""
     user_id = session.get('user_id')
     if not user_id:
-        return jsonify({'error': 'Chưa đăng nhập'}), 401
+        return jsonify({'success': False, 'message': 'Chưa đăng nhập'}), 401
     
     try:
         data = request.get_json()
         content = data.get('content')
         image_url = data.get('image_url')
 
-        # Validation: Phải có nội dung hoặc ảnh
         if not content and not image_url:
-            return jsonify({'error': 'Bài viết phải có nội dung hoặc ảnh'}), 400
+            return jsonify({'success': False, 'message': 'Bài viết phải có nội dung hoặc ảnh'}), 400
 
         post = Post(
             User_id=user_id,
@@ -61,21 +60,23 @@ def create_post():
             Title=data.get('title'),
             Sport=data.get('sport'),
             Topic=data.get('topic'),
-            ImageUrl=image_url
+            ImageUrl=image_url,
+            Status='Pending'  # Mặc định chờ duyệt
         )
         db.session.add(post)
         db.session.commit()
         
-        current_app.logger.info(f"User {user_id} created post {post.Id}")
+        current_app.logger.info(f"User {user_id} created post {post.Id} - Status: Pending")
         
         return jsonify({
             'success': True,
-            'post': post.to_dict(user_id)
+            'message': 'Bài viết đã được gửi và đang chờ admin duyệt!',
+            'post': None  # Không trả post để không hiện lên UI
         }), 201
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error in create_post: {str(e)}")
-        return jsonify({'error': 'Không thể tạo bài viết'}), 500
+        return jsonify({'success': False, 'message': 'Không thể tạo bài viết'}), 500
 
 
 @social_bp.route('/posts/<int:post_id>', methods=['DELETE'])
