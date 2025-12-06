@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import ImageUploader from "../components/ImageUploader";
 import { useToast } from "../contexts/ToastContext";
 
-// Styles CSS améliorés
 const styles = `
   @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(20px); }
@@ -24,7 +23,6 @@ const styles = `
     margin: 0 auto;
   }
 
-  /* --- Cards --- */
   .fb-card {
     background: white;
     border-radius: 12px;
@@ -33,7 +31,6 @@ const styles = `
     overflow: hidden;
   }
 
-  /* --- Avatar --- */
   .fb-avatar {
     width: 40px;
     height: 40px;
@@ -47,7 +44,6 @@ const styles = `
     height: 48px;
   }
 
-  /* --- Left Sidebar --- */
   .fb-left .fb-menu-item {
     display: flex;
     align-items: center;
@@ -63,7 +59,6 @@ const styles = `
     background: #e4e6eb;
   }
 
-  /* --- Composer (New Design) --- */
   .composer-container {
     padding: 16px;
     background: white;
@@ -167,7 +162,6 @@ const styles = `
     cursor: not-allowed;
   }
 
-  /* --- Post --- */
   .fb-post {
     padding: 0;
     animation: fadeInUp 0.5s ease-out;
@@ -252,7 +246,6 @@ const styles = `
     color: #1877f2;
   }
 
-  /* --- Right Sidebar --- */
   .fb-right .fb-card {
     padding: 16px;
   }
@@ -294,11 +287,9 @@ const styles = `
   }
 `;
 
-// Hàm tạo avatar ngẫu nhiên
 const avatar = (name = "U") =>
   `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff&bold=true`;
 
-// Phần Left Sidebar
 function LeftSidebar({ user }) {
   return (
     <aside className="fb-left sticky">
@@ -327,7 +318,6 @@ function LeftSidebar({ user }) {
   );
 }
 
-// Phần Composer - Thiết kế mới
 function Composer({ onPost, user }) {
   const [text, setText] = useState("");
   const [img, setImg] = useState("");
@@ -372,7 +362,7 @@ function Composer({ onPost, user }) {
         </div>
       </div>
 
-      {/* Image Preview */}
+      {}
       {img && (
         <div className="mb-3 relative rounded-lg overflow-hidden border border-gray-200">
           <img src={img} alt="Preview" className="w-full max-h-80 object-cover" />
@@ -385,7 +375,7 @@ function Composer({ onPost, user }) {
         </div>
       )}
 
-      {/* Uploader Area */}
+      {}
       {showUploader && (
         <div className="mb-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
           <div className="flex justify-between items-center mb-2">
@@ -423,7 +413,6 @@ function Composer({ onPost, user }) {
   );
 }
 
-// Phần hiển thị bài đăng
 function Post({ post, onLike, onComment, onDelete, currentUser }) {
   const time = useMemo(
     () => new Date(post.created_at).toLocaleString("vi-VN"),
@@ -513,7 +502,6 @@ function Post({ post, onLike, onComment, onDelete, currentUser }) {
   );
 }
 
-// Phần Right Sidebar
 function RightSidebar() {
   return (
     <aside className="fb-right sticky">
@@ -544,13 +532,11 @@ function RightSidebar() {
   );
 }
 
-// Social Feed chính
 export default function Social() {
   const [posts, setPosts] = useState([]);
   const [user, setUser] = useState(null);
   const toast = useToast();
 
-  // Fetch user info
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -570,7 +556,6 @@ export default function Social() {
     fetchUser();
   }, []);
 
-  // Fetch posts
   const fetchPosts = async () => {
     try {
       const res = await fetch("http://localhost:5000/api/social/posts?page=1&per_page=20", { credentials: "include" });
@@ -598,7 +583,7 @@ export default function Social() {
       const data = await res.json();
       if (data.success) {
         toast.success("Đăng bài thành công!");
-        fetchPosts(); // Reload posts
+        fetchPosts();
       } else {
         toast.error(data.error || "Lỗi khi đăng bài");
       }
@@ -615,7 +600,6 @@ export default function Social() {
       });
       const data = await res.json();
       if (data.success) {
-        // Optimistic update or reload
         setPosts(posts.map(p => {
           if (p.id === id) {
             return {
@@ -643,7 +627,6 @@ export default function Social() {
       const data = await res.json();
       if (data.success) {
         toast.success("Đã bình luận!");
-        // Reload posts to update comment count (or fetch comments separately)
         fetchPosts();
       }
     } catch (err) {

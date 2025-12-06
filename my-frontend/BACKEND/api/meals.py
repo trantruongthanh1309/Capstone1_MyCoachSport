@@ -1,4 +1,3 @@
-# api/meals.py - API for meals with filtering
 from flask import Blueprint, request, jsonify
 from sqlalchemy import text
 from db import db
@@ -19,7 +18,6 @@ def get_meals():
         min_kcal = request.args.get('min_kcal', type=int)
         max_kcal = request.args.get('max_kcal', type=int)
         
-        # Build query
         query = "SELECT * FROM dbo.Meals WHERE 1=1"
         params = {}
         
@@ -35,7 +33,7 @@ def get_meals():
             query += " AND Kcal <= :max_kcal"
             params['max_kcal'] = max_kcal
         
-        query += " ORDER BY NEWID()"  # Random order
+        query += " ORDER BY NEWID()"
         
         result = db.session.execute(text(query), params).fetchall()
         
@@ -57,7 +55,6 @@ def get_meals():
         print(f"Error fetching meals: {e}")
         return jsonify({"error": str(e)}), 500
 
-
 @meals_bp.route('/workouts', methods=['GET'])
 def get_workouts():
     """
@@ -75,7 +72,7 @@ def get_workouts():
             query += " AND Intensity = :intensity"
             params['intensity'] = intensity
         
-        query += " ORDER BY NEWID()"  # Random order
+        query += " ORDER BY NEWID()"
         
         result = db.session.execute(text(query), params).fetchall()
         

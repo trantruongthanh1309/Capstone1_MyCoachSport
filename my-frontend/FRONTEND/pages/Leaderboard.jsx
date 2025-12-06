@@ -7,11 +7,10 @@ export default function Leaderboard() {
   const [rankings, setRankings] = useState([]);
   const [myStats, setMyStats] = useState(null);
   const [achievements, setAchievements] = useState([]);
-  const [activeTab, setActiveTab] = useState('rankings'); // rankings, achievements
+  const [activeTab, setActiveTab] = useState('rankings');
   const [showLogModal, setShowLogModal] = useState(false);
   const toast = useToast();
 
-  // Workout form state
   const [workoutForm, setWorkoutForm] = useState({
     workout_name: '',
     sport: '',
@@ -100,9 +99,9 @@ export default function Leaderboard() {
   };
 
   const getRankColor = (rank) => {
-    if (rank === 1) return '#FFD700'; // Gold
-    if (rank === 2) return '#C0C0C0'; // Silver
-    if (rank === 3) return '#CD7F32'; // Bronze
+    if (rank === 1) return '#FFD700';
+    if (rank === 2) return '#C0C0C0';
+    if (rank === 3) return '#CD7F32';
     return '#4a5568';
   };
 
@@ -115,7 +114,7 @@ export default function Leaderboard() {
 
   return (
     <div className="leaderboard-container">
-      {/* Header */}
+      {}
       <div className="leaderboard-header">
         <h1 className="leaderboard-title">🏆 Bảng Xếp Hạng</h1>
         <p className="leaderboard-subtitle">Cạnh tranh và chinh phục đỉnh cao!</p>
@@ -124,7 +123,7 @@ export default function Leaderboard() {
         </button>
       </div>
 
-      {/* My Stats Card */}
+      {}
       {myStats && (
         <div className="my-stats-card">
           <div className="stats-row">
@@ -176,7 +175,7 @@ export default function Leaderboard() {
         </div>
       )}
 
-      {/* Tabs */}
+      {}
       <div className="tabs">
         <button
           className={`tab ${activeTab === 'rankings' ? 'active' : ''}`}
@@ -192,7 +191,7 @@ export default function Leaderboard() {
         </button>
       </div>
 
-      {/* Content */}
+      {}
       {activeTab === 'rankings' && (
         <div className="rankings-list">
           {rankings.map((user, index) => (
@@ -251,7 +250,7 @@ export default function Leaderboard() {
         </div>
       )}
 
-      {/* Log Workout Modal */}
+      {}
       {showLogModal && (
         <div className="modal-overlay" onClick={() => setShowLogModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>

@@ -1,4 +1,3 @@
-# models/user_model.py
 from db import db
 
 class User(db.Model):
@@ -17,16 +16,13 @@ class User(db.Model):
     Sessions_per_week = db.Column(db.Integer)
     Allergies = db.Column(db.String(500))
     
-    # AI-related fields
-    WorkSchedule = db.Column(db.Text)          # JSON string
-    DislikedIngredients = db.Column(db.Text)   # JSON string
+    WorkSchedule = db.Column(db.Text)
+    DislikedIngredients = db.Column(db.Text)
     
-    # Settings fields
-    Avatar = db.Column(db.Text)                # Base64 encoded image or URL
-    Bio = db.Column(db.Text)                   # User bio/description
-    Preferences = db.Column(db.Text)           # JSON: theme, language, notifications
-    Privacy = db.Column(db.Text)               # JSON: privacy settings
-    NotificationSettings = db.Column(db.Text)  # JSON: notification preferences
+    Avatar = db.Column(db.Text)
+    Bio = db.Column(db.Text)
+    Preferences = db.Column(db.Text)
+    Privacy = db.Column(db.Text)
+    NotificationSettings = db.Column(db.Text)
     
-    # Timestamp for user growth tracking
     CreatedAt = db.Column(db.DateTime, default=db.func.current_timestamp())

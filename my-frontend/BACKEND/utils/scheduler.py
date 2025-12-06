@@ -15,7 +15,6 @@ def get_free_time_slots(work_schedule: dict, target_date: str, user_id: int):
     }
     weekday_key = day_map[dt.weekday()]
 
-    # Lấy tất cả buổi bận của user trong ngày
     busy_slots = UserSchedule.query.filter_by(
         User_id=user_id,
         DayOfWeek=weekday_key
@@ -26,11 +25,9 @@ def get_free_time_slots(work_schedule: dict, target_date: str, user_id: int):
         if slot.Period:
             busy_periods.add(slot.Period)
 
-    # Trả về buổi TRỐNG
     all_periods = ["sáng", "trưa", "tối"]
     free_periods = [p for p in all_periods if p not in busy_periods]
     
-    # Chuyển thành khung giờ giả (AI không cần giờ cụ thể)
     time_map = {
         "sáng": "06:00-09:00",
         "trưa": "12:00-14:00",

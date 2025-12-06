@@ -30,7 +30,6 @@ const ImageUploader = ({ onUploadSuccess }) => {
         setError(null);
 
         try {
-            // Thay đổi URL này nếu backend của bạn chạy ở port khác
             const response = await axios.post('http://localhost:5000/api/upload', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',

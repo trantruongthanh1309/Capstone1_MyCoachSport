@@ -15,7 +15,6 @@ def check_upcoming_events(app):
         now = datetime.now()
         today = now.date()
 
-        # Lấy lịch hôm nay
         try:
             schedules = UserSchedule.query.filter_by(Date=today).all()
         except Exception as e:
@@ -25,22 +24,16 @@ def check_upcoming_events(app):
         for s in schedules:
             if not s.Time: continue
             
-            # Tạo datetime đầy đủ cho lịch
             schedule_dt = datetime.combine(today, s.Time)
             
-            # Tính khoảng cách thời gian (phút)
-            # time_diff = phút cho đến giờ tập (ví dụ còn 30 phút -> time_diff=30)
             time_diff = (schedule_dt - now).total_seconds() / 60 
 
             item_type = None
             is_time_to_remind = False
             item_data = {}
 
-            # --- Logic nhắc nhở ---
-            
             if s.WorkoutId:
                 item_type = 'Workout'
-                # Nhắc trước 2 tiếng (120 phút) -> Quét trong khoảng 110-130 phút
                 if 110 <= time_diff <= 130: 
                     is_time_to_remind = True
                     w = Workout.query.get(s.WorkoutId)
@@ -48,16 +41,12 @@ def check_upcoming_events(app):
             
             elif s.MealId:
                 item_type = 'Meal'
-                # Nhắc trước 30 phút -> Quét trong khoảng 20-40 phút
                 if 20 <= time_diff <= 40:
                     is_time_to_remind = True
                     m = Meal.query.get(s.MealId)
                     item_data = {'title': m.Name if m else 'Bữa ăn', 'calories': m.Calories if m else 0, 'time': s.Time.strftime('%H:%M')}
 
-            # --- Gửi Mail ---
             if is_time_to_remind and item_type:
-                # Kiểm tra xem đã gửi chưa trong bảng Log
-                # Chúng ta check theo User, Type và ReferenceID (ID lịch)
                 existing_log = NotificationLog.query.filter_by(
                     User_id=s.User_id, 
                     Type=item_type, 
@@ -70,7 +59,6 @@ def check_upcoming_events(app):
                         print(f"📧 Đang gửi mail nhắc {item_type} cho {user.Email}...")
                         send_schedule_reminder(user, item_data, type=item_type)
 
-                        # Lưu log
                         new_log = NotificationLog(
                             User_id=user.Id,
                             Type=item_type,

@@ -36,7 +36,6 @@ export default function PostCard({ post, currentUserId, onStartChat }) {
     const [commentContent, setCommentContent] = useState("");
     const [loadingComments, setLoadingComments] = useState(false);
 
-    // Fallback for old posts without new fields
     const sportIcon = SPORT_ICONS[post.sport] || "🏅";
     const topicLabel = TOPIC_LABELS[post.topic] || post.topic || "Chung";
     const topicColor = TOPIC_COLORS[post.topic] || "#64748b";

@@ -8,13 +8,12 @@ export default function Logs() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [type, setType] = useState("workout"); // workout | meal | other
+  const [type, setType] = useState("workout");
   const [content, setContent] = useState("");
-  const [feeling, setFeeling] = useState(""); // Mapping to FeedbackType or Notes
+  const [feeling, setFeeling] = useState("");
   const [rpe, setRpe] = useState(5);
   const [rating, setRating] = useState(5);
 
-  // Optional IDs
   const [mealId, setMealId] = useState("");
   const [workoutId, setWorkoutId] = useState("");
 
@@ -23,13 +22,11 @@ export default function Logs() {
 
   const API_URL = "http://localhost:5000/api/logs";
 
-  // Fetch Logs
   const fetchLogs = async () => {
     try {
       setLoading(true);
       const res = await axios.get(API_URL, { withCredentials: true });
       if (res.data.success) {
-        // Map data từ backend về format frontend
         const mappedLogs = res.data.data.map(log => ({
           id: log.id,
           date: log.day,
@@ -72,7 +69,7 @@ export default function Logs() {
       if (res.data.success) {
         toast.success("✅ Đã lưu log thành công!");
         resetForm();
-        fetchLogs(); // Reload logs
+        fetchLogs();
       } else {
         toast.error("❌ Lỗi: " + res.data.error);
       }
@@ -97,7 +94,7 @@ export default function Logs() {
 
   return (
     <div className="logs-page">
-      {/* Hero Section */}
+      {}
       <div className="hero-section">
         <div className="hero-content">
           <h1 className="hero-title">
@@ -113,7 +110,7 @@ export default function Logs() {
       </div>
 
       <div className="logs-content">
-        {/* Stats Cards */}
+        {}
         <div className="stats-section">
           <div className="stat-box">
             <div className="stat-icon-wrap" style={{ background: "linear-gradient(135deg, #667eea, #764ba2)" }}>
@@ -146,7 +143,7 @@ export default function Logs() {
           </div>
         </div>
 
-        {/* Filter Tabs */}
+        {}
         <div className="filter-section">
           <button className={`filter-btn ${filter === "all" ? "active" : ""}`} onClick={() => setFilter("all")}>
             Tất cả ({logs.length})
@@ -159,7 +156,7 @@ export default function Logs() {
           </button>
         </div>
 
-        {/* Logs Grid */}
+        {}
         {loading ? (
           <div className="loading-text">Đang tải nhật ký...</div>
         ) : filteredLogs.length === 0 ? (
@@ -207,7 +204,7 @@ export default function Logs() {
         )}
       </div>
 
-      {/* Modal */}
+      {}
       {showModal && (
         <div className="modal-bg" onClick={resetForm}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
@@ -232,7 +229,7 @@ export default function Logs() {
                 </div>
               </div>
 
-              {/* Optional IDs */}
+              {}
               {type === 'workout' && (
                 <div className="input-group">
                   <label className="input-label">💪 Workout ID (Tùy chọn)</label>

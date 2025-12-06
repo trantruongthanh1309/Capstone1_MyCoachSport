@@ -13,13 +13,11 @@ def chat():
     data = request.get_json()
     user_message = data.get('message')
     
-    # Lấy user_id từ session hoặc body
     user_id = session.get('user_id') or data.get('user_id')
     
     if not user_message:
         return jsonify({"response": "..."}), 400
 
-    # 1. Lấy Context User
     user_context = {"name": "Bạn", "id": user_id}
     if user_id:
         try:
@@ -38,13 +36,10 @@ def chat():
         except:
             pass
 
-    # 2. Thêm delay nhỏ để tạo cảm giác "đang suy nghĩ" (1-2 giây)
     time.sleep(1.5)
 
-    # 3. Gọi Model Local
     response = get_response(user_message, user_context)
 
-    # 4. Lưu vào Database
     if user_id:
         try:
             chat_record = ChatHistory(
@@ -60,7 +55,6 @@ def chat():
 
     return jsonify({"response": response})
 
-
 @chatbot_bp.route('/chat/history', methods=['GET'])
 def get_chat_history():
     """Lấy lịch sử chat của user"""
@@ -70,13 +64,11 @@ def get_chat_history():
         return jsonify({"error": "Chưa đăng nhập"}), 401
     
     try:
-        # Lấy 50 tin nhắn gần nhất
         history = ChatHistory.query.filter_by(User_id=user_id)\
             .order_by(ChatHistory.Timestamp.desc())\
             .limit(50)\
             .all()
         
-        # Đảo ngược để tin nhắn cũ nhất ở trên
         history.reverse()
         
         return jsonify({
@@ -85,7 +77,6 @@ def get_chat_history():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 @chatbot_bp.route('/chat/history/clear', methods=['DELETE'])
 def clear_chat_history():

@@ -1,18 +1,7 @@
-/* ==================== GLOBAL STYLES ==================== */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
 
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  overflow-x: hidden;
-}
 
-/* ==================== ANIMATED BACKGROUND ==================== */
 .home {
   min-height: calc(100vh - 60px);
   display: flex;
@@ -30,20 +19,26 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%);
-  background-size: 400% 400%;
-  animation: gradientFlow 15s ease infinite;
+  background: url('../assets/home_background.jpg') no-repeat center center fixed;
+  background-size: cover;
   z-index: -2;
-  opacity: 0.15;
+  opacity: 1;
 }
 
 @keyframes gradientFlow {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
-/* ==================== GREETING SECTION ==================== */
 .greeting {
   text-align: center;
   margin-bottom: 30px;
@@ -56,6 +51,7 @@ body {
     opacity: 0;
     transform: translateY(-30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -76,8 +72,15 @@ body {
 }
 
 @keyframes shimmer {
-  0%, 100% { background-position: 0% center; }
-  50% { background-position: 100% center; }
+
+  0%,
+  100% {
+    background-position: 0% center;
+  }
+
+  50% {
+    background-position: 100% center;
+  }
 }
 
 .subtitle {
@@ -89,11 +92,15 @@ body {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
-/* ==================== CLOCK SECTION ==================== */
 .clockWrap {
   text-align: center;
   animation: scaleIn 0.6s ease-out 0.4s both;
@@ -105,6 +112,7 @@ body {
     opacity: 0;
     transform: scale(0.8);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -125,8 +133,15 @@ body {
 }
 
 @keyframes floatAnimation {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 .date {
@@ -137,7 +152,6 @@ body {
   letter-spacing: 0.5px;
 }
 
-/* ==================== WEATHER SECTION ==================== */
 .weatherWrap {
   width: 100%;
   display: flex;
@@ -152,6 +166,7 @@ body {
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -163,8 +178,8 @@ body {
   backdrop-filter: blur(20px);
   border-radius: 24px;
   padding: 30px 40px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1), 
-              0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.5) inset;
   display: flex;
   gap: 24px;
   align-items: center;
@@ -188,14 +203,19 @@ body {
 }
 
 @keyframes glassShine {
-  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-  100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+
+  100% {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
 }
 
 .weatherBox:hover {
   transform: translateY(-8px) scale(1.02);
   box-shadow: 0 20px 60px rgba(102, 126, 234, 0.2),
-              0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+    0 0 0 1px rgba(255, 255, 255, 0.8) inset;
 }
 
 .weather-icon {
@@ -206,8 +226,15 @@ body {
 }
 
 @keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 .city-name {
@@ -249,8 +276,15 @@ body {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .error-shake {
@@ -258,12 +292,21 @@ body {
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-10px); }
-  75% { transform: translateX(10px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-10px);
+  }
+
+  75% {
+    transform: translateX(10px);
+  }
 }
 
-/* ==================== CARDS SECTION ==================== */
 .cardsContainer {
   display: flex;
   justify-content: center;
@@ -370,7 +413,6 @@ body {
   font-weight: 500;
 }
 
-/* ==================== CHAT SECTION ==================== */
 .chatFloat {
   position: fixed;
   bottom: 30px;
@@ -400,10 +442,13 @@ body {
 }
 
 @keyframes pulseChat {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4);
   }
+
   50% {
     transform: scale(1.05);
     box-shadow: 0 12px 40px rgba(102, 126, 234, 0.6);
@@ -436,6 +481,7 @@ body {
     opacity: 0;
     transform: translateY(30px) scale(0.9);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -516,6 +562,7 @@ body {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -585,26 +632,25 @@ body {
   transform: translateY(0);
 }
 
-/* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
   .gradient-text {
     font-size: 32px;
   }
-  
+
   .clock {
     font-size: 3rem;
   }
-  
+
   .cardsContainer {
     flex-direction: column;
     align-items: center;
   }
-  
+
   .card {
     width: 100%;
     max-width: 350px;
   }
-  
+
   .chatBox {
     width: 90vw;
     max-width: 380px;

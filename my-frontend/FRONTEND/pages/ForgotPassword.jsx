@@ -27,7 +27,6 @@ const ForgotPassword = () => {
         });
     };
 
-    // Step 1: Send OTP to email
     const handleSendOTP = async (e) => {
         e.preventDefault();
 
@@ -64,7 +63,6 @@ const ForgotPassword = () => {
         }
     };
 
-    // Step 2: Verify OTP
     const handleVerifyOTP = async (e) => {
         e.preventDefault();
 
@@ -104,7 +102,6 @@ const ForgotPassword = () => {
         }
     };
 
-    // Step 3: Reset Password
     const handleResetPassword = async (e) => {
         e.preventDefault();
 
@@ -205,7 +202,7 @@ const ForgotPassword = () => {
                     </p>
                 </div>
 
-                {/* Progress Steps */}
+                {}
                 <div className={styles.progressSteps}>
                     <div className={`${styles.stepItem} ${step >= 1 ? styles.active : ''}`}>
                         <div className={styles.stepCircle}>1</div>
@@ -223,7 +220,7 @@ const ForgotPassword = () => {
                     </div>
                 </div>
 
-                {/* Step 1: Email Input */}
+                {}
                 {step === 1 && (
                     <form onSubmit={handleSendOTP} className={styles.form}>
                         <div className={styles.inputGroup}>
@@ -260,7 +257,7 @@ const ForgotPassword = () => {
                     </form>
                 )}
 
-                {/* Step 2: OTP Input */}
+                {}
                 {step === 2 && (
                     <form onSubmit={handleVerifyOTP} className={styles.form}>
                         <div className={styles.inputGroup}>
@@ -318,7 +315,7 @@ const ForgotPassword = () => {
                     </form>
                 )}
 
-                {/* Step 3: New Password Input */}
+                {}
                 {step === 3 && (
                     <form onSubmit={handleResetPassword} className={styles.form}>
                         <div className={styles.inputGroup}>

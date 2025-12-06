@@ -1,13 +1,7 @@
-/* ==================== GLOBAL & FONTS ==================== */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
 
-/* ==================== ANIMATED BACKGROUND ==================== */
+
 .schedule-manager {
   min-height: 100vh;
   padding: 3rem 2rem;
@@ -31,12 +25,19 @@
 }
 
 @keyframes gradientFlow {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
-/* ==================== LOADING STATE ==================== */
 .loading-container {
   display: flex;
   flex-direction: column;
@@ -56,7 +57,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-text {
@@ -67,11 +70,17 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
 }
 
-/* ==================== HEADER SECTION ==================== */
 .header-section {
   text-align: center;
   margin-bottom: 3rem;
@@ -83,6 +92,7 @@
     opacity: 0;
     transform: translateY(-30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -104,8 +114,15 @@
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px) rotateY(0deg); }
-  50% { transform: translateY(-15px) rotateY(10deg); }
+
+  0%,
+  100% {
+    transform: translateY(0px) rotateY(0deg);
+  }
+
+  50% {
+    transform: translateY(-15px) rotateY(10deg);
+  }
 }
 
 .header-icon {
@@ -127,8 +144,15 @@
 }
 
 @keyframes shimmer {
-  0%, 100% { background-position: 0% center; }
-  50% { background-position: 100% center; }
+
+  0%,
+  100% {
+    background-position: 0% center;
+  }
+
+  50% {
+    background-position: 100% center;
+  }
 }
 
 .subtitle {
@@ -139,11 +163,15 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
-/* ==================== SCHEDULE CARD ==================== */
 .schedule-card {
   max-width: 1200px;
   margin: 0 auto;
@@ -152,7 +180,7 @@
   border-radius: 24px;
   padding: 40px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1),
-              0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+    0 0 0 1px rgba(255, 255, 255, 0.5) inset;
   animation: scaleIn 0.6s ease-out 0.2s both;
   position: relative;
   overflow: hidden;
@@ -163,6 +191,7 @@
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -182,11 +211,15 @@
 }
 
 @keyframes glassShine {
-  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-  100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+
+  100% {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
 }
 
-/* ==================== TABLE ==================== */
 .table-wrapper {
   overflow-x: auto;
   border-radius: 16px;
@@ -241,7 +274,6 @@
   font-weight: 700;
 }
 
-/* ==================== TABLE ROWS ==================== */
 .day-row {
   background: white;
   transition: all 0.3s ease;
@@ -253,6 +285,7 @@
     opacity: 0;
     transform: translateX(-30px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -302,7 +335,6 @@
   background-clip: text;
 }
 
-/* ==================== INPUT CELLS ==================== */
 .input-cell {
   position: relative;
 }
@@ -368,6 +400,7 @@
     opacity: 0;
     transform: scale(0);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -380,7 +413,6 @@
   transform: scale(1.1) rotate(90deg);
 }
 
-/* ==================== ACTION SECTION ==================== */
 .action-section {
   text-align: center;
   margin-top: 3rem;
@@ -392,6 +424,7 @@
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -467,16 +500,22 @@
 }
 
 @keyframes successPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
 }
 
-/* ==================== RESPONSIVE ==================== */
 @media (max-width: 1024px) {
   .schedule-card {
     padding: 30px 20px;
   }
-  
+
   .gradient-title {
     font-size: 36px;
   }
@@ -486,50 +525,50 @@
   .schedule-manager {
     padding: 2rem 1rem;
   }
-  
+
   .header-icon-wrapper {
     width: 80px;
     height: 80px;
   }
-  
+
   .header-icon {
     font-size: 40px;
   }
-  
+
   .gradient-title {
     font-size: 32px;
   }
-  
+
   .subtitle {
     font-size: 16px;
   }
-  
+
   .schedule-card {
     padding: 20px 15px;
     border-radius: 16px;
   }
-  
+
   .schedule-table th,
   .schedule-table td {
     padding: 12px 8px;
     font-size: 13px;
   }
-  
+
   .day-label-wrapper {
     flex-direction: column;
     gap: 4px;
     padding: 8px;
   }
-  
+
   .day-icon {
     font-size: 20px;
   }
-  
+
   .schedule-input {
     font-size: 13px;
     padding: 10px 35px 10px 12px;
   }
-  
+
   .save-btn {
     padding: 14px 30px;
     font-size: 16px;
@@ -541,15 +580,15 @@
     flex-direction: column;
     gap: 4px;
   }
-  
+
   .period-icon {
     font-size: 18px;
   }
-  
+
   .period-label {
     font-size: 12px;
   }
-  
+
   .day-label {
     font-size: 14px;
   }

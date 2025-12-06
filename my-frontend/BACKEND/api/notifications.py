@@ -18,7 +18,6 @@ def get_notifications():
     
     print(f"🔔 Fetching notifications for user_id={user_id}, date={today}")
     
-    # Query lịch hôm nay
     try:
         schedules = UserSchedule.query.filter(
             UserSchedule.User_id == user_id,
@@ -31,7 +30,6 @@ def get_notifications():
     
     notifs = []
     
-    # Mapping giờ mặc định
     DEFAULT_TIMES = {
         'meal_morning': (7, 0),
         'workout_morning': (6, 30),
@@ -48,12 +46,10 @@ def get_notifications():
         item_type = ""
         name = ""
         
-        # Nếu đã có Time cụ thể
         if s.Time:
              sched_time = datetime.combine(today, s.Time)
              print(f"    ✅ Has specific time: {sched_time}")
              
-        # Xử lý WORKOUT
         if s.WorkoutId:
             item_type = "workout"
             w = Workout.query.get(s.WorkoutId)
@@ -61,12 +57,10 @@ def get_notifications():
                 name = w.Name
                 print(f"    🏋️ Workout: {name}")
                 if not sched_time:
-                    # Guess time from context
                     h, m = DEFAULT_TIMES.get('workout_afternoon', (16, 30))
                     sched_time = datetime.combine(today, datetime.strptime(f"{h}:{m}", "%H:%M").time())
                     print(f"    ⏰ Inferred time: {sched_time}")
 
-        # Xử lý MEAL
         elif s.MealId:
             item_type = "meal"
             m = Meal.query.get(s.MealId)
@@ -76,7 +70,6 @@ def get_notifications():
                 print(f"    🍽️ Meal: {name}, MealType: {meal_type}")
                 
                 if not sched_time:
-                    # Use MealType from Meal table
                     if 'morning' in meal_type or 'breakfast' in meal_type: 
                         key = 'meal_morning'
                     elif 'evening' in meal_type or 'dinner' in meal_type: 
@@ -88,24 +81,20 @@ def get_notifications():
                     sched_time = datetime.combine(today, datetime.strptime(f"{h}:{m}", "%H:%M").time())
                     print(f"    ⏰ Inferred time from MealType: {sched_time}")
 
-        # RELAXED: Show even if missing info
         if not name:
             print(f"    ⚠️ Skipping - no name found")
             continue
             
         if not sched_time:
-            # Last resort: use current time + 1 hour
             sched_time = now + timedelta(hours=1)
             print(f"    ⚠️ No time info, using fallback: {sched_time}")
             
-        # Calculate time difference
         diff = sched_time - now
         minutes_diff = int(diff.total_seconds() / 60)
         
         print(f"    📊 Time diff: {minutes_diff} minutes")
         
-        # SHOW ALL items for today (no time window filter)
-        if minutes_diff > -180:  # Only hide if more than 3 hours past
+        if minutes_diff > -180:
             if minutes_diff < 0:
                 title = f"Bạn đã lỡ { 'bài tập' if item_type == 'workout' else 'bữa ăn' }?"
                 msg = f"{name} (lúc {sched_time.strftime('%H:%M')})"
@@ -128,7 +117,6 @@ def get_notifications():
         else:
             print(f"    ⏭️ Skipped - too far in the past")
             
-    # Sort by time
     notifs.sort(key=lambda x: x['minutes_diff'])
     
     print(f"\n🎉 Total notifications: {len(notifs)}")

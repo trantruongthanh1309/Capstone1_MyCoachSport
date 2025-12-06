@@ -8,7 +8,7 @@ export default function Footer() {
   return (
     <footer className="footer">
       <div className="footer-container">
-        {/* Top Section */}
+        {}
         <div className="footer-top">
           <div className="footer-column">
             <div className="footer-logo">
@@ -90,7 +90,7 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Bottom Section */}
+        {}
         <div className="footer-bottom">
           <div className="footer-bottom-left">
             <p>&copy; {currentYear} MySportCoachAI. All rights reserved.</p>

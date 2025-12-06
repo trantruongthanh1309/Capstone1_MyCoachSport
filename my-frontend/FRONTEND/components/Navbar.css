@@ -1,23 +1,13 @@
-/* ==================== IMPORTS & RESET ==================== */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
 
-html, body {
-  height: 100%;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-}
 
-/* ==================== KEYFRAMES ==================== */
 @keyframes slideDown {
   from {
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -28,24 +18,31 @@ html, body {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.1);
   }
 }
 
 @keyframes glow {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 10px rgba(255, 186, 8, 0.5);
   }
+
   50% {
     box-shadow: 0 0 20px rgba(255, 186, 8, 0.8);
   }
@@ -55,12 +52,12 @@ html, body {
   0% {
     background-position: -1000px 0;
   }
+
   100% {
     background-position: 1000px 0;
   }
 }
 
-/* ==================== NAVBAR ==================== */
 .navbar {
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   color: white;
@@ -99,7 +96,6 @@ html, body {
   z-index: 2;
 }
 
-/* ==================== LOGO ==================== */
 .logo {
   display: flex;
   align-items: center;
@@ -134,7 +130,6 @@ html, body {
   transform: scale(1.05);
 }
 
-/* ==================== NAVBAR LINKS ==================== */
 .navbar-links {
   display: flex;
   gap: 8px;
@@ -187,7 +182,6 @@ html, body {
   transform: scale(1.2) rotate(10deg);
 }
 
-/* ==================== USER PROFILE ==================== */
 .user-profile {
   display: flex;
   align-items: center;
@@ -195,7 +189,6 @@ html, body {
   position: relative;
 }
 
-/* ==================== NOTIFICATION ==================== */
 .notification {
   position: relative;
   cursor: pointer;
@@ -354,7 +347,6 @@ html, body {
   transform: translateY(-2px);
 }
 
-/* ==================== PROFILE ==================== */
 .profile-wrapper {
   position: relative;
   cursor: pointer;
@@ -484,7 +476,6 @@ html, body {
   color: #dc2626;
 }
 
-/* ==================== APP LAYOUT ==================== */
 .app-container {
   display: flex;
   flex-direction: column;
@@ -497,7 +488,6 @@ html, body {
   padding: 20px;
 }
 
-/* ==================== RESPONSIVE ==================== */
 @media (max-width: 1024px) {
   .navbar-links {
     gap: 4px;

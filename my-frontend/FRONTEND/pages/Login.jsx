@@ -29,14 +29,12 @@ export default function Login() {
       setLoading(false);
 
       if (response.ok && result.success) {
-        // ✅ LƯU VÀO LOCALSTORAGE
         localStorage.setItem('user_id', result.user_id);
         localStorage.setItem('role', result.role);
         localStorage.setItem('isLoggedIn', 'true');
 
         console.log('✅ Login success - Role:', result.role);
 
-        // ✅ REDIRECT DỰA VÀO ROLE
         if (result.role === 'admin' || result.role === 'manager') {
           window.location.href = "/admin";
         } else {
@@ -134,7 +132,6 @@ export default function Login() {
           padding: 20px;
         }
 
-        /* Particules flottantes */
         .bg::before,
         .bg::after {
           content: '';
@@ -161,7 +158,6 @@ export default function Login() {
           animation-delay: 2s;
         }
 
-        /* Particules animées */
         .particle {
           position: absolute;
           width: 4px;
@@ -567,13 +563,13 @@ export default function Login() {
       `}</style>
 
       <div className="bg">
-        {/* Particules */}
+        {}
         {[...Array(9)].map((_, i) => (
           <div key={i} className="particle"></div>
         ))}
 
         <div className="card">
-          {/* Logo */}
+          {}
           <div className="logo">
             MySportCoach<span>AI</span>
           </div>
@@ -583,11 +579,11 @@ export default function Login() {
             Chào mừng trở lại! Hãy đăng nhập để tiếp tục
           </p>
 
-          {/* Thông báo */}
+          {}
           {message && <p className="message">{message}</p>}
 
           <div className="form">
-            {/* Email */}
+            {}
             <div className="inputGroup">
               <input
                 type="email"
@@ -600,7 +596,7 @@ export default function Login() {
               <span className="icon">📧</span>
             </div>
 
-            {/* Password */}
+            {}
             <div className="inputGroup">
               <input
                 type={showPw ? "text" : "password"}
@@ -616,7 +612,7 @@ export default function Login() {
               </span>
             </div>
 
-            {/* Remember + Forgot */}
+            {}
             <div className="row">
               <label className="remember">
                 <input type="checkbox" /> Ghi nhớ đăng nhập
@@ -636,7 +632,7 @@ export default function Login() {
             </button>
           </div>
 
-          {/* Social Login */}
+          {}
           <div className="socialWrap">
             <p className="or">Hoặc đăng nhập với</p>
             <div className="socials">
@@ -646,7 +642,7 @@ export default function Login() {
             </div>
           </div>
 
-          {/* Extra */}
+          {}
           <p className="extra">
             Chưa có tài khoản? <a href="/register">Đăng ký ngay</a>
           </p>

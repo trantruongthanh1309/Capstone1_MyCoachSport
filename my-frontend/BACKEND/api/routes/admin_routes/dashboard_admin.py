@@ -30,31 +30,24 @@ def get_dashboard_stats():
         return auth_error
     
     try:
-        # Tổng số user
         total_users = User.query.count()
         
-        # User mới trong 7 ngày
         week_ago = datetime.now() - timedelta(days=7)
         new_users_week = User.query.filter(User.CreatedAt >= week_ago).count()
         
-        # User hoạt động hôm nay
         today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         active_users_today = db.session.query(func.count(func.distinct(Log.User_id)))\
             .filter(Log.Date >= today_start).scalar() or 0
         
-        # Tổng số meals & workouts
         total_meals = Meal.query.count()
         total_workouts = Workout.query.count()
         
-        # Avg ratings
         avg_meal_rating = db.session.query(func.avg(Log.Rating)).filter(Log.Meal_id.isnot(None)).scalar() or 0
         avg_workout_rating = db.session.query(func.avg(Log.Rating)).filter(Log.Workout_id.isnot(None)).scalar() or 0
         
-        # Tổng số logs
         total_logs = Log.query.count()
         logs_today = Log.query.filter(Log.Date >= today_start).count()
         
-        # Thống kê theo môn thể thao
         sport_stats = db.session.query(
             User.Sport, 
             func.count(User.Id).label('count')
@@ -65,7 +58,6 @@ def get_dashboard_stats():
         
         sport_distribution = [{"sport": s[0], "count": s[1]} for s in sport_stats]
         
-        # Thống kê theo mục tiêu
         goal_stats = db.session.query(
             User.Goal,
             func.count(User.Id).label('count')
@@ -106,8 +98,6 @@ def get_user_growth():
         days = int(request.args.get('days', 30))
         start_date = datetime.now() - timedelta(days=days)
         
-        # ✅ SQL Server không hỗ trợ hàm DATE() kiểu generic,
-        # nên ta CAST CreatedAt về DATE để GROUP BY theo ngày
         day_expr = func.cast(User.CreatedAt, db.Date)
 
         growth_data = db.session.query(
@@ -118,10 +108,7 @@ def get_user_growth():
          .order_by(day_expr).all()
         
         result = [{"date": str(item.date), "count": item.count} for item in growth_data]
-        
-        # Fill in missing dates with 0 if needed (optional, but good for charts)
-        # For now, let's return what we have.
-        
+
         return jsonify({"success": True, "data": result})
     except Exception as e:
         print(f"Error in user growth: {e}")

@@ -1,6 +1,5 @@
-/* ChatBox.css - Floating Chat UI */
 
-/* Floating Button */
+
 .chat-float-btn {
     position: fixed;
     bottom: 30px;
@@ -54,7 +53,6 @@
     box-shadow: 0 2px 8px rgba(16, 185, 129, 0.5);
 }
 
-/* Chatbox Container - Floating Mode */
 .chatbox-floating {
     position: fixed;
     bottom: 30px;

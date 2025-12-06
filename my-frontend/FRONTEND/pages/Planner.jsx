@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import "./Planner.css";
-import "./PlannerEnhanced.css";
-import "./PlannerCompact.css";
-import "./PlannerComplete.css";
+
 import SwapButton from "../components/SwapButton";
 import { useToast } from "../contexts/ToastContext";
 
@@ -14,10 +12,8 @@ export default function Planner() {
   const [detailItem, setDetailItem] = useState(null);
   const toast = useToast();
 
-  // ✅ DÙNG USER_ID THẬT CỦA BẠN
   const currentUser = { id: 18 };
 
-  // Hàm lấy ngày Thứ 2 của tuần hiện tại
   const getMonday = (date) => {
     const d = new Date(date);
     const day = d.getDay();
@@ -158,7 +154,7 @@ export default function Planner() {
         </button>
       </div>
 
-      {/* MEAL PLAN */}
+      { }
       <div className="section meal-section">
         <div className="section-header">
           <h2><span className="emoji">🍽</span> Kế Hoạch Ăn Uống</h2>
@@ -204,7 +200,7 @@ export default function Planner() {
                               <span className="meta-badge">💪 {mealItem.data.Protein}g</span>
                             </div>
 
-                            {/* Nút Hoàn Thành - To và nổi bật */}
+                            { }
                             <button
                               className={`btn-complete ${mealItem.is_completed ? 'completed' : ''}`}
                               onClick={() => handleComplete(mealItem.schedule_id)}
@@ -213,7 +209,7 @@ export default function Planner() {
                               {mealItem.is_completed ? '✅ Đã ăn' : '☑️ Hoàn thành'}
                             </button>
 
-                            {/* Các nút phụ - Nhỏ và gọn */}
+                            { }
                             <div className="item-actions-compact">
                               <button
                                 className="action-btn-small like"
@@ -252,7 +248,7 @@ export default function Planner() {
         </div>
       </div>
 
-      {/* WORKOUT PLAN */}
+      { }
       <div className="section workout-section">
         <div className="section-header">
           <h2><span className="emoji">🏋️</span> Kế Hoạch Tập Luyện</h2>
@@ -295,7 +291,7 @@ export default function Planner() {
                             <span className="meta-badge">💪 {workoutItem.data.Intensity}</span>
                           </div>
 
-                          {/* Nút Hoàn Thành - To và nổi bật */}
+                          { }
                           <button
                             className={`btn-complete ${workoutItem.is_completed ? 'completed' : ''}`}
                             onClick={() => handleComplete(workoutItem.schedule_id)}
@@ -304,7 +300,7 @@ export default function Planner() {
                             {workoutItem.is_completed ? '✅ Đã tập' : '☑️ Hoàn thành'}
                           </button>
 
-                          {/* Các nút phụ - Nhỏ và gọn */}
+                          { }
                           <div className="item-actions-compact">
                             <button
                               className="action-btn-small like"
@@ -359,7 +355,7 @@ export default function Planner() {
                             <span className="meta-badge">💪 {workoutItem.data.Intensity}</span>
                           </div>
 
-                          {/* Nút Hoàn Thành - To và nổi bật */}
+                          { }
                           <button
                             className={`btn-complete ${workoutItem.is_completed ? 'completed' : ''}`}
                             onClick={() => handleComplete(workoutItem.schedule_id)}
@@ -368,7 +364,7 @@ export default function Planner() {
                             {workoutItem.is_completed ? '✅ Đã tập' : '☑️ Hoàn thành'}
                           </button>
 
-                          {/* Các nút phụ - Nhỏ và gọn */}
+                          { }
                           <div className="item-actions-compact">
                             <button
                               className="action-btn-small like"
@@ -406,7 +402,7 @@ export default function Planner() {
         </div>
       </div>
 
-      {/* MODAL CHI TIẾT */}
+      { }
       {showDetail && (
         <div className="modal-overlay" onClick={() => setShowDetail(false)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>

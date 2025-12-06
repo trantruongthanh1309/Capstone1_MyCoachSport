@@ -29,7 +29,6 @@ def get_users():
         if goal:
             query = query.filter(User.Goal == goal)
         
-        # ✅ THÊM ORDER BY
         query = query.order_by(User.Id.desc())
         
         pagination = query.paginate(page=page, per_page=per_page, error_out=False)

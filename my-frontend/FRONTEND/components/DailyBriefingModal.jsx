@@ -70,7 +70,6 @@ export default function DailyBriefingModal() {
         return null;
     }
 
-    // Filter content by current phase
     const getPhaseContent = () => {
         console.log('📊 Full plan data:', plan);
         console.log('🍽️ Total meals:', plan.meals?.length || 0);
@@ -80,7 +79,6 @@ export default function DailyBriefingModal() {
         let relevantMeals = [];
         let relevantWorkouts = [];
 
-        // FILTER by current phase
         if (currentPhase === 'morning') {
             message = "Chào ngày mới! Sáng nay";
             relevantMeals = plan.meals.filter(m => {
@@ -207,10 +205,10 @@ export default function DailyBriefingModal() {
                 </div>
 
                 <div className="daily-briefing-footer">
-                    <button className="btn-close" onClick={() => setIsOpen(false)}>
+                    <button className="btn-briefing-close" onClick={() => setIsOpen(false)}>
                         Đã rõ, cảm ơn!
                     </button>
-                    <button className="btn-view-all" onClick={() => window.location.href = '/planner'}>
+                    <button className="btn-briefing-view-all" onClick={() => window.location.href = '/planner'}>
                         Xem cả ngày 👉
                     </button>
                 </div>

@@ -10,7 +10,6 @@ class Account(db.Model):
     Role = db.Column(db.String(20), default='user')
     User_id = db.Column(db.Integer, db.ForeignKey('Users.Id'))
     
-    # Password Reset fields
-    ResetToken = db.Column(db.String(6))  # 6-digit OTP
-    ResetTokenExpiry = db.Column(db.DateTime)  # Expiry time for OTP
+    ResetToken = db.Column(db.String(6))
+    ResetTokenExpiry = db.Column(db.DateTime)
     CreatedAt = db.Column(db.DateTime, default=datetime.utcnow)

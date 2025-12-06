@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify
-from sqlalchemy import text   # 👈 thêm dòng này
+from sqlalchemy import text
 from db import db
 
 planner_bp = Blueprint('planner', __name__)

@@ -1,4 +1,3 @@
-// AdminUsers.jsx
 import React, { useState, useEffect } from 'react';
 import './AdminUsers.css';
 
@@ -151,7 +150,7 @@ export default function AdminUsers() {
         <p className="subtitle">Tổng {pagination.total} người dùng</p>
       </div>
 
-      {/* Filters */}
+      {}
       <div className="filters-bar">
         <div className="search-box">
           <input
@@ -187,7 +186,7 @@ export default function AdminUsers() {
         </button>
       </div>
 
-      {/* Users Table */}
+      {}
       <div className="users-table-container">
         <table className="users-table">
           <thead>
@@ -253,7 +252,7 @@ export default function AdminUsers() {
         </table>
       </div>
 
-      {/* Pagination */}
+      {}
       <div className="pagination">
         <button 
           disabled={pagination.page === 1}
@@ -270,7 +269,7 @@ export default function AdminUsers() {
         </button>
       </div>
 
-      {/* Edit Modal */}
+      {}
       {showEditModal && (
         <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -382,7 +381,7 @@ export default function AdminUsers() {
         </div>
       )}
 
-      {/* Delete Modal */}
+      {}
       {showDeleteModal && (
         <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
           <div className="modal-content modal-small" onClick={(e) => e.stopPropagation()}>

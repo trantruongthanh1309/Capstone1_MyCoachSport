@@ -1,7 +1,6 @@
 from flask import current_app, render_template_string
 from flask_mail import Mail, Message
 from threading import Thread
-# Xóa import app để tránh circular import
 from db import db
 from models.notification_log import NotificationLog
 from datetime import datetime
@@ -20,12 +19,9 @@ def send_email(subject, recipient, html_body):
     try:
         msg = Message(subject, recipients=[recipient])
         msg.html = html_body
-        # Chạy thread riêng để không block server
         Thread(target=send_async_email, args=(current_app._get_current_object(), msg)).start()
     except Exception as e:
         print(f"❌ Error preparing email: {e}")
-
-# --- Templates ---
 
 def send_otp_email(user_email, otp, purpose="reset"):
     if purpose == "reset":
@@ -109,6 +105,4 @@ def send_schedule_reminder(user, schedule_item, type="Workout"):
     </div>
     """
     
-    # Check log để không gửi trùng (Double check logic nên ở scheduler, nhưng check ở đây cho chắc)
-    # Ở đây chúng ta chỉ gửi. Logic check sẽ nằm ở Scheduler.
     send_email(subject, user.Email, html)

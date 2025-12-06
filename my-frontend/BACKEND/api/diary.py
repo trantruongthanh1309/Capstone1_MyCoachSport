@@ -17,7 +17,6 @@ def get_history():
     end_date = request.args.get('end_date')
     
     if not start_date or not end_date:
-        # Mặc định lấy 7 ngày gần nhất
         end = datetime.now().date()
         start = end - timedelta(days=6)
         start_date = start.strftime('%Y-%m-%d')
@@ -99,7 +98,6 @@ def get_preferences():
         return jsonify({'error': 'Chưa đăng nhập'}), 401
         
     try:
-        # Lấy logs
         logs = Log.query.filter_by(User_id=user_id).all()
         
         preferences = {
@@ -109,7 +107,6 @@ def get_preferences():
             'disliked_workouts': []
         }
         
-        # Cache để tránh query lặp lại
         meal_cache = {}
         workout_cache = {}
         
@@ -140,9 +137,7 @@ def get_preferences():
                     elif log.FeedbackType == 'disliked':
                         preferences['disliked_workouts'].append(item)
                         
-        # Remove duplicates (nếu có log trùng)
         for key in preferences:
-            # Deduplicate list of dicts
             preferences[key] = [dict(t) for t in {tuple(d.items()) for d in preferences[key]}]
             
         return jsonify(preferences)

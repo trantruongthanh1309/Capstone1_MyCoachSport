@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 import os, requests
 
 weather_bp = Blueprint('weather', __name__)
-OPENWEATHER_KEY = os.getenv("OPENWEATHER_KEY")  # hoặc thay bằng chuỗi key tạm
+OPENWEATHER_KEY = os.getenv("OPENWEATHER_KEY")
 
 @weather_bp.route("/", methods=["GET"])
 def get_weather():

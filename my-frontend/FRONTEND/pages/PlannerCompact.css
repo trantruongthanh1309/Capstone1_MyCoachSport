@@ -1,12 +1,10 @@
-/* Planner Compact Mode - Override styles to make cards smaller */
 
-/* Make cells more compact */
+
 .cell-content {
     padding: 10px !important;
     min-width: 150px !important;
 }
 
-/* Make cards smaller */
 .item-card {
     padding: 10px !important;
     border-radius: 12px !important;
@@ -32,7 +30,6 @@
     border-radius: 12px !important;
 }
 
-/* Arrange action buttons in 2x2 grid */
 .item-actions {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;

@@ -31,7 +31,6 @@ const Register = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Validation
         if (!formData.email || !formData.password || !formData.confirmPassword) {
             showToast('Vui lòng điền đầy đủ thông tin', 'error');
             return;
@@ -63,7 +62,7 @@ const Register = () => {
 
             if (data.success) {
                 showToast('Mã OTP đã được gửi đến email của bạn!', 'success');
-                setStep(2); // Chuyển sang bước nhập OTP
+                setStep(2);
             } else {
                 showToast(data.error || 'Đăng ký thất bại', 'error');
             }

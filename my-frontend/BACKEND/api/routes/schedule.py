@@ -8,7 +8,7 @@ router = APIRouter()
 @router.get("/schedule")
 def get_daily_schedule(
     user_id: int,
-    date: str,  # format: "YYYY-MM-DD"
+    date: str,
     db: Session = Depends(get_db)
 ):
     try:

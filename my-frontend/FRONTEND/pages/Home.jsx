@@ -4,7 +4,7 @@ import ChatBox from "../components/ChatBox";
 import DailyBriefingModal from "../components/DailyBriefingModal";
 
 const API_BASE = "http://localhost:5000";
-const WEATHER_API_KEY = "40dfa2d8e73afabb299edc21486cb2c3"; // Thay bằng API key của bạn
+const WEATHER_API_KEY = "40dfa2d8e73afabb299edc21486cb2c3";
 const WEATHER_API_URL = "https://api.openweathermap.org/data/2.5/weather";
 
 export default function Home() {
@@ -14,7 +14,6 @@ export default function Home() {
   const [log, setLog] = useState([]);
   const [openChat, setOpenChat] = useState(false);
 
-  // Lấy vị trí người dùng
   const getWeather = (latitude, longitude) => {
     fetch(
       `${WEATHER_API_URL}?lat=${latitude}&lon=${longitude}&appid=${WEATHER_API_KEY}&units=metric&lang=vi`
@@ -34,19 +33,16 @@ export default function Home() {
       .catch(() => setWeather({ error: "Không tải được thời tiết" }));
   };
 
-  // Clock
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
 
-  // Lấy vị trí người dùng và gọi API thời tiết
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
         console.log("Latitude:", latitude, "Longitude:", longitude); // In ra tọa độ chính xác
-        // Gọi API thời tiết với tọa độ chính xác
         getWeather(latitude, longitude);
       },
       (error) => {
@@ -55,7 +51,6 @@ export default function Home() {
     );
   }, []);
 
-  // Chat
   const send = async () => {
     const content = msg.trim();
     if (!content) return;
@@ -76,7 +71,24 @@ export default function Home() {
 
   return (
     <main className={styles.home}>
-      {/* Chào mừng */}
+      {/* Background Image - User Link */}
+      <div
+        className={styles['animated-bg']}
+        style={{
+          backgroundImage: "url('https://lh3.googleusercontent.com/gg-dl/ABS2GSlfCnTvwraW3DBkwCpk9WgHk-tOdsErDRWoPDwdy-UySvV3Ru8FGU9wHMHLZhGvctu0mKk0Bbl0EpQR6C4y7Q7i81JoYyrsw5fnNKDRUTrhyfftmCP2hr5BZrWm3Ij2D1gMpOJuo099xREtxAt2rywyrR1mAEDx2yA5Va1A1usVLrPBCg=s1024-rj')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          zIndex: -1,
+          opacity: 1
+        }}
+      />
+
+      { }
       <div className={styles.greeting}>
         <h1>Chào mừng đến với MySportCoachAI</h1>
         <p>
@@ -84,7 +96,7 @@ export default function Home() {
         </p>
       </div>
 
-      {/* Clock chính giữa */}
+      { }
       <div className={styles.clockWrap}>
         <div className={styles.clock}>{now.toLocaleTimeString("vi-VN")}</div>
         <div className={styles.date}>
@@ -97,7 +109,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Weather phía dưới (Hiển thị thời tiết dựa trên vị trí người dùng) */}
+      { }
       <div className={styles.weatherWrap}>
         {!weather ? (
           <div className={styles.weather}>⏳ Đang tải...</div>
@@ -123,7 +135,7 @@ export default function Home() {
         )}
       </div>
 
-      {/* 3 Thẻ thông tin bổ sung */}
+      { }
       <div className={styles.cardsContainer}>
         <div className={styles.card}>
           <img
@@ -156,10 +168,10 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Chatbox component */}
+      { }
       <ChatBox />
 
-      {/* Daily Briefing Modal */}
+      { }
       <DailyBriefingModal />
     </main>
   );

@@ -6,32 +6,26 @@ export default function NotificationBell() {
     const [isOpen, setIsOpen] = useState(false);
     const wrapperRef = useRef(null);
 
-    // Fetch notifications
     const fetchNotifs = async () => {
         try {
             const res = await fetch('http://localhost:5000/api/notifications/', { credentials: 'include' });
             const data = await res.json();
-            console.log('🔔 Notifications fetched:', data);
             setNotifs(data);
         } catch (err) {
             console.error("Notif error", err);
         }
     };
 
-    // Mark all as read
     const markAllAsRead = () => {
         setNotifs([]);
-        // Optional: Send request to backend to persist this
-        console.log('✅ Marked all notifications as read');
     };
 
     useEffect(() => {
         fetchNotifs();
-        const interval = setInterval(fetchNotifs, 30000); // Check every 30s
+        const interval = setInterval(fetchNotifs, 60000);
         return () => clearInterval(interval);
     }, []);
 
-    // Close when clicking outside
     useEffect(() => {
         function handleClickOutside(event) {
             if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
@@ -42,7 +36,6 @@ export default function NotificationBell() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [wrapperRef]);
 
-    // Count unread (all notifications for now)
     const unreadCount = notifs.length;
 
     return (
@@ -64,13 +57,13 @@ export default function NotificationBell() {
                     <div className="notif-list">
                         {notifs.length === 0 ? (
                             <div className="notif-empty">
-                                <span style={{ fontSize: '3rem' }}>🔕</span>
+                                <span style={{ fontSize: '2.5rem' }}>🔕</span>
                                 <p>Không có thông báo mới</p>
                                 <small>Lịch ăn/tập sắp tới sẽ hiện ở đây</small>
                             </div>
                         ) : (
                             notifs.map((n) => (
-                                <div key={n.id} className={`notif-item ${n.minutes_diff <= 0 ? 'past' : 'upcoming'}`}>
+                                <div key={n.id} className="notif-item">
                                     <div className={`item-icon ${n.type}`}>
                                         {n.type === 'workout' ? '🏋️' : '🥗'}
                                     </div>
@@ -79,8 +72,9 @@ export default function NotificationBell() {
                                         <p>{n.message}</p>
                                         <span className="item-time">
                                             {n.minutes_diff > 0
-                                                ? `⏰ ${n.minutes_diff} phút nữa`
-                                                : `⏱️ ${Math.abs(n.minutes_diff)} phút trước`}
+                                                ? `⏰ Còn ${n.minutes_diff} phút`
+                                                : `⏱️ Đã qua ${Math.abs(n.minutes_diff)} phút`}
+                                            {n.time && ` • ${n.time}`}
                                         </span>
                                     </div>
                                 </div>

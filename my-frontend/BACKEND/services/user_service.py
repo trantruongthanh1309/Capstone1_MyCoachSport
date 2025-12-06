@@ -7,8 +7,7 @@ def get_user_profile(user_id: int):
     if not user:
         raise ValueError("User not found")
 
-    # KHÔNG DÙNG WorkSchedule NỮA
-    work_schedule = {}  # ← LUÔN TRẢ VỀ RỖNG
+    work_schedule = {}
 
     disliked = json.loads(user.DislikedIngredients) if user.DislikedIngredients else []
     allergies = json.loads(user.Allergies) if user.Allergies else []
@@ -17,7 +16,7 @@ def get_user_profile(user_id: int):
         "id": user.Id,
         "sport": user.Sport,
         "goal": user.Goal,
-        "work_schedule": work_schedule,  # ← SẼ KHÔNG DÙNG ĐẾN
+        "work_schedule": work_schedule,
         "disliked_ingredients": disliked,
         "allergies": allergies
     }
@@ -33,7 +32,6 @@ def get_user_feedback(user_id: int):
         if log.Workout_id and log.Rating:
             workout_ratings[log.Workout_id] = workout_ratings.get(log.Workout_id, []) + [log.Rating]
     
-    # Tính trung bình rating
     avg_meal = {mid: sum(r)/len(r) for mid, r in meal_ratings.items()}
     avg_workout = {wid: sum(r)/len(r) for wid, r in workout_ratings.items()}
     

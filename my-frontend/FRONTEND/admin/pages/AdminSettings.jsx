@@ -61,7 +61,6 @@ const AdminSettings = () => {
   };
 
   const handleSave = () => {
-    // Mock save - In real app, call API
     console.log('Saving settings:', settings);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
@@ -108,7 +107,7 @@ const AdminSettings = () => {
       )}
 
       <div className="settings-container">
-        {/* System Stats */}
+        {}
         <section className="settings-section">
           <h2>📊 Thống Kê Hệ Thống</h2>
           <div className="stats-grid">
@@ -143,7 +142,7 @@ const AdminSettings = () => {
           </div>
         </section>
 
-        {/* General Settings */}
+        {}
         <section className="settings-section">
           <h2>🌐 Cài Đặt Chung</h2>
           <div className="settings-form">
@@ -194,7 +193,7 @@ const AdminSettings = () => {
           </div>
         </section>
 
-        {/* Security Settings */}
+        {}
         <section className="settings-section">
           <h2>🔒 Bảo Mật</h2>
           <div className="settings-form">
@@ -234,7 +233,7 @@ const AdminSettings = () => {
           </div>
         </section>
 
-        {/* Notifications */}
+        {}
         <section className="settings-section">
           <h2>🔔 Thông Báo</h2>
           <div className="settings-form">
@@ -264,7 +263,7 @@ const AdminSettings = () => {
           </div>
         </section>
 
-        {/* System Actions */}
+        {}
         <section className="settings-section">
           <h2>🛠️ Hành Động Hệ Thống</h2>
           <div className="action-buttons">
@@ -280,7 +279,7 @@ const AdminSettings = () => {
           </div>
         </section>
 
-        {/* Save Buttons */}
+        {}
         <div className="settings-footer">
           <button onClick={handleReset} className="btn-secondary">
             Hủy thay đổi

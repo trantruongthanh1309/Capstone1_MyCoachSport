@@ -1,7 +1,6 @@
 import sys
 import os
 
-# Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app import app
@@ -13,19 +12,16 @@ def set_user_as_admin(email):
     """Set user role to admin by email"""
     with app.app_context():
         try:
-            # Find user by email
             user = User.query.filter_by(Email=email).first()
             if not user:
                 print(f"❌ User with email '{email}' not found!")
                 return
             
-            # Find or create account
             account = Account.query.filter_by(User_id=user.Id).first()
             if not account:
                 print(f"❌ No account found for user {user.Name}")
                 return
             
-            # Update role to admin
             old_role = account.Role
             account.Role = 'admin'
             db.session.commit()

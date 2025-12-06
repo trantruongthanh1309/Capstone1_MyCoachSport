@@ -1,4 +1,4 @@
-/* Register.module.css */
+
 
 .registerContainer {
     min-height: 100vh;
@@ -276,7 +276,6 @@
     text-decoration: underline;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
     .registerCard {
         padding: 32px 24px;

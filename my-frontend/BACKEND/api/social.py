@@ -6,8 +6,6 @@ from datetime import datetime
 
 social_bp = Blueprint('social', __name__, url_prefix='/api/social')
 
-# ==================== POSTS ====================
-
 @social_bp.route('/posts', methods=['GET'])
 def get_posts():
     """Lấy danh sách bài viết (chỉ bài đã duyệt)"""
@@ -18,7 +16,6 @@ def get_posts():
         
         sport_filter = request.args.get('sport')
         
-        # CHỈ LẤY BÀI ĐÃ ĐƯỢC DUYỆT
         query = Post.query.filter(Post.Status == 'Approved')
         
         if sport_filter and sport_filter != 'All':
@@ -37,7 +34,6 @@ def get_posts():
     except Exception as e:
         current_app.logger.error(f"Error in get_posts: {str(e)}")
         return jsonify({'error': 'Lỗi máy chủ nội bộ'}), 500
-
 
 @social_bp.route('/posts', methods=['POST'])
 def create_post():
@@ -61,7 +57,7 @@ def create_post():
             Sport=data.get('sport'),
             Topic=data.get('topic'),
             ImageUrl=image_url,
-            Status='Pending'  # Mặc định chờ duyệt
+            Status='Pending'
         )
         db.session.add(post)
         db.session.commit()
@@ -71,13 +67,12 @@ def create_post():
         return jsonify({
             'success': True,
             'message': 'Bài viết đã được gửi và đang chờ admin duyệt!',
-            'post': None  # Không trả post để không hiện lên UI
+            'post': None
         }), 201
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error in create_post: {str(e)}")
         return jsonify({'success': False, 'message': 'Không thể tạo bài viết'}), 500
-
 
 @social_bp.route('/posts/<int:post_id>', methods=['DELETE'])
 def delete_post(post_id):
@@ -102,9 +97,6 @@ def delete_post(post_id):
         current_app.logger.error(f"Error in delete_post: {str(e)}")
         return jsonify({'error': 'Không thể xóa bài viết'}), 500
 
-
-# ==================== COMMENTS ====================
-
 @social_bp.route('/posts/<int:post_id>/comments', methods=['GET'])
 def get_comments(post_id):
     """Lấy danh sách bình luận của bài viết"""
@@ -119,7 +111,6 @@ def get_comments(post_id):
     except Exception as e:
         current_app.logger.error(f"Error in get_comments: {str(e)}")
         return jsonify({'error': 'Lỗi khi lấy bình luận'}), 500
-
 
 @social_bp.route('/posts/<int:post_id>/comments', methods=['POST'])
 def create_comment(post_id):
@@ -152,9 +143,6 @@ def create_comment(post_id):
         current_app.logger.error(f"Error in create_comment: {str(e)}")
         return jsonify({'error': 'Không thể bình luận'}), 500
 
-
-# ==================== LIKES ====================
-
 @social_bp.route('/posts/<int:post_id>/like', methods=['POST'])
 def toggle_like(post_id):
     """Like/Unlike bài viết"""
@@ -166,12 +154,10 @@ def toggle_like(post_id):
         existing_like = Like.query.filter_by(Post_id=post_id, User_id=user_id).first()
         
         if existing_like:
-            # Unlike
             db.session.delete(existing_like)
             db.session.commit()
             return jsonify({'success': True, 'liked': False})
         else:
-            # Like
             like = Like(Post_id=post_id, User_id=user_id)
             db.session.add(like)
             db.session.commit()
@@ -180,9 +166,6 @@ def toggle_like(post_id):
         db.session.rollback()
         current_app.logger.error(f"Error in toggle_like: {str(e)}")
         return jsonify({'error': 'Lỗi xử lý like'}), 500
-
-
-# ==================== SHARES ====================
 
 @social_bp.route('/posts/<int:post_id>/share', methods=['POST'])
 def share_post(post_id):
@@ -201,9 +184,6 @@ def share_post(post_id):
         db.session.rollback()
         current_app.logger.error(f"Error in share_post: {str(e)}")
         return jsonify({'error': 'Không thể chia sẻ'}), 500
-
-
-# ==================== MESSAGES ====================
 
 @social_bp.route('/conversations', methods=['GET'])
 def get_conversations():
@@ -225,7 +205,6 @@ def get_conversations():
         current_app.logger.error(f"Error in get_conversations: {str(e)}")
         return jsonify({'error': 'Lỗi lấy danh sách tin nhắn'}), 500
 
-
 @social_bp.route('/conversations/<int:user2_id>', methods=['GET'])
 def get_or_create_conversation(user2_id):
     """Lấy hoặc tạo cuộc trò chuyện với user khác"""
@@ -234,19 +213,16 @@ def get_or_create_conversation(user2_id):
         return jsonify({'error': 'Chưa đăng nhập'}), 401
     
     try:
-        # Tìm conversation hiện có
         conversation = Conversation.query.filter(
             ((Conversation.User1_id == user_id) & (Conversation.User2_id == user2_id)) |
             ((Conversation.User1_id == user2_id) & (Conversation.User2_id == user_id))
         ).first()
         
         if not conversation:
-            # Tạo mới
             conversation = Conversation(User1_id=user_id, User2_id=user2_id)
             db.session.add(conversation)
             db.session.commit()
         
-        # Lấy tin nhắn
         messages = Message.query.filter_by(Conversation_id=conversation.Id)\
             .order_by(Message.CreatedAt.asc()).all()
         
@@ -259,7 +235,6 @@ def get_or_create_conversation(user2_id):
         db.session.rollback()
         current_app.logger.error(f"Error in get_or_create_conversation: {str(e)}")
         return jsonify({'error': 'Lỗi xử lý cuộc trò chuyện'}), 500
-
 
 @social_bp.route('/conversations/<int:conversation_id>/messages', methods=['POST'])
 def send_message(conversation_id):
@@ -282,7 +257,6 @@ def send_message(conversation_id):
         )
         db.session.add(message)
         
-        # Cập nhật LastMessageAt
         conversation = Conversation.query.get(conversation_id)
         if conversation:
             conversation.LastMessageAt = datetime.utcnow()
@@ -298,7 +272,6 @@ def send_message(conversation_id):
         current_app.logger.error(f"Error in send_message: {str(e)}")
         return jsonify({'error': 'Không thể gửi tin nhắn'}), 500
 
-
 @social_bp.route('/users/search', methods=['GET'])
 def search_users():
     """Tìm kiếm người dùng theo tên"""
@@ -307,7 +280,6 @@ def search_users():
         return jsonify({'users': []})
     
     try:
-        # Tìm user có tên chứa query (không phân biệt hoa thường)
         users = User.query.filter(User.Name.ilike(f'%{query}%')).limit(10).all()
         
         return jsonify({

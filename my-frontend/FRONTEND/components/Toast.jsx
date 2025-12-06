@@ -1,10 +1,6 @@
 import { useState, useEffect } from 'react';
 import './Toast.css';
 
-/**
- * Toast Notification Component
- * Usage: <Toast message={msg} type="success|error|info" onClose={handleClose} />
- */
 export default function Toast({ message, type = 'info', duration = 4000, onClose }) {
     const [isVisible, setIsVisible] = useState(true);
 

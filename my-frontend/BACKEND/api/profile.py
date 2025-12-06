@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify,session
-from db import db  # Giả sử bạn đã có `db = SQLAlchemy(app)` trong file `db.py` # Từ models.py chứa class User
+from db import db
 from models import User  
 import json
 profile_bp = Blueprint('profile', __name__, url_prefix='/api/profile')
@@ -19,7 +19,6 @@ def to_dict(self):
     }
 @profile_bp.route('', methods=['GET'])
 def get_profile():
-    # Lấy user_id từ session
     user_id_from_session = session.get('user_id')
 
     if not user_id_from_session:
@@ -43,11 +42,10 @@ def get_profile():
         "Avatar": user.Avatar
     })
 
-
 @profile_bp.route('/<int:user_id>', methods=['POST'])
 def update_profile(user_id):
     try:
-        data = request.get_json()  # Lấy dữ liệu từ body
+        data = request.get_json()
         print(f"Received data for user {user_id}: {data}")
 
         user = User.query.filter_by(Id=user_id).first()
@@ -76,8 +74,6 @@ def update_profile(user_id):
         print(f"❌ Lỗi khi lưu vào DB: {e}")
         return jsonify({"error": str(e)}), 500
 
-
-    
 @profile_bp.route('/schedule', methods=['GET'])
 def get_work_schedule():
     if 'user_id' not in session:
@@ -87,7 +83,6 @@ def get_work_schedule():
     if not user:
         return jsonify({"error": "User không tồn tại"}), 404
     
-    # Nếu WorkSchedule là NULL → gán mặc định
     schedule = json.loads(user.WorkSchedule) if user.WorkSchedule else {
         "mon": [], "tue": [], "wed": [], "thu": [], "fri": [], "sat": [], "sun": []
     }
@@ -103,7 +98,6 @@ def update_work_schedule():
     if not user:
         return jsonify({"error": "User không tồn tại"}), 404
     
-    # Kiểm tra dữ liệu đầu vào
     if not isinstance(data, dict):
         return jsonify({"error": "Dữ liệu không hợp lệ"}), 400
     

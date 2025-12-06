@@ -1,16 +1,10 @@
-/* ============================================
-   SETTINGS PAGE - SIÊU ĐẸP & ĐẦY ĐỦ TÍNH NĂNG
-   ============================================ */
+
 
 .settings-page {
   min-height: calc(100vh - 80px);
   background: #f8f9fa;
   padding: 40px 20px;
 }
-
-/* ============================================
-   HEADER
-   ============================================ */
 
 .settings-header {
   max-width: 1200px;
@@ -71,10 +65,6 @@
   font-size: 1.3rem;
 }
 
-/* ============================================
-   SAVE ALERT
-   ============================================ */
-
 .save-alert {
   position: fixed;
   top: 100px;
@@ -97,10 +87,6 @@
   font-size: 1.5rem;
 }
 
-/* ============================================
-   CONTAINER
-   ============================================ */
-
 .settings-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -109,10 +95,6 @@
   gap: 30px;
   animation: fadeIn 0.6s ease;
 }
-
-/* ============================================
-   SIDEBAR
-   ============================================ */
 
 .settings-sidebar {
   background: white;
@@ -158,10 +140,6 @@
   font-size: 1.5rem;
 }
 
-/* ============================================
-   CONTENT AREA
-   ============================================ */
-
 .settings-content {
   background: white;
   border-radius: 20px;
@@ -182,10 +160,6 @@
   padding-bottom: 20px;
   border-bottom: 3px solid #f0f0f0;
 }
-
-/* ============================================
-   AVATAR SECTION
-   ============================================ */
 
 .avatar-section {
   display: flex;
@@ -261,10 +235,6 @@
   background: #e0e0e0;
 }
 
-/* ============================================
-   FORM ELEMENTS
-   ============================================ */
-
 .form-group {
   margin-bottom: 25px;
 }
@@ -303,10 +273,6 @@
   line-height: 1.6;
 }
 
-/* ============================================
-   THEME SELECTOR
-   ============================================ */
-
 .theme-selector {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -335,10 +301,6 @@
   color: white;
   box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
 }
-
-/* ============================================
-   TOGGLE SWITCH
-   ============================================ */
 
 .toggle-group {
   display: flex;
@@ -422,10 +384,6 @@
   transform: translateX(26px);
 }
 
-/* ============================================
-   NUTRITION GRID
-   ============================================ */
-
 .nutrition-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -485,10 +443,6 @@
   color: #666;
   font-size: 0.95rem;
 }
-
-/* ============================================
-   DATA ACTIONS
-   ============================================ */
 
 .data-actions {
   display: grid;
@@ -583,10 +537,6 @@
   box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
 }
 
-/* ============================================
-   ANIMATIONS
-   ============================================ */
-
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -630,10 +580,6 @@
     transform: rotate(360deg);
   }
 }
-
-/* ============================================
-   RESPONSIVE
-   ============================================ */
 
 @media (max-width: 1024px) {
   .settings-container {
@@ -779,10 +725,6 @@
     box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
   }
 
-  /* ============================================
-   ANIMATIONS
-   ============================================ */
-
   @keyframes fadeIn {
     from {
       opacity: 0;
@@ -826,10 +768,6 @@
       transform: rotate(360deg);
     }
   }
-
-  /* ============================================
-   RESPONSIVE
-   ============================================ */
 
   @media (max-width: 1024px) {
     .settings-container {
@@ -906,10 +844,6 @@
       grid-template-columns: 1fr;
     }
   }
-
-  /* ============================================
-   LOADING SPINNER
-   ============================================ */
 
   @keyframes spin {
     0% {

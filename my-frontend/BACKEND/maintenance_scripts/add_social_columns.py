@@ -4,7 +4,6 @@ from sqlalchemy import text
 
 def add_column_if_not_exists(table, column, type_def):
     try:
-        # Check if column exists
         check_sql = text(f"SELECT COL_LENGTH('{table}', '{column}')")
         result = db.session.execute(check_sql).scalar()
         
@@ -24,7 +23,6 @@ def add_column_if_not_exists(table, column, type_def):
 with app.app_context():
     print("🚀 Starting migration...")
     
-    # Add columns to SocialPosts
     add_column_if_not_exists('SocialPosts', 'Title', 'NVARCHAR(255)')
     add_column_if_not_exists('SocialPosts', 'Sport', 'NVARCHAR(50)')
     add_column_if_not_exists('SocialPosts', 'Topic', 'NVARCHAR(50)')

@@ -1,13 +1,7 @@
-/* ==================== GLOBAL & FONTS ==================== */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
 
-/* ==================== ANIMATED BACKGROUND ==================== */
+
 .wrap {
   min-height: 100vh;
   padding: 3rem 2rem;
@@ -32,12 +26,19 @@
 }
 
 @keyframes gradientFlow {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
-/* ==================== HEADER SECTION ==================== */
 .header-section {
   text-align: center;
   margin-bottom: 3rem;
@@ -49,6 +50,7 @@
     opacity: 0;
     transform: translateY(-30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -70,8 +72,15 @@
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-12px); }
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-12px);
+  }
 }
 
 .main-icon {
@@ -91,8 +100,17 @@
 }
 
 @keyframes pulse {
-  0%, 100% { transform: scale(1); opacity: 0.5; }
-  50% { transform: scale(1.2); opacity: 0.8; }
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
 }
 
 .gradient-title {
@@ -109,8 +127,15 @@
 }
 
 @keyframes shimmer {
-  0%, 100% { background-position: 0% center; }
-  50% { background-position: 100% center; }
+
+  0%,
+  100% {
+    background-position: 0% center;
+  }
+
+  50% {
+    background-position: 100% center;
+  }
 }
 
 .subtitle {
@@ -122,14 +147,13 @@
   line-height: 1.6;
 }
 
-/* ==================== SEARCH CONTAINER ==================== */
 .search-container {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   border-radius: 24px;
   padding: 32px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1),
-              0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+    0 0 0 1px rgba(255, 255, 255, 0.5) inset;
   margin-bottom: 3rem;
   animation: scaleIn 0.6s ease-out 0.2s both;
   position: relative;
@@ -141,6 +165,7 @@
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -160,11 +185,15 @@
 }
 
 @keyframes glassShine {
-  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-  100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+
+  100% {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
 }
 
-/* ==================== SEARCH BAR ==================== */
 .search-bar {
   display: flex;
   gap: 12px;
@@ -234,6 +263,7 @@
     opacity: 0;
     transform: scale(0);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -291,7 +321,6 @@
   transform: translateY(0);
 }
 
-/* ==================== CHIPS ==================== */
 .chips-container {
   display: flex;
   align-items: center;
@@ -336,6 +365,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -373,7 +403,6 @@
   transform: translateX(4px);
 }
 
-/* ==================== LOADING STATE ==================== */
 .loading-state {
   display: flex;
   flex-direction: column;
@@ -393,7 +422,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-text {
@@ -403,7 +434,6 @@
   animation: pulse 1.5s ease-in-out infinite;
 }
 
-/* ==================== ERROR & EMPTY STATES ==================== */
 .error-state,
 .empty-state {
   text-align: center;
@@ -416,8 +446,13 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .error-state {
@@ -433,8 +468,15 @@
 }
 
 @keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 .empty-state h3 {
@@ -451,7 +493,6 @@
   margin: 0 auto;
 }
 
-/* ==================== RESULTS HEADER ==================== */
 .results-header {
   margin: 2rem 0 1.5rem;
   animation: fadeInUp 0.6s ease-out;
@@ -462,6 +503,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -485,7 +527,6 @@
   font-size: 28px;
 }
 
-/* ==================== VIDEO GRID ==================== */
 .video-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -510,6 +551,7 @@
     opacity: 0;
     transform: translateY(30px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -539,11 +581,15 @@
 }
 
 @keyframes shine {
-  from { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-  to { transform: translateX(100%) translateY(100%) rotate(45deg); }
+  from {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+
+  to {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
 }
 
-/* ==================== THUMBNAIL ==================== */
 .thumbnail-wrapper {
   position: relative;
   width: 100%;
@@ -611,7 +657,6 @@
   backdrop-filter: blur(10px);
 }
 
-/* ==================== CARD CONTENT ==================== */
 .card-content {
   padding: 20px;
 }
@@ -683,42 +728,41 @@
   background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
 }
 
-/* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
   .wrap {
     padding: 2rem 1rem;
   }
-  
+
   .icon-wrapper {
     width: 80px;
     height: 80px;
   }
-  
+
   .main-icon {
     font-size: 40px;
   }
-  
+
   .gradient-title {
     font-size: 32px;
   }
-  
+
   .subtitle {
     font-size: 16px;
   }
-  
+
   .search-container {
     padding: 24px 20px;
   }
-  
+
   .search-bar {
     flex-direction: column;
   }
-  
+
   .search-btn {
     width: 100%;
     justify-content: center;
   }
-  
+
   .video-grid {
     grid-template-columns: 1fr;
     gap: 20px;

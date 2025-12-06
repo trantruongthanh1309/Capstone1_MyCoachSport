@@ -4,7 +4,6 @@ import "./Settings.css";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 export default function Settings() {
-  // Profile Settings
   const [profile, setProfile] = useState({
     name: "",
     email: "",
@@ -12,7 +11,6 @@ export default function Settings() {
     bio: "",
   });
 
-  // Preferences
   const [preferences, setPreferences] = useState({
     theme: "light",
     language: "vi",
@@ -21,7 +19,6 @@ export default function Settings() {
     pushNotifications: false,
   });
 
-  // Privacy
   const [privacy, setPrivacy] = useState({
     profilePublic: true,
     showEmail: false,
@@ -29,7 +26,6 @@ export default function Settings() {
     allowMessages: true,
   });
 
-  // Workout Settings
   const [workoutSettings, setWorkoutSettings] = useState({
     defaultDuration: 60,
     reminderTime: "07:00",
@@ -37,7 +33,6 @@ export default function Settings() {
     restDayReminder: true,
   });
 
-  // Nutrition Settings
   const [nutritionSettings, setNutritionSettings] = useState({
     calorieGoal: 2000,
     proteinGoal: 150,
@@ -53,7 +48,6 @@ export default function Settings() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Load settings from backend
     loadSettings();
   }, []);
 
@@ -153,7 +147,6 @@ export default function Settings() {
           throw new Error('Không thể reset settings');
         }
 
-        // Reload settings from server
         await loadSettings();
 
         alert('Đã đặt lại cài đặt về mặc định!');
@@ -219,7 +212,7 @@ export default function Settings() {
 
   return (
     <div className="settings-page">
-      {/* Header */}
+      { }
       <div className="settings-header">
         <div className="header-content">
           <h1 className="page-title">
@@ -234,7 +227,7 @@ export default function Settings() {
         </button>
       </div>
 
-      {/* Success Alert */}
+      { }
       {showSaveAlert && (
         <div className="save-alert">
           <span className="alert-icon">✅</span>
@@ -242,7 +235,7 @@ export default function Settings() {
         </div>
       )}
 
-      {/* Error Alert */}
+      { }
       {error && (
         <div className="error-alert" style={{
           background: '#fee',
@@ -256,7 +249,7 @@ export default function Settings() {
       )}
 
       <div className="settings-container">
-        {/* Sidebar Tabs */}
+        { }
         <div className="settings-sidebar">
           <button
             className={`tab-btn ${activeTab === "profile" ? "active" : ""}`}
@@ -302,9 +295,9 @@ export default function Settings() {
           </button>
         </div>
 
-        {/* Content Area */}
+        { }
         <div className="settings-content">
-          {/* Profile Tab */}
+          { }
           {activeTab === "profile" && (
             <div className="settings-section">
               <h2 className="section-title">Thông Tin Cá Nhân</h2>
@@ -321,29 +314,28 @@ export default function Settings() {
                 </div>
                 <div className="avatar-actions">
                   <label className="btn-upload">
-                    <input type="file" accept="image/*" onChange={handleAvatarChange} hidden />
-                    📷 Đổi Ảnh
+                    <input type="file" accept="image/*" onChange={handleAvatarChange} />
+                    Thay đổi
                   </label>
-                  <button
-                    className="btn-remove"
-                    onClick={() => {
-                      setAvatarPreview(null);
-                      setProfile({ ...profile, avatar: "" });
-                    }}
-                  >
-                    🗑️ Xóa
-                  </button>
+                  {profile.avatar && (
+                    <button
+                      className="btn-delete"
+                      onClick={() => setProfile({ ...profile, avatar: "" })}
+                    >
+                      Xóa
+                    </button>
+                  )}
                 </div>
               </div>
 
               <div className="form-group">
-                <label className="form-label">Tên hiển thị</label>
+                <label className="form-label">Họ và Tên</label>
                 <input
                   type="text"
                   value={profile.name}
                   onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                  className="form-input"
                   placeholder="Nhập tên của bạn"
+                  className="form-input"
                 />
               </div>
 
@@ -352,9 +344,8 @@ export default function Settings() {
                 <input
                   type="email"
                   value={profile.email}
-                  onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                  className="form-input"
-                  placeholder="email@example.com"
+                  disabled
+                  className="form-input disabled"
                 />
               </div>
 
@@ -363,15 +354,13 @@ export default function Settings() {
                 <textarea
                   value={profile.bio}
                   onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+                  placeholder="Viết đôi dòng về bạn..."
                   className="form-textarea"
-                  rows="4"
-                  placeholder="Viết vài dòng về bạn..."
                 />
               </div>
             </div>
           )}
 
-          {/* Preferences Tab */}
           {activeTab === "preferences" && (
             <div className="settings-section">
               <h2 className="section-title">Tùy Chỉnh Giao Diện</h2>
@@ -463,7 +452,7 @@ export default function Settings() {
             </div>
           )}
 
-          {/* Privacy Tab */}
+          { }
           {activeTab === "privacy" && (
             <div className="settings-section">
               <h2 className="section-title">Quyền Riêng Tư & Bảo Mật</h2>
@@ -532,7 +521,7 @@ export default function Settings() {
             </div>
           )}
 
-          {/* Workout Tab */}
+          { }
           {activeTab === "workout" && (
             <div className="settings-section">
               <h2 className="section-title">Cài Đặt Tập Luyện</h2>
@@ -597,7 +586,7 @@ export default function Settings() {
             </div>
           )}
 
-          {/* Nutrition Tab */}
+          { }
           {activeTab === "nutrition" && (
             <div className="settings-section">
               <h2 className="section-title">Mục Tiêu Dinh Dưỡng</h2>
@@ -696,7 +685,7 @@ export default function Settings() {
             </div>
           )}
 
-          {/* Data Tab */}
+          { }
           {activeTab === "data" && (
             <div className="settings-section">
               <h2 className="section-title">Quản Lý Dữ Liệu</h2>

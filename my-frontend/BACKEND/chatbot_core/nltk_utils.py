@@ -2,7 +2,6 @@ import numpy as np
 import nltk
 from nltk.stem.porter import PorterStemmer
 
-# Tải dữ liệu cần thiết cho NLTK (chỉ chạy lần đầu)
 try:
     nltk.data.find('tokenizers/punkt')
 except LookupError:
@@ -30,10 +29,8 @@ def bag_of_words(tokenized_sentence, words):
     Tạo vector Bag of Words:
     Trả về mảng: [1, 0, 1, ...] với 1 là từ có xuất hiện trong words, 0 là không.
     """
-    # Stem từng từ trong câu
     sentence_words = [stem(word) for word in tokenized_sentence]
     
-    # Khởi tạo vector toàn số 0
     bag = np.zeros(len(words), dtype=np.float32)
     
     for idx, w in enumerate(words):

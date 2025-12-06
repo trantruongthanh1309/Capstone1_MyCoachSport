@@ -14,14 +14,12 @@ export default function Messenger({ currentUserId, startChatWithUser }) {
     const [searchResults, setSearchResults] = useState([]);
     const chatBodyRef = useRef(null);
 
-    // Expose startChatWithUser to parent if needed, or handle internal prop change
     useEffect(() => {
         if (startChatWithUser) {
             setActiveChat(startChatWithUser);
         }
     }, [startChatWithUser]);
 
-    // Load conversations
     const loadConversations = () => {
         if (currentUserId) {
             fetch(`${API_BASE}/api/social/conversations`, { credentials: 'include' })
@@ -34,22 +32,19 @@ export default function Messenger({ currentUserId, startChatWithUser }) {
 
     useEffect(() => {
         loadConversations();
-        const interval = setInterval(loadConversations, 10000); // Poll every 10s
+        const interval = setInterval(loadConversations, 10000);
         return () => clearInterval(interval);
     }, [currentUserId]);
 
-    // Load messages when chat opens
     useEffect(() => {
         if (activeChat) {
-            // If activeChat has an ID, use it. If it's a new user (from search), fetch by user ID
-            const targetId = activeChat.other_user?.id || activeChat.id; // Handle both conversation obj and user obj
+            const targetId = activeChat.other_user?.id || activeChat.id;
 
             fetch(`${API_BASE}/api/social/conversations/${targetId}`, { credentials: 'include' })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
                         setMessages(data.messages);
-                        // Ensure we have the full conversation object
                         setActiveChat(prev => ({
                             ...data.conversation,
                             other_user: data.conversation.other_user
@@ -57,9 +52,8 @@ export default function Messenger({ currentUserId, startChatWithUser }) {
                     }
                 });
         }
-    }, [activeChat?.other_user?.id, activeChat?.id]); // Watch for ID changes
+    }, [activeChat?.other_user?.id, activeChat?.id]);
 
-    // Auto scroll
     useEffect(() => {
         if (chatBodyRef.current) {
             chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
@@ -80,7 +74,7 @@ export default function Messenger({ currentUserId, startChatWithUser }) {
             if (data.success) {
                 setMessages([...messages, data.message]);
                 setMsgContent("");
-                loadConversations(); // Refresh list to show latest msg
+                loadConversations();
             }
         } catch (err) {
             console.error("Error sending message:", err);
@@ -106,7 +100,6 @@ export default function Messenger({ currentUserId, startChatWithUser }) {
     };
 
     const startNewChat = (user) => {
-        // Set active chat temporarily with user info, effect will fetch/create conversation
         setActiveChat({
             id: null, // Unknown conversation ID yet
             other_user: user
@@ -117,7 +110,7 @@ export default function Messenger({ currentUserId, startChatWithUser }) {
 
     return (
         <>
-            {/* Sidebar List */}
+            {}
             <div className="messenger-column">
                 <div className="messenger-header">
                     <span>💬 Tin nhắn</span>
@@ -130,7 +123,7 @@ export default function Messenger({ currentUserId, startChatWithUser }) {
                     </button>
                 </div>
 
-                {/* Search Box */}
+                {}
                 {showSearch && (
                     <div className="messenger-search-box">
                         <div className="search-header">
@@ -186,7 +179,7 @@ export default function Messenger({ currentUserId, startChatWithUser }) {
                 </div>
             </div>
 
-            {/* Chat Window Overlay */}
+            {}
             {activeChat && (
                 <div className="chat-window">
                     <div className="chat-header" onClick={() => setActiveChat(null)}>

@@ -20,7 +20,6 @@ export function ToastProvider({ children }) {
 
         setToasts(prev => [...prev, newToast]);
 
-        // Auto remove after duration
         setTimeout(() => {
             setToasts(prev => prev.filter(t => t.id !== id));
         }, duration);

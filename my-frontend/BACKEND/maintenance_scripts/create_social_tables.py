@@ -7,16 +7,13 @@ from db import db
 import sqlalchemy as sa
 
 with app.app_context():
-    # Lấy inspector để check tables
     inspector = sa.inspect(db.engine)
     existing_tables = inspector.get_table_names()
     
     print(f"📋 Tables hiện có: {existing_tables}")
     
-    # Tạo từng table riêng lẻ
     from models.social_models import Post, Comment, Like, Share, Conversation, Message
     
-    # Chỉ tạo tables chưa tồn tại
     tables_to_create = []
     
     if 'SocialPosts' not in existing_tables:

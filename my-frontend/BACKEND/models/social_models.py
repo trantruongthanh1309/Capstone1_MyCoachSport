@@ -2,20 +2,19 @@ from db import db
 from datetime import datetime
 
 class Post(db.Model):
-    __tablename__ = 'SocialPosts'  # ✅ Đổi tên để tránh conflict với Posts admin
+    __tablename__ = 'SocialPosts'
     
     Id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     User_id = db.Column(db.Integer, db.ForeignKey('Users.Id'), nullable=False)
-    Content = db.Column(db.UnicodeText, nullable=False)  # ✅ NVARCHAR(MAX) - Hỗ trợ tiếng Việt
-    Title = db.Column(db.Unicode(255))   # ✅ NVARCHAR(255) - Tiêu đề bài viết
-    Sport = db.Column(db.Unicode(50))    # ✅ NVARCHAR(50) - Môn thể thao
-    Topic = db.Column(db.Unicode(50))    # ✅ NVARCHAR(50) - Chủ đề
+    Content = db.Column(db.UnicodeText, nullable=False)
+    Title = db.Column(db.Unicode(255))
+    Sport = db.Column(db.Unicode(50))
+    Topic = db.Column(db.Unicode(50))
     ImageUrl = db.Column(db.UnicodeText) # ✅ NVARCHAR(MAX) - URL hoặc base64 của ảnh
-    Status = db.Column(db.Unicode(20), nullable=False, default='Pending')  # ✅ Pending/Approved/Rejected
+    Status = db.Column(db.Unicode(20), nullable=False, default='Pending')
     CreatedAt = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     UpdatedAt = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationships
     user = db.relationship('User', backref=db.backref('social_posts', lazy=True))
     comments = db.relationship('Comment', backref='post', lazy=True, cascade='all, delete-orphan')
     likes = db.relationship('Like', backref='post', lazy=True, cascade='all, delete-orphan')
@@ -39,17 +38,15 @@ class Post(db.Model):
             'is_liked': any(like.User_id == current_user_id for like in self.likes) if current_user_id else False
         }
 
-
 class Comment(db.Model):
     __tablename__ = 'Comments'
     
     Id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     Post_id = db.Column(db.Integer, db.ForeignKey('SocialPosts.Id'), nullable=False)
     User_id = db.Column(db.Integer, db.ForeignKey('Users.Id'), nullable=False)
-    Content = db.Column(db.UnicodeText, nullable=False)  # ✅ NVARCHAR(MAX)
+    Content = db.Column(db.UnicodeText, nullable=False)
     CreatedAt = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     
-    # Relationships
     user = db.relationship('User', backref=db.backref('comments', lazy=True))
     
     def to_dict(self):
@@ -63,7 +60,6 @@ class Comment(db.Model):
             'created_at': self.CreatedAt.isoformat() if self.CreatedAt else None
         }
 
-
 class Like(db.Model):
     __tablename__ = 'Likes'
     
@@ -72,11 +68,9 @@ class Like(db.Model):
     User_id = db.Column(db.Integer, db.ForeignKey('Users.Id'), nullable=False)
     CreatedAt = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     
-    # Unique constraint: một user chỉ like một post một lần
     __table_args__ = (db.UniqueConstraint('Post_id', 'User_id', name='unique_post_user_like'),)
     
     user = db.relationship('User', backref=db.backref('likes', lazy=True))
-
 
 class Share(db.Model):
     __tablename__ = 'Shares'
@@ -97,7 +91,6 @@ class Share(db.Model):
             'created_at': self.CreatedAt.isoformat() if self.CreatedAt else None
         }
 
-
 class Conversation(db.Model):
     __tablename__ = 'Conversations'
     
@@ -106,7 +99,6 @@ class Conversation(db.Model):
     User2_id = db.Column(db.Integer, db.ForeignKey('Users.Id'), nullable=False)
     LastMessageAt = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Relationships
     messages = db.relationship('Message', backref='conversation', lazy=True, cascade='all, delete-orphan')
     
     def to_dict(self, current_user_id):
@@ -128,18 +120,16 @@ class Conversation(db.Model):
             'last_message_at': self.LastMessageAt.isoformat() if self.LastMessageAt else None
         }
 
-
 class Message(db.Model):
     __tablename__ = 'Messages'
     
     Id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     Conversation_id = db.Column(db.Integer, db.ForeignKey('Conversations.Id'), nullable=False)
     Sender_id = db.Column(db.Integer, db.ForeignKey('Users.Id'), nullable=False)
-    Content = db.Column(db.UnicodeText, nullable=False)  # ✅ NVARCHAR(MAX)
+    Content = db.Column(db.UnicodeText, nullable=False)
     IsRead = db.Column(db.Boolean, default=False)
     CreatedAt = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     
-    # Relationships
     sender = db.relationship('User', backref=db.backref('sent_messages', lazy=True))
     
     def to_dict(self):

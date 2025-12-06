@@ -1,4 +1,4 @@
-/* LOGS COMPONENT - ĐƠN GIẢN & ĐẸP */
+
 
 .logs-wrapper {
   min-height: calc(100vh - 80px);
@@ -11,7 +11,6 @@
   margin: 0 auto;
 }
 
-/* ===== HEADER ===== */
 .logs-header {
   display: flex;
   justify-content: space-between;
@@ -51,7 +50,6 @@
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
 }
 
-/* ===== STATS ===== */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -96,7 +94,6 @@
   font-weight: 600;
 }
 
-/* ===== MODAL ===== */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -157,7 +154,6 @@
   transform: rotate(90deg);
 }
 
-/* ===== FORM ===== */
 .log-form {
   padding: 28px;
   display: flex;
@@ -260,7 +256,6 @@
   box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
 }
 
-/* ===== FILTERS ===== */
 .filter-tabs {
   display: flex;
   gap: 12px;
@@ -290,7 +285,6 @@
   box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2);
 }
 
-/* ===== LOGS GRID ===== */
 .logs-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -412,7 +406,6 @@
   transform: scale(1.1) rotate(15deg);
 }
 
-/* ===== EMPTY STATE ===== */
 .empty-state {
   background: white;
   border-radius: 24px;
@@ -458,7 +451,6 @@
   box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
 }
 
-/* ===== ANIMATIONS ===== */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -491,7 +483,6 @@
   50% { transform: translateY(-20px); }
 }
 
-/* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
   .logs-wrapper {
     padding: 20px 10px;

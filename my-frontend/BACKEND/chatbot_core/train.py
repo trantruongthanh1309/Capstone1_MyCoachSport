@@ -9,9 +9,8 @@ from model import NeuralNet
 
 import os
 
-# 1. Load dữ liệu
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-INTENTS_FILE = os.path.join(BASE_DIR, 'data', 'intents_mega.json')  # ✅ MEGA DATASET!
+INTENTS_FILE = os.path.join(BASE_DIR, 'data', 'intents_mega.json')
 FILE = os.path.join(BASE_DIR, 'data.pth')
 
 with open(INTENTS_FILE, 'r', encoding='utf-8') as f:
@@ -21,7 +20,6 @@ all_words = []
 tags = []
 xy = []
 
-# 2. Xử lý dữ liệu (Tokenize, Stem)
 for intent in intents['intents']:
     tag = intent['tag']
     tags.append(tag)
@@ -39,7 +37,6 @@ print(f"🔢 Vocabulary size: {len(all_words)} words")
 print(f"🏷️ Number of tags: {len(tags)}")
 print(f"📝 Training samples: {len(xy)}")
 
-# 3. Tạo Training Data
 X_train = []
 y_train = []
 
@@ -52,7 +49,6 @@ for (pattern_sentence, tag) in xy:
 X_train = np.array(X_train)
 y_train = np.array(y_train)
 
-# 4. Dataset & DataLoader
 class ChatDataset(Dataset):
     def __init__(self):
         self.n_samples = len(X_train)
@@ -65,12 +61,11 @@ class ChatDataset(Dataset):
     def __len__(self):
         return self.n_samples
 
-# Hyper-parameters (✅ TỐI ƯU TỐC ĐỘ)
-num_epochs = 150  # Đủ để đạt Loss 0.0000
-batch_size = 128  # Tăng tốc độ training gấp 4 lần
+num_epochs = 150
+batch_size = 128
 learning_rate = 0.001
 input_size = len(X_train[0])
-hidden_size = 512  # Tăng từ 128 lên 512 neurons - SIÊU THÔNG MINH!
+hidden_size = 512
 output_size = len(tags)
 
 dataset = ChatDataset()
@@ -80,22 +75,18 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 model = NeuralNet(input_size, hidden_size, output_size).to(device)
 
-# Loss and optimizer
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
-# 5. Training Loop
 print("🚀 Đang bắt đầu train model...")
 for epoch in range(num_epochs):
     for (words, labels) in train_loader:
         words = words.to(device)
         labels = labels.to(dtype=torch.long).to(device)
         
-        # Forward pass
         outputs = model(words)
         loss = criterion(outputs, labels)
         
-        # Backward and optimize
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
@@ -105,7 +96,6 @@ for epoch in range(num_epochs):
 
 print(f'✅ Training hoàn tất. Loss cuối cùng: {loss.item():.4f}')
 
-# 6. Lưu Model
 data = {
     "model_state": model.state_dict(),
     "input_size": input_size,
@@ -115,7 +105,6 @@ data = {
     "tags": tags
 }
 
-# FILE = "data.pth" (Đã define ở trên)
 torch.save(data, FILE)
 
 print(f'💾 Đã lưu model vào file {FILE}')

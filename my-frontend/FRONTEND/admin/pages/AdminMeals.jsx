@@ -1,4 +1,3 @@
-// admin/pages/AdminMeals.jsx
 import React, { useState, useEffect } from 'react';
 import './AdminMeals.css';
 
@@ -137,7 +136,6 @@ export default function AdminMeals() {
 
   const saveMeal = async () => {
     try {
-      // Validate
       if (!selectedMeal.name || !selectedMeal.kcal) {
         alert('Vui lòng điền đầy đủ thông tin!');
         return;
@@ -203,7 +201,7 @@ export default function AdminMeals() {
         </button>
       </div>
 
-      {/* Stats Cards */}
+      {}
       {stats && (
         <div className="meals-stats">
           <div className="stat-card">
@@ -251,7 +249,7 @@ export default function AdminMeals() {
         </div>
       )}
 
-      {/* Filters */}
+      {}
       <div className="filters-bar">
         <div className="search-box">
           <input
@@ -287,7 +285,7 @@ export default function AdminMeals() {
         </button>
       </div>
 
-      {/* Meals Grid */}
+      {}
       <div className="meals-grid">
         {meals.map(meal => (
           <div key={meal.id} className="meal-card">
@@ -349,7 +347,7 @@ export default function AdminMeals() {
         </div>
       )}
 
-      {/* Pagination */}
+      {}
       {meals.length > 0 && (
         <div className="pagination">
           <button
@@ -368,7 +366,7 @@ export default function AdminMeals() {
         </div>
       )}
 
-      {/* Edit/Add Modal */}
+      {}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -468,7 +466,7 @@ export default function AdminMeals() {
         </div>
       )}
 
-      {/* Delete Modal */}
+      {}
       {showDeleteModal && (
         <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
           <div className="modal-content modal-small" onClick={(e) => e.stopPropagation()}>

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Migration script: Chuyển cột Content của Comments và Messages sang NVARCHAR
 """
@@ -19,7 +18,6 @@ try:
     print("✅ Kết nối thành công!")
     print("\n🔄 Bắt đầu migration VARCHAR → NVARCHAR cho Comments và Messages...")
     
-    # Danh sách các cột cần chuyển đổi
     migrations = [
         ("Comments", "Content", "NVARCHAR(MAX)"),
         ("Messages", "Content", "NVARCHAR(MAX)")

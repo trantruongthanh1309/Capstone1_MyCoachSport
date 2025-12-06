@@ -6,5 +6,4 @@ from flask import session, jsonify
 
 def require_admin():
     """Middleware đơn giản - TẠM THỜI TẮT để test"""
-    # TẠM THỜI CHO PHÉP TẤT CẢ REQUEST ĐỂ TEST
     return None

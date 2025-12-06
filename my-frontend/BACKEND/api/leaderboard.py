@@ -12,8 +12,6 @@ def get_leaderboard():
     Returns top users by points, workouts, and activity
     """
     try:
-        # Get top users by total points/activity
-        # Join Users table with Leaderboard based on User_id
         query = text("""
             SELECT TOP 50
                 u.Id as UserID,
@@ -43,10 +41,8 @@ def get_leaderboard():
         
         leaderboard_list = []
         for idx, entry in enumerate(leaderboard_data, 1):
-            # Determine badge based on rank
             badge = "🥇" if idx == 1 else "🥈" if idx == 2 else "🥉" if idx == 3 else ""
             
-            # Determine level based on points
             points = entry[5]
             if points >= 1000:
                 level = "Legend"

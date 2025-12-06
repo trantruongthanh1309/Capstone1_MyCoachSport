@@ -1,4 +1,4 @@
-/* ==================== NÚT HOÀN THÀNH MỚI ==================== */
+
 
 .btn-complete {
     width: 100%;
@@ -39,8 +39,6 @@
     cursor: not-allowed;
     opacity: 0.7;
 }
-
-/* ==================== CÁC NÚT PHỤ GỌN ==================== */
 
 .item-actions-compact {
     display: flex;

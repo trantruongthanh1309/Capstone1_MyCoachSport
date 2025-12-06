@@ -11,7 +11,7 @@ class UserPlan(db.Model):
     Type = db.Column(db.String(20), nullable=False) # meal, workout
     MealId = db.Column(db.Integer, db.ForeignKey('Meals.Id'), nullable=True)
     WorkoutId = db.Column(db.Integer, db.ForeignKey('Workouts.Id'), nullable=True)
-    ProfileHash = db.Column(db.String(32), nullable=True)  # Hash của Sport+Goal+Allergies để detect thay đổi
+    ProfileHash = db.Column(db.String(32), nullable=True)
     IsCompleted = db.Column(db.Boolean, default=False)
     CreatedAt = db.Column(db.DateTime, default=datetime.utcnow)
 

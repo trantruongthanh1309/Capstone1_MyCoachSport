@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from db import db
-from models.social_models import Post  # ✅ Dùng SocialPosts thay vì Posts cũ
+from models.social_models import Post
 from models.user_model import User
 from .admin_middleware import require_admin
 from sqlalchemy import func
@@ -37,11 +37,11 @@ def get_posts():
             'user_id': p.Post.User_id,
             'user_name': p.User.Name,
             'content': p.Post.Content,
-            'image': p.Post.ImageUrl,  # ✅ ImageUrl thay vì Image
+            'image': p.Post.ImageUrl,
             'status': p.Post.Status,
-            'likes': len(p.Post.likes),  # ✅ Đếm relationship
-            'comments': len(p.Post.comments),  # ✅ Đếm relationship
-            'rejection_reason': None,  # SocialPosts không có field này
+            'likes': len(p.Post.likes),
+            'comments': len(p.Post.comments),
+            'rejection_reason': None,
             'created_at': p.Post.CreatedAt.isoformat() if p.Post.CreatedAt else None
         } for p in pagination.items]
         
@@ -66,7 +66,7 @@ def approve_post(post_id):
     
     try:
         post = Post.query.get_or_404(post_id)
-        post.Status = 'Approved'  # ✅ Capital A
+        post.Status = 'Approved'
         db.session.commit()
         
         return jsonify({'success': True, 'message': 'Post approved'}), 200
@@ -85,8 +85,7 @@ def reject_post(post_id):
         data = request.get_json()
         reason = data.get('reason', '')
         
-        post.Status = 'Rejected'  # ✅ Capital R
-        # SocialPosts không có RejectionReason field
+        post.Status = 'Rejected'
         
         db.session.commit()
         

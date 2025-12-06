@@ -2,10 +2,6 @@ import { useState } from "react";
 import { useToast } from "../contexts/ToastContext";
 import "../pages/PlannerEnhanced.css";
 
-/**
- * SwapButton Component - Nút đổi món ăn/bài tập THÔNG MINH
- * Sử dụng AI scoring dựa trên profile user, sport tags, meal type
- */
 export default function SwapButton({ item, type, onSwapSuccess, userId }) {
     const [swapping, setSwapping] = useState(false);
     const toast = useToast();
@@ -14,7 +10,6 @@ export default function SwapButton({ item, type, onSwapSuccess, userId }) {
         setSwapping(true);
 
         try {
-            // Bước 1: Gọi API smart swap để lấy đề xuất thông minh
             let suggestEndpoint = "";
             let payload = {};
 
@@ -53,10 +48,8 @@ export default function SwapButton({ item, type, onSwapSuccess, userId }) {
                 return;
             }
 
-            // Chọn món có score cao nhất (đã được sort từ backend)
             const selectedOption = suggestions[0];
 
-            // Bước 2: Gọi API swap
             const swapEndpoint = "http://localhost:5000/api/ai/swap";
             const swapPayload = {
                 user_id: userId,
@@ -74,7 +67,6 @@ export default function SwapButton({ item, type, onSwapSuccess, userId }) {
             });
 
             if (swapRes.ok) {
-                // Thông báo thành công với thông tin món mới
                 if (type === "meal") {
                     const kcalDiff = selectedOption.kcal_diff || Math.abs(selectedOption.Kcal - item.data.Kcal);
                     const message = `Đã đổi thành công!\n\n` +
@@ -92,7 +84,6 @@ export default function SwapButton({ item, type, onSwapSuccess, userId }) {
                     toast.success(message, 5000);
                 }
 
-                // Reload lịch
                 if (onSwapSuccess) onSwapSuccess();
             } else {
                 const errorData = await swapRes.json();

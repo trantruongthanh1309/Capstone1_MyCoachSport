@@ -12,7 +12,6 @@ export default function Navbar() {
   });
   const navigate = useNavigate();
 
-  // Fetch user data khi component mount
   useEffect(() => {
     fetch('/api/auth/me', {
       credentials: 'include'
@@ -84,10 +83,10 @@ export default function Navbar() {
           </nav>
 
           <div className="user-profile">
-            {/* Thông báo */}
+            {}
             <NotificationBell />
 
-            {/* Hồ sơ người dùng */}
+            {}
             <div className="profile-wrapper" onClick={toggleProfileDropdown}>
               <img
                 src={userData.avatar}
@@ -97,7 +96,7 @@ export default function Navbar() {
               <div className="status-indicator"></div>
             </div>
 
-            {/* Menu dropdown hồ sơ */}
+            {}
             {showProfileDropdown && (
               <div className="profile-dropdown">
                 <div className="profile-header">

@@ -1,4 +1,3 @@
-# models/leaderboard_models.py
 from db import db
 from datetime import datetime
 
@@ -11,7 +10,7 @@ class WorkoutLog(db.Model):
     Sport = db.Column(db.Unicode(50))
     Duration_minutes = db.Column(db.Integer)
     Calories_burned = db.Column(db.Integer)
-    Difficulty = db.Column(db.Unicode(20))  # Easy, Medium, Hard, Expert
+    Difficulty = db.Column(db.Unicode(20))
     Completed_at = db.Column(db.DateTime, default=datetime.utcnow)
     Points_earned = db.Column(db.Integer, default=0)
     
@@ -27,7 +26,6 @@ class WorkoutLog(db.Model):
             'completed_at': self.Completed_at.isoformat() if self.Completed_at else None,
             'points_earned': self.Points_earned
         }
-
 
 class UserStats(db.Model):
     __tablename__ = 'UserStats'
@@ -57,7 +55,6 @@ class UserStats(db.Model):
             'rank': self.Rank
         }
 
-
 class Achievement(db.Model):
     __tablename__ = 'Achievements'
     
@@ -80,7 +77,6 @@ class Achievement(db.Model):
             'requirement_type': self.Requirement_type,
             'requirement_value': self.Requirement_value
         }
-
 
 class UserAchievement(db.Model):
     __tablename__ = 'UserAchievements'

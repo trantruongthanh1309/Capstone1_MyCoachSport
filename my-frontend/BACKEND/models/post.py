@@ -1,4 +1,3 @@
-# models/post.py
 from db import db
 from datetime import datetime
 
@@ -9,7 +8,7 @@ class Post(db.Model):
     User_id = db.Column(db.Integer, db.ForeignKey('Users.Id'), nullable=False)
     Content = db.Column(db.Text, nullable=False)
     Image = db.Column(db.String(500), nullable=True)
-    Status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
+    Status = db.Column(db.String(20), default='pending')
     ApprovedBy = db.Column(db.Integer, db.ForeignKey('Users.Id'), nullable=True)
     ApprovedAt = db.Column(db.DateTime, nullable=True)
     RejectionReason = db.Column(db.Text, nullable=True)
@@ -18,7 +17,6 @@ class Post(db.Model):
     Likes = db.Column(db.Integer, default=0)
     Comments = db.Column(db.Integer, default=0)
     
-    # Relationships
     user = db.relationship('User', foreign_keys=[User_id], backref='posts')
     approver = db.relationship('User', foreign_keys=[ApprovedBy])
 
@@ -39,7 +37,6 @@ class Post(db.Model):
             'comments': self.Comments
         }
 
-
 class AdminLog(db.Model):
     __tablename__ = 'AdminLogs'
 
@@ -51,7 +48,6 @@ class AdminLog(db.Model):
     Details = db.Column(db.Text, nullable=True)
     Timestamp = db.Column(db.DateTime, default=datetime.now, nullable=False)
     
-    # Relationship
     admin = db.relationship('User', backref='admin_logs')
 
     def to_dict(self):

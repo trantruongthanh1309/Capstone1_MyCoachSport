@@ -1,4 +1,3 @@
-# api/ai_coach.py
 from flask import Blueprint, request, jsonify, session
 from datetime import datetime
 from services.recommendation_service import build_daily_schedule
@@ -19,9 +18,7 @@ def get_schedule():
     try:
         schedule = build_daily_schedule(user_id, date)
         
-        # Thêm schedule_id và is_completed cho mỗi item từ UserPlans
         for item in schedule.get('schedule', []):
-            # Lấy từ UserPlans table
             query = text("""
                 SELECT TOP 1 Id, IsCompleted 
                 FROM UserPlans 
@@ -31,7 +28,7 @@ def get_schedule():
                 AND (MealId = :meal_id OR WorkoutId = :workout_id)
             """)
             
-            item_type = item.get('type')  # 'meal' hoặc 'workout'
+            item_type = item.get('type')
             item_id = item.get('data', {}).get('Id')
             
             result = db.session.execute(query, {
@@ -54,7 +51,6 @@ def get_schedule():
         print("Lỗi AI:", str(e))
         return jsonify({"error": "Lỗi hệ thống"}), 500
 
-
 @ai_coach_bp.route('/feedback', methods=['POST'])
 def submit_feedback():
     try:
@@ -62,7 +58,7 @@ def submit_feedback():
         user_id = data.get('user_id')
         meal_id = data.get('meal_id')
         workout_id = data.get('workout_id')
-        rating = data.get('rating')  # 1-5
+        rating = data.get('rating')
         feedback_type = data.get('feedback_type', 'liked')
             
         if not user_id or not rating:
@@ -89,7 +85,6 @@ def submit_feedback():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
-
 @ai_coach_bp.route('/swap', methods=['POST'])
 def swap_schedule_item():
     """
@@ -106,14 +101,12 @@ def swap_schedule_item():
         if not all([user_id, date, old_item_id, new_item_id, item_type]):
             return jsonify({"success": False, "error": "Missing required fields"}), 400
             
-        # Chuyển đổi date string sang object nếu cần
         try:
             date_obj = datetime.strptime(date, "%Y-%m-%d").date()
         except:
             return jsonify({"success": False, "error": "Invalid date format"}), 400
         
         if item_type == "meal":
-            # Tìm plan cũ trong UserPlans
             plan = UserPlan.query.filter_by(
                 UserId=user_id, 
                 Date=date_obj,
@@ -123,11 +116,9 @@ def swap_schedule_item():
             if not plan:
                 return jsonify({"success": False, "error": "Old meal not found in schedule"}), 404
             
-            # Cập nhật sang món mới
             plan.MealId = new_item_id
             db.session.commit()
             
-            # Lấy thông tin món mới để trả về (optional)
             new_meal = Meal.query.get(new_item_id)
             return jsonify({
                 "success": True, 
@@ -144,7 +135,6 @@ def swap_schedule_item():
             })
             
         elif item_type == "workout":
-            # Tìm plan cũ trong UserPlans
             plan = UserPlan.query.filter_by(
                 UserId=user_id, 
                 Date=date_obj,
@@ -154,11 +144,9 @@ def swap_schedule_item():
             if not plan:
                 return jsonify({"success": False, "error": "Old workout not found in schedule"}), 404
             
-            # Cập nhật sang bài tập mới
             plan.WorkoutId = new_item_id
             db.session.commit()
             
-            # Lấy thông tin bài tập mới để trả về
             new_workout = Workout.query.get(new_item_id)
             return jsonify({
                 "success": True, 
@@ -179,7 +167,6 @@ def swap_schedule_item():
         print(f"Error swapping item: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
-
 @ai_coach_bp.route('/regenerate', methods=['POST'])
 def regenerate_schedule():
     """
@@ -196,13 +183,11 @@ def regenerate_schedule():
         if not date:
             return jsonify({"success": False, "error": "Missing date"}), 400
         
-        # Chuyển đổi date string sang object
         try:
             date_obj = datetime.strptime(date, "%Y-%m-%d").date()
         except:
             return jsonify({"success": False, "error": "Invalid date format"}), 400
         
-        # Xóa lịch cũ
         deleted_count = UserPlan.query.filter_by(
             UserId=user_id,
             Date=date_obj
@@ -212,7 +197,6 @@ def regenerate_schedule():
         
         print(f"🔄 [REGENERATE] Deleted {deleted_count} old schedule items for user {user_id} on {date}")
         
-        # Tạo lịch mới
         schedule = build_daily_schedule(user_id, date)
         
         return jsonify({

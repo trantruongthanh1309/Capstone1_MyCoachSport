@@ -27,7 +27,6 @@ def get_workouts():
         if difficulty:
             query = query.filter(Workout.Difficulty == difficulty)
             
-        # Order by ID desc
         query = query.order_by(Workout.Id.desc())
         
         pagination = query.paginate(page=page, per_page=per_page, error_out=False)

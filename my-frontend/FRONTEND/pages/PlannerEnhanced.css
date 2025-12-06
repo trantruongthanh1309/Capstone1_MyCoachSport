@@ -1,36 +1,26 @@
-/* Planner Enhancement - Mở rộng bảng và thêm nút SWAP */
-/* File này KHÔNG thay thế file cũ, chỉ bổ sung thêm */
 
-/* ==================== MỞ RỘNG BẢNG ==================== */
 
-/* Tăng max-width của section để bảng rộng hơn */
 .section {
     max-width: 1800px !important;
-    /* Tăng từ 1600px lên 1800px */
+    
 }
 
-/* Tăng min-width của các ô để không bị lấp */
 .cell-content {
     min-width: 220px !important;
-    /* Tăng từ 200px lên 220px */
+    
 }
 
-/* Đảm bảo cột cuối cùng (Chủ nhật) hiển thị đầy đủ */
 .planner-table th:last-child,
 .planner-table td:last-child {
     min-width: 220px !important;
     padding-right: 20px !important;
 }
 
-/* Thêm padding cho table container để tránh bị cắt */
 .table-container {
     padding-right: 10px !important;
     padding-bottom: 10px !important;
 }
 
-/* ==================== NÚT SWAP MỚI ==================== */
-
-/* Thêm nút swap vào item-actions */
 .swap-btn {
     width: 38px;
     height: 38px;
@@ -77,7 +67,6 @@
     transform: scale(1.05) rotate(180deg);
 }
 
-/* Animation cho icon swap */
 @keyframes swapRotate {
     0% {
         transform: rotate(0deg);
@@ -92,8 +81,6 @@
     animation: swapRotate 0.6s ease-in-out;
     pointer-events: none;
 }
-
-/* ==================== MODAL SWAP ==================== */
 
 .swap-modal-overlay {
     position: fixed;
@@ -376,8 +363,6 @@
     font-weight: 600;
     color: #92400e;
 }
-
-/* ==================== RESPONSIVE ==================== */
 
 @media (max-width: 1400px) {
     .section {

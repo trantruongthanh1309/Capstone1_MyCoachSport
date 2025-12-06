@@ -1,23 +1,9 @@
-/* AdminLayout.css - FIXED VERSION */
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  overflow-x: hidden;
-}
-
 .admin-layout {
   display: flex;
   min-height: 100vh;
   width: 100%;
 }
 
-/* Sidebar */
 .admin-sidebar {
   width: 280px;
   background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
@@ -53,14 +39,14 @@ body {
 
 .logo-icon {
   font-size: 2rem;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
   width: 45px;
   height: 45px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
 }
 
 .logo-text {
@@ -89,7 +75,6 @@ body {
   transform: scale(1.1);
 }
 
-/* Sidebar Menu */
 .sidebar-menu {
   flex: 1;
   padding: 20px 0;
@@ -145,7 +130,6 @@ body {
   padding: 16px 10px;
 }
 
-/* Sidebar Footer */
 .sidebar-footer {
   padding: 20px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -183,13 +167,12 @@ body {
   display: none;
 }
 
-/* Main Content - FIXED */
 .admin-main {
   flex: 1;
   margin-left: 280px;
   transition: all 0.3s ease;
   min-height: 100vh;
-  /* Ghi đè style global của thẻ <main> trong index.css */
+
   max-width: 100%;
   margin-top: 0;
   padding: 0;
@@ -200,13 +183,11 @@ body {
   margin-left: 80px;
 }
 
-/* Ensure child components take full width */
 .admin-main>* {
   width: 100%;
   min-height: 100vh;
 }
 
-/* Coming Soon Placeholder */
 .coming-soon {
   display: flex;
   align-items: center;
@@ -232,7 +213,6 @@ body {
   }
 }
 
-/* Scrollbar Styling */
 .sidebar-menu::-webkit-scrollbar {
   width: 6px;
 }
@@ -250,7 +230,6 @@ body {
   background: rgba(255, 255, 255, 0.3);
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .admin-sidebar {
     width: 80px;

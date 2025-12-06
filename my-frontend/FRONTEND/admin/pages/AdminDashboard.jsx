@@ -1,4 +1,3 @@
-// AdminDashboard.jsx
 import React, { useState, useEffect } from 'react';
 import './AdminDashboard.css';
 import {
@@ -41,7 +40,6 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
       
-      // Fetch stats
       const statsRes = await fetch('/api/admin/dashboard/stats', {
         credentials: 'include'
       });
@@ -51,7 +49,6 @@ export default function AdminDashboard() {
         setStats(statsData.data);
       }
       
-      // Fetch user growth
       const growthRes = await fetch(`/api/admin/dashboard/user-growth?days=${timeRange}`, {
         credentials: 'include'
       });
@@ -79,7 +76,6 @@ export default function AdminDashboard() {
     );
   }
 
-  // Chart data
   const userGrowthChartData = {
     labels: userGrowth.map(item => {
       const date = new Date(item.date);
@@ -155,7 +151,7 @@ export default function AdminDashboard() {
         <p className="dashboard-subtitle">Tổng quan hệ thống MySportCoach</p>
       </div>
 
-      {/* Stats Cards */}
+      {}
       <div className="stats-grid">
         <div className="stat-card gradient-blue">
           <div className="stat-icon">👥</div>
@@ -216,9 +212,9 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Charts Section */}
+      {}
       <div className="charts-section">
-        {/* User Growth Chart */}
+        {}
         <div className="chart-card full-width">
           <div className="chart-header">
             <h2>📈 Tăng Trưởng Người Dùng</h2>
@@ -248,7 +244,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Sport Distribution */}
+        {}
         <div className="chart-card">
           <div className="chart-header">
             <h2>🏃 Phân Bố Môn Thể Thao</h2>
@@ -264,7 +260,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Goal Distribution */}
+        {}
         <div className="chart-card">
           <div className="chart-header">
             <h2>🎯 Mục Tiêu Người Dùng</h2>
@@ -275,7 +271,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Quick Actions */}
+      {}
       <div className="quick-actions">
         <h2>⚡ Thao Tác Nhanh</h2>
         <div className="action-buttons">

@@ -1,8 +1,8 @@
 .admin-workouts {
   padding: 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #f8fafc;
   min-height: 100vh;
-  color: white;
+  color: #1e293b;
 }
 
 .workouts-header {
@@ -14,25 +14,28 @@
 
 .header-icon {
   font-size: 3rem;
+  color: #3b82f6;
 }
 
 .workouts-header h1 {
   font-size: 2.5rem;
   margin: 0;
+  color: #1e293b;
 }
 
 .workouts-stats {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
+  background: white;
   padding: 1.5rem;
   border-radius: 15px;
   margin-bottom: 2rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .workouts-stats h2 {
   margin: 0;
   font-size: 1.5rem;
+  color: #1e293b;
 }
 
 .workouts-controls {
@@ -45,11 +48,10 @@
 .search-input,
 .filter-select {
   padding: 0.8rem 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  color: white;
+  background: white;
+  color: #1e293b;
   font-size: 1rem;
   outline: none;
   transition: all 0.3s;
@@ -64,24 +66,20 @@
   min-width: 180px;
 }
 
-.search-input::placeholder {
-  color: rgba(255, 255, 255, 0.6);
-}
-
 .search-input:focus,
 .filter-select:focus {
-  border-color: rgba(255, 255, 255, 0.6);
-  background: rgba(255, 255, 255, 0.15);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .filter-select option {
-  background: #667eea;
-  color: white;
+  background: white;
+  color: #1e293b;
 }
 
 .btn-add {
   padding: 0.8rem 1.5rem;
-  background: #48bb78;
+  background: #10b981;
   color: white;
   border: none;
   border-radius: 10px;
@@ -95,17 +93,17 @@
 }
 
 .btn-add:hover {
-  background: #38a169;
+  background: #059669;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
 }
 
 .workouts-table-container {
-  background: rgba(255, 255, 255, 0.95);
+  background: white;
   border-radius: 15px;
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
   margin-bottom: 2rem;
+  border: 1px solid #e2e8f0;
 }
 
 .workouts-table {
@@ -114,8 +112,9 @@
 }
 
 .workouts-table thead {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: #f1f5f9;
+  color: #475569;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .workouts-table th {
@@ -128,22 +127,22 @@
 }
 
 .workouts-table tbody tr {
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #f1f5f9;
   transition: background 0.2s;
 }
 
 .workouts-table tbody tr:hover {
-  background: #f7fafc;
+  background: #f8fafc;
 }
 
 .workouts-table td {
   padding: 1rem;
-  color: #2d3748;
+  color: #334155;
 }
 
 .workout-name {
   font-weight: 600;
-  color: #667eea;
+  color: #3b82f6;
 }
 
 .badge {
@@ -155,18 +154,18 @@
 }
 
 .badge-easy {
-  background: #c6f6d5;
-  color: #22543d;
+  background: #dcfce7;
+  color: #15803d;
 }
 
 .badge-medium {
-  background: #feebc8;
-  color: #7c2d12;
+  background: #fef3c7;
+  color: #d97706;
 }
 
 .badge-hard {
-  background: #fed7d7;
-  color: #742a2a;
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 .actions {
@@ -176,29 +175,35 @@
 
 .btn-edit,
 .btn-delete {
-  padding: 0.5rem 1rem;
+  padding: 0.5rem;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   transition: all 0.3s;
   background: transparent;
 }
 
+.btn-edit {
+  color: #3b82f6;
+}
+
 .btn-edit:hover {
-  background: rgba(102, 126, 234, 0.1);
-  transform: scale(1.1);
+  background: #eff6ff;
+}
+
+.btn-delete {
+  color: #ef4444;
 }
 
 .btn-delete:hover {
-  background: rgba(245, 101, 101, 0.1);
-  transform: scale(1.1);
+  background: #fee2e2;
 }
 
 .no-data {
   text-align: center;
   padding: 3rem !important;
-  color: #a0aec0;
+  color: #64748b;
   font-style: italic;
 }
 
@@ -206,6 +211,7 @@
   text-align: center;
   padding: 3rem;
   font-size: 1.5rem;
+  color: #64748b;
 }
 
 .pagination {
@@ -217,19 +223,19 @@
 
 .btn-page {
   padding: 0.8rem 1.5rem;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: white;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
-  color: white;
+  color: #64748b;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
 }
 
 .btn-page:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.3);
-  transform: translateY(-2px);
+  background: #f1f5f9;
+  color: #3b82f6;
+  border-color: #3b82f6;
 }
 
 .btn-page:disabled {
@@ -240,22 +246,20 @@
 .page-info {
   font-weight: 600;
   font-size: 1.1rem;
+  color: #1e293b;
 }
 
-/* Modal */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(5px);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  animation: fadeIn 0.3s;
 }
 
 .modal-content {
@@ -265,28 +269,7 @@
   max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  animation: slideUp 0.3s;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(30px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
 .modal-header {
@@ -294,29 +277,25 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem 2rem;
-  border-bottom: 1px solid #e2e8f0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  border-bottom: 2px solid #f0f0f0;
+  background: white;
   border-radius: 20px 20px 0 0;
 }
 
 .modal-header h2 {
   margin: 0;
   font-size: 1.5rem;
+  color: #1e293b;
 }
 
 .btn-close {
-  background: none;
-  border: none;
-  font-size: 2rem;
-  color: white;
+  color: #64748b;
   cursor: pointer;
-  transition: transform 0.2s;
   line-height: 1;
 }
 
 .btn-close:hover {
-  transform: rotate(90deg);
+  color: #1e293b;
 }
 
 .workout-form {
@@ -337,7 +316,7 @@
 .form-group label {
   display: block;
   margin-bottom: 0.5rem;
-  color: #2d3748;
+  color: #333;
   font-weight: 600;
   font-size: 0.9rem;
 }
@@ -347,10 +326,9 @@
 .form-group textarea {
   width: 100%;
   padding: 0.8rem;
-  border: 2px solid #e2e8f0;
+  border: 1px solid #cbd5e1;
   border-radius: 10px;
   font-size: 1rem;
-  transition: border-color 0.3s;
   box-sizing: border-box;
 }
 
@@ -358,7 +336,8 @@
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .form-group textarea {
@@ -372,40 +351,27 @@
   justify-content: flex-end;
   margin-top: 2rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #e2e8f0;
-}
-
-.btn-cancel,
-.btn-submit {
-  padding: 0.8rem 2rem;
-  border: none;
-  border-radius: 10px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
+  border-top: 1px solid #f0f0f0;
 }
 
 .btn-cancel {
-  background: #e2e8f0;
-  color: #4a5568;
+  background: #f1f5f9;
+  color: #333;
 }
 
 .btn-cancel:hover {
-  background: #cbd5e0;
+  background: #e2e8f0;
 }
 
 .btn-submit {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #3b82f6;
   color: white;
 }
 
 .btn-submit:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  background: #2563eb;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .admin-workouts {
     padding: 1rem;

@@ -5,8 +5,6 @@ import os
 from datetime import datetime
 from sqlalchemy import func
 
-# Import models để truy vấn dữ liệu thật
-# Lưu ý: Các import này hoạt động khi chạy từ app.py (root context)
 try:
     from models.user_schedule import UserSchedule
     from models.workout import Workout
@@ -14,20 +12,18 @@ try:
     from models.log import Log
     from models.user_model import User
 except ImportError:
-    # Fallback cho trường hợp chạy test riêng lẻ
     pass
 
 from .model import NeuralNet
 from .nltk_utils import bag_of_words, tokenize
+from chatbot_core.weather_handler import handle_weather_query
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# Đường dẫn file
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-INTENTS_FILE = os.path.join(BASE_DIR, 'data', 'intents_mega.json')  # ✅ MEGA DATASET!
+INTENTS_FILE = os.path.join(BASE_DIR, 'data', 'intents_mega.json')
 DATA_FILE = os.path.join(BASE_DIR, 'data.pth')
 
-# Load dữ liệu model đã train
 with open(INTENTS_FILE, 'r', encoding='utf-8') as f:
     intents = json.load(f)
 
@@ -48,85 +44,49 @@ else:
     print("⚠️ Chưa tìm thấy file data.pth. Hãy chạy train.py trước!")
     model = None
 
-# --- CÁC HÀM XỬ LÝ THÔNG MINH (DYNAMIC HANDLERS) ---
-
 def handle_schedule_query(user_context):
-    """Trả lời về lịch tập (Hỗ trợ hôm nay, ngày mai)"""
+    """Trả lời về lịch tập/ăn (KHÔNG bao gồm lịch bận)"""
     if not user_context or not user_context.get('id'):
         return "Bạn cần đăng nhập để mình xem lịch giúp nhé! 🔒"
     
-    # Mặc định là hôm nay
     target_date = datetime.now().date()
-    date_str = "hôm nay"
     
-    # Lấy DayOfWeek (mon, tue, wed, thu, fri, sat, sun)
-    # FIX: Dữ liệu DB đang bị lệch 1 ngày (Mon trên UI = sun trong DB)
-    # Python weekday: 0=Mon, 1=Tue, ..., 6=Sun
-    # Mapping cần thiết: 0->sun, 1->mon, 2->tue...
-    
-    day_names = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
-    
-    # Logic cũ: day_of_week = day_names[target_date.weekday()] -> Sai với DB hiện tại
-    
-    # Logic mới: Shift lùi 1 ngày
-    shifted_index = (target_date.weekday() - 1) % 7
-    day_of_week = day_names[shifted_index]
-    
-    # DEBUG: Log để kiểm tra
-    print(f"[DEBUG] Target date: {target_date}, Weekday: {target_date.weekday()}, Shifted Index: {shifted_index}, DayOfWeek (DB): {day_of_week}")
-    
-    # Query DB lấy lịch:
-    # 1. Lịch theo ngày cụ thể (Date)
-    daily_schedules = UserSchedule.query.filter_by(
+    schedules = UserSchedule.query.filter_by(
         User_id=user_context['id'], 
         Date=target_date
+    ).filter(
+        (UserSchedule.WorkoutId.isnot(None)) | (UserSchedule.MealId.isnot(None))
     ).all()
     
-    # 2. Lịch tuần lặp lại (DayOfWeek) - cho lịch bận
-    weekly_schedules = UserSchedule.query.filter_by(
-        User_id=user_context['id'],
-        DayOfWeek=day_of_week
-    ).filter(UserSchedule.Date.is_(None)).all()  # Chỉ lấy lịch tuần (Date = NULL)
+    if not schedules:
+        return f"Hôm nay {user_context['name']} chưa có lịch tập hoặc ăn nào cả. Bạn vào mục Planner để AI tạo lịch ngay nhé! 📅"
     
-    print(f"[DEBUG] Daily schedules: {len(daily_schedules)}, Weekly schedules: {len(weekly_schedules)}")
-    for s in weekly_schedules:
-        print(f"[DEBUG] Weekly: DayOfWeek={s.DayOfWeek}, Period={s.Period}, Note={s.Note}, WorkoutId={s.WorkoutId}, MealId={s.MealId}")
+    msg = f"📅 Lịch hôm nay của {user_context['name']}:\n\n"
     
-    # Merge cả 2 loại lịch
-    all_schedules = daily_schedules + weekly_schedules
+    workouts = []
+    meals = []
     
-    if not all_schedules:
-        return f"Hôm nay {user_context['name']} chưa có lịch nào cả. Bạn vào mục Planner để tạo lịch ngay nhé! 📅"
-    
-    msg = f"📅 Lịch {date_str} của {user_context['name']}:\n\n"
-    
-    # Tách lịch tập/ăn và lịch bận
-    workouts_meals = []
-    busy_slots = []
-    
-    for s in all_schedules:
+    for s in schedules:
+        time_str = s.Time.strftime('%H:%M') if s.Time else s.Period
+        
         if s.WorkoutId:
             w = Workout.query.get(s.WorkoutId)
             if w:
-                workouts_meals.append(f"💪 {s.Period}: Tập {w.Name}")
+                workouts.append(f"💪 {time_str}: Tập {w.Name}")
         elif s.MealId:
             m = Meal.query.get(s.MealId)
             if m:
-                workouts_meals.append(f"🥗 {s.Period}: Ăn {m.Name}")
-        elif s.Note:  # Lịch bận (có Note)
-            busy_slots.append(f"🚫 {s.Period}: {s.Note}")
+                meals.append(f"🥗 {time_str}: Ăn {m.Name} ({m.Calories} kcal)")
     
-    # Hiển thị lịch tập/ăn
-    if workouts_meals:
-        msg += "✅ LỊCH TẬP & ĂN:\n"
-        msg += "\n".join(workouts_meals) + "\n\n"
+    if workouts:
+        msg += "✅ LỊCH TẬP:\n"
+        msg += "\n".join(workouts) + "\n\n"
     
-    # Hiển thị lịch bận
-    if busy_slots:
-        msg += "⏰ LỊCH BẬN:\n"
-        msg += "\n".join(busy_slots) + "\n\n"
+    if meals:
+        msg += "🍽️ LỊCH ĂN:\n"
+        msg += "\n".join(meals) + "\n\n"
     
-    if not workouts_meals and not busy_slots:
+    if not workouts and not meals:
         return "Lịch trống trơn à! Vào Planner tạo lịch đi nào! 🚀"
     
     msg += "💡 Chúc bạn một ngày năng động!"
@@ -140,17 +100,15 @@ def handle_busy_schedule(user_context):
     target_date = datetime.now().date()
     day_names = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
     
-    # FIX: Shift lùi 1 ngày để khớp DB
     shifted_index = (target_date.weekday() - 1) % 7
     day_of_week = day_names[shifted_index]
     
-    # Query lấy lịch bận (có Note và DayOfWeek)
     busy_schedules = UserSchedule.query.filter_by(
         User_id=user_context['id'], 
         DayOfWeek=day_of_week
     ).filter(
         UserSchedule.Note.isnot(None),
-        UserSchedule.Date.is_(None)  # Chỉ lấy lịch tuần
+        UserSchedule.Date.is_(None)
     ).all()
     
     if not busy_schedules:
@@ -164,24 +122,18 @@ def handle_busy_schedule(user_context):
     msg += "\n💡 Những khung giờ còn lại bạn có thể sắp xếp tập luyện nhé!"
     return msg
 
-
 def handle_my_stats(user_context):
-    """Trả lời về thống kê tập luyện"""
     if not user_context or not user_context.get('id'):
         return "Đăng nhập đi bạn ơi, mình mới đếm được chứ!"
-        
     log_count = Log.query.filter_by(User_id=user_context['id']).count()
-    
     return f"{user_context['name']} ơi, bạn đã hoàn thành tổng cộng {log_count} buổi tập/bữa ăn rồi! Quá dữ! 🔥 Tiếp tục phát huy nhé!"
 
 def handle_my_info(user_context):
-    """Trả lời thông tin cá nhân"""
     if not user_context or not user_context.get('id'):
         return "Bạn chưa đăng nhập. Hãy đăng nhập để mình biết bạn là ai nhé! 🔒"
     return f"Bạn là {user_context['name']}, {user_context.get('age', '?')} tuổi. Một {user_context.get('sex', 'người')} tràn đầy năng lượng! 🔥"
 
 def handle_my_body(user_context):
-    """Trả lời chỉ số cơ thể"""
     if not user_context or not user_context.get('id'): return "Đăng nhập đi bạn ơi!"
     h = user_context.get('height', 0)
     w = user_context.get('weight', 0)
@@ -189,18 +141,15 @@ def handle_my_body(user_context):
     return f"Chỉ số của bạn: Cao {h}cm, Nặng {w}kg. BMI khoảng {bmi}. { 'Body chuẩn rồi!' if 18.5 <= bmi <= 25 else 'Cố gắng tập luyện thêm nhé!' } 💪"
 
 def handle_my_sport(user_context):
-    """Trả lời về môn thể thao"""
     if not user_context or not user_context.get('id'): return "Đăng nhập đi nào!"
     return f"Môn sở trường của bạn là {user_context.get('sport', 'Chưa chọn')}. Mục tiêu hiện tại: {user_context.get('goal', 'Chưa rõ')}. 🏆"
 
 def handle_current_date(user_context):
-    """Trả lời ngày giờ"""
     now = datetime.now()
     days = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ Nhật"]
     return f"Hôm nay là {days[now.weekday()]}, ngày {now.strftime('%d/%m/%Y')}. Giờ đẹp để đi tập đấy! ⏰"
 
 def handle_calc_tdee(user_context):
-    """Tính toán TDEE và Macro"""
     if not user_context or not user_context.get('id'):
         return "Bạn cần đăng nhập để mình tính TDEE chính xác nhé! 🔒"
     
@@ -212,12 +161,10 @@ def handle_calc_tdee(user_context):
     if not w or not h:
         return "Bạn chưa cập nhật chiều cao cân nặng trong hồ sơ. Hãy vào Profile cập nhật đi nhé! 📝"
 
-    # Mifflin-St Jeor Equation
     bmr = 10 * w + 6.25 * h - 5 * age
     if sex == 'Male' or sex == 'Nam': bmr += 5
     else: bmr -= 161
     
-    # Giả sử activity level trung bình (1.55) - Có thể lấy từ DB nếu có
     tdee = int(bmr * 1.55)
     
     return f"""📊 Phân tích dinh dưỡng cho {user_context['name']}:
@@ -235,7 +182,6 @@ def handle_calc_tdee(user_context):
 - Fat: {int((tdee * 0.25)/9)}g"""
 
 def handle_calc_bmi(user_context):
-    """Phân tích BMI chi tiết"""
     if not user_context or not user_context.get('id'): return "Đăng nhập đi bạn ơi!"
     h = user_context.get('height', 0)
     w = user_context.get('weight', 0)
@@ -262,13 +208,11 @@ def handle_calc_bmi(user_context):
     return f"Chỉ số BMI của bạn là: {bmi} ({status}).\n💡 {advice}"
 
 def handle_greeting(user_context):
-    """Chào hỏi cá nhân hóa"""
     if user_context and user_context.get('name'):
         return f"Chào {user_context['name']}! Rất vui được gặp lại bạn. Hôm nay bạn thấy trong người thế nào? 💪"
     return "Chào bạn! Tôi là MySportCoach AI. Tôi có thể giúp gì cho bạn hôm nay?"
 
 def handle_weather(user_context):
-    """Trả lời về thời tiết (Fake thông minh)"""
     responses = [
         "Dự báo thời tiết hôm nay rất đẹp để đi tập! 🌤️ Đừng lười biếng nhé!",
         "Trời có thể mưa, nhưng tinh thần tập luyện thì không được ướt! ☔ Phòng gym luôn mở cửa.",
@@ -278,7 +222,6 @@ def handle_weather(user_context):
     return random.choice(responses)
 
 def handle_motivation(user_context):
-    """Động viên tinh thần"""
     quotes = [
         "Đừng dừng lại khi mệt mỏi, hãy dừng lại khi đã xong! 💪",
         "Cơ bắp được sinh ra trong những rep cuối cùng. Cố lên!",
@@ -289,7 +232,6 @@ def handle_motivation(user_context):
     return random.choice(quotes)
 
 def handle_small_talk(user_context):
-    """Giao tiếp xã giao"""
     responses = [
         f"Mình vẫn đang trực chiến 24/7 để hỗ trợ {user_context.get('name', 'bạn')} đây! ⚡",
         "Mình là AI nên không biết mệt, chỉ sợ bạn tập mệt thôi! 😆",
@@ -299,7 +241,6 @@ def handle_small_talk(user_context):
     return random.choice(responses)
 
 def handle_suggest_meal(user_context):
-    """Gợi ý món ăn thông minh theo buổi"""
     now = datetime.now()
     hour = now.hour
     
@@ -340,7 +281,6 @@ def handle_suggest_meal(user_context):
     return f"💡 Gợi ý {period} cho {user_context.get('name', 'bạn')}: {suggestion} Chúc ngon miệng!"
 
 def handle_suggest_workout(user_context):
-    """Gợi ý bài tập ngẫu nhiên"""
     workouts = [
         "🔥 Cardio đốt mỡ: Nhảy dây 10 phút + Burpees 3 hiệp (10 cái/hiệp).",
         "🦵 Leg Day: Squat 4x12, Lunges 3x12, Calf Raise 4x15.",
@@ -350,9 +290,10 @@ def handle_suggest_workout(user_context):
     ]
     return f"Hôm nay thử bài này xem: {random.choice(workouts)} Cố lên! 💪"
 
-# Map Intent Tag -> Handler Function
 INTENT_HANDLERS = {
     "schedule": handle_schedule_query,
+    "check_today_schedule": handle_schedule_query,
+    "check_week_schedule": handle_schedule_query,
     "busy_schedule": handle_busy_schedule,
     "stats": handle_my_stats,
     "greeting": handle_greeting,
@@ -369,14 +310,14 @@ INTENT_HANDLERS = {
     "love": handle_small_talk,
     "funny": handle_small_talk,
     "suggest_meal": handle_suggest_meal,
-    "suggest_workout": handle_suggest_workout
+    "suggest_workout": handle_suggest_workout,
+    "weather_query": lambda user_context: "Bạn muốn kiểm tra thời tiết ở đâu?"
 }
 
 def get_response(msg, user_context=None):
     if not model:
         return "Hệ thống đang bảo trì (Chưa train model)."
 
-    # 1. Dự đoán Intent
     sentence = tokenize(msg)
     X = bag_of_words(sentence, all_words)
     X = X.reshape(1, X.shape[0])
@@ -386,21 +327,19 @@ def get_response(msg, user_context=None):
     _, predicted = torch.max(output, dim=1)
     tag = tags[predicted.item()]
 
-    # Tính độ tin cậy
     probs = torch.softmax(output, dim=1)
     prob = probs[0][predicted.item()]
     
-    # Ngưỡng tin cậy (Threshold)
+    if prob.item() > 0.75 and tag == "weather_query":
+        return handle_weather_query(user_context, msg)
+
     if prob.item() > 0.75:
-        # 2. Kiểm tra xem có Handler thông minh cho Intent này không
         if tag in INTENT_HANDLERS and user_context:
             return INTENT_HANDLERS[tag](user_context)
             
-        # 3. Nếu không, trả lời theo câu mẫu (Random response)
         for intent in intents['intents']:
             if tag == intent['tag']:
                 response = random.choice(intent['responses'])
-                # Thay thế placeholder {name} nếu có
                 if user_context and "{name}" in response:
                     response = response.replace("{name}", user_context['name'])
                 return response

@@ -1,5 +1,3 @@
-# Migration: Add Status column to SocialPosts table
-# Run this script ONCE to add the Status field
 
 from db import db
 from app import app
@@ -7,7 +5,6 @@ from app import app
 def add_status_column():
     with app.app_context():
         try:
-            # Add Status column với giá trị mặc định 'Approved' cho bài cũ
             db.engine.execute("""
                 IF NOT EXISTS (
                     SELECT * FROM INFORMATION_SCHEMA.COLUMNS 

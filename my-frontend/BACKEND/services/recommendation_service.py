@@ -21,7 +21,6 @@ class SmartRecommendationEngine:
         self.disliked = self._parse_list(self.user.DislikedIngredients)
         self.forbidden_ingredients = set(a.lower() for a in self.allergies + self.disliked)
 
-        # ✅ LOAD PREFERENCES (Like/Dislike) từ bảng Logs
         self.liked_meals = set()
         self.disliked_meals = set()
         self.liked_workouts = set()
@@ -53,7 +52,6 @@ class SmartRecommendationEngine:
             return []
 
     def _get_busy_slots(self):
-        # Vẫn đọc lịch bận từ UserSchedule như cũ
         weekday_key = self.day_map[self.day_of_week]
         schedules = UserSchedule.query.filter_by(User_id=self.user_id, DayOfWeek=weekday_key).all()
         
@@ -69,7 +67,6 @@ class SmartRecommendationEngine:
         return busy
 
     def _score_workout(self, workout, slot):
-        # ✅ CHECK PREFERENCES
         if workout.Id in self.disliked_workouts:
             return -1000 # Né ngay lập tức
         
@@ -78,7 +75,6 @@ class SmartRecommendationEngine:
         if workout.Id in self.liked_workouts:
             score += 50 # Ưu tiên cực cao
         
-        # 1. Sport Match (Quan trọng nhất: +50)
         user_sport = (self.user.Sport or "").lower()
         workout_sport_tags = (workout.SportTags or "").lower()
         
@@ -87,7 +83,6 @@ class SmartRecommendationEngine:
         elif "general" in workout_sport_tags:
             score += 20 # Bài tập chung cũng tốt
 
-        # 2. Goal Match (Mục tiêu: +30)
         user_goal = (self.user.Goal or "").lower()
         workout_goal = (workout.GoalFocus or "").lower()
         
@@ -97,19 +92,13 @@ class SmartRecommendationEngine:
         elif "giảm cân" in user_goal:
             if "tim mạch" in workout_goal or "toàn thân" in workout_goal or "tốc độ" in workout_goal:
                 score += 30
-            # Ưu tiên bài đốt calo cao
             if workout.CalorieBurn and workout.CalorieBurn > 200:
                 score += 15
 
-        # 3. Difficulty Match (Trình độ: +20)
-        # Giả định user mới là Beginner, tập lâu là Intermediate/Advanced
-        # Tạm thời ưu tiên Beginner/Intermediate cho an toàn
         workout_diff = (workout.Difficulty or "Beginner").lower()
         if workout_diff in ["beginner", "intermediate"]:
             score += 20
         
-        # 4. Intensity & Slot
-        # Buổi sáng ưu tiên cường độ vừa/cao để tỉnh táo
         if slot == "morning" and "cao" in (workout.Intensity or "").lower():
             score += 10
             
@@ -117,11 +106,9 @@ class SmartRecommendationEngine:
         return score
 
     def _score_meal(self, meal, time_slot):
-        # ✅ CHECK PREFERENCES
         if meal.Id in self.disliked_meals:
             return -1000 # Né ngay lập tức
         
-        # 1. Allergy Check (Tuyệt đối)
         if meal.IngredientTags:
             ingredients = set(i.strip().lower() for i in meal.IngredientTags.split(','))
             if ingredients & self.forbidden_ingredients:
@@ -132,8 +119,6 @@ class SmartRecommendationEngine:
         if meal.Id in self.liked_meals:
             score += 50 # Ưu tiên cực cao
         
-        # 2. Timing Match (Quan trọng nhất: +40)
-        # Kiểm tra cả MealTiming (AI mới) và MealType (Dữ liệu cũ)
         meal_timing = (meal.MealTiming or "").lower()
         meal_type = (meal.MealType or "").lower()
         
@@ -145,7 +130,6 @@ class SmartRecommendationEngine:
             elif "morning" in meal_type or "sáng" in meal_type or "breakfast" in meal_type:
                 is_timing_match = True
                 
-            # Phạt nặng nếu món tối ăn sáng
             if "dinner" in meal_timing or "evening" in meal_type or "tối" in meal_type:
                 score -= 100
                 
@@ -161,36 +145,30 @@ class SmartRecommendationEngine:
             elif "evening" in meal_type or "dinner" in meal_type or "tối" in meal_type:
                 is_timing_match = True
                 
-            # Phạt nặng nếu món sáng ăn tối (như Xôi)
             if "breakfast" in meal_timing or "morning" in meal_type or "sáng" in meal_type:
                 score -= 100
 
         if is_timing_match:
             score += 40
         else:
-            # Nếu không đúng buổi, trừ điểm nặng để hạn chế chọn
             score -= 20
         
-        # 3. Sport Support (+20)
         user_sport = (self.user.Sport or "").lower()
         if meal.SportTags and user_sport:
             sport_tags = set(s.strip().lower() for s in meal.SportTags.split(','))
             if user_sport in sport_tags:
                 score += 20
 
-        # 4. Goal Optimization (+30)
         user_goal = (self.user.Goal or "").lower()
         kcal = meal.Kcal or 0
         protein = meal.Protein or 0
         
         if "giảm cân" in user_goal:
-            # Ưu tiên ít calo, giàu protein để no lâu
             if kcal < 500 and protein > 20:
                 score += 30
             elif kcal < 400:
                 score += 20
         elif "tăng cơ" in user_goal:
-            # Ưu tiên protein cao
             if protein > 30:
                 score += 30
             elif protein > 20:
@@ -201,17 +179,14 @@ class SmartRecommendationEngine:
 
     def _get_user_profile_hash(self):
         """Tạo hash từ thông tin user VÀ Lịch Bận để phát hiện thay đổi"""
-        # Lấy thông tin busy slots hiện tại
         busy_slots = self._get_busy_slots()
         busy_str = ",".join(sorted(list(busy_slots)))
         
-        # Hash bao gồm: Sport + Goal + Allergies + Disliked + BUSY SLOTS
         profile_str = f"{self.user.Sport}_{self.user.Goal}_{self.user.Allergies}_{self.user.DislikedIngredients}_{busy_str}"
         return hashlib.md5(profile_str.encode()).hexdigest()
     
     def _has_profile_changed(self):
         """Kiểm tra xem user có thay đổi Sport, Goal, Allergies không"""
-        # Lấy lịch đã lưu
         existing_items = UserPlan.query.filter_by(
             UserId=self.user_id,
             Date=self.date_obj
@@ -220,7 +195,6 @@ class SmartRecommendationEngine:
         if not existing_items:
             return False
             
-        # Kiểm tra ProfileHash
         current_hash = self._get_user_profile_hash()
         saved_hash = existing_items.ProfileHash if hasattr(existing_items, 'ProfileHash') else None
         
@@ -231,12 +205,10 @@ class SmartRecommendationEngine:
     
     def _load_existing_schedule(self):
         """Đọc lịch đã lưu và LUÔN LUÔN kiểm tra busy slots"""
-        # Kiểm tra xem profile có thay đổi không
         if self._has_profile_changed():
             print("   ⚠️ Profile changed, will regenerate schedule")
             return None
         
-        # Đọc từ bảng UserPlans (Lịch tập/ăn cố định)
         items = UserPlan.query.filter_by(
             UserId=self.user_id,
             Date=self.date_obj
@@ -245,7 +217,6 @@ class SmartRecommendationEngine:
         if not items:
             return None
         
-        # ✅ LUÔN LUÔN kiểm tra busy slots, ngay cả với lịch đã lưu
         busy_slots = self._get_busy_slots()
         
         schedule = []
@@ -258,7 +229,6 @@ class SmartRecommendationEngine:
         filtered_count = 0
         
         for item in items:
-            # ✅ Bỏ qua các item trùng với busy slots
             if item.Slot and item.Slot.lower() in busy_slots:
                 filtered_count += 1
                 print(f"   🚫 Filtered out {item.Type} at {item.Slot} (busy)")
@@ -283,7 +253,6 @@ class SmartRecommendationEngine:
                         "data": self._serialize_workout(workout)
                     })
         
-        # ✅ Nếu có item bị filter do busy, XÓA và TẠO LẠI lịch
         if filtered_count > 0:
             print(f"   🔄 {filtered_count} items conflict with busy slots, regenerating schedule...")
             return None
@@ -298,13 +267,11 @@ class SmartRecommendationEngine:
         }
 
     def _save_schedule(self, schedule_items):
-        # Xóa lịch cũ trong UserPlans nếu có (để cập nhật mới)
         UserPlan.query.filter_by(
             UserId=self.user_id,
             Date=self.date_obj
         ).delete()
         
-        # Lấy profile hash hiện tại
         profile_hash = self._get_user_profile_hash()
         
         for item in schedule_items:
@@ -355,10 +322,8 @@ class SmartRecommendationEngine:
         
         print(f"💪 [WORKOUT] Checking workout slots...")
         
-        # ✅ FIX: Tạo 2 workouts/ngày (sáng + tối) thay vì chỉ 1
         workout_slots = []
         
-        # Ưu tiên sáng và tối
         if "morning" not in busy_slots:
             workout_slots.append("morning")
             print(f"   ✅ Morning workout slot available")
@@ -371,12 +336,10 @@ class SmartRecommendationEngine:
         else:
             print(f"   ⏭️ Skipped evening (busy)")
         
-        # Nếu không có cả 2 slot, thử afternoon
         if len(workout_slots) < 2 and "afternoon" not in busy_slots:
             workout_slots.append("afternoon")
             print(f"   ✅ Afternoon workout slot available (backup)")
         
-        # Tạo workout cho mỗi slot
         all_workouts = Workout.query.all()
         
         for slot in workout_slots:

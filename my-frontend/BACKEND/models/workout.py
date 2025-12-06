@@ -16,7 +16,6 @@ class Workout(db.Model):
     VideoUrl = db.Column(db.String(500))
     SportTags = db.Column(db.String(500))
     
-    # New AI fields
     Difficulty = db.Column(db.String(50))
     GoalFocus = db.Column(db.String(100))
     CalorieBurn = db.Column(db.Integer)

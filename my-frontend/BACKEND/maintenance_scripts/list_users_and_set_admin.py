@@ -1,7 +1,6 @@
 import sys
 import os
 
-# Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app import app
@@ -13,7 +12,6 @@ def list_and_set_admin():
     """List all users and set first one as admin"""
     with app.app_context():
         try:
-            # Get all users
             users = User.query.all()
             
             if not users:
@@ -31,7 +29,6 @@ def list_and_set_admin():
             
             print("-" * 60)
             
-            # Set first user as admin
             if users:
                 first_user = users[0]
                 account = Account.query.filter_by(User_id=first_user.Id).first()

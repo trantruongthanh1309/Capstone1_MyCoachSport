@@ -3,7 +3,7 @@ import "./DiaryNew.css";
 import { useToast } from "../contexts/ToastContext";
 
 const Diary = () => {
-    const [activeTab, setActiveTab] = useState("history"); // 'history' or 'preferences'
+    const [activeTab, setActiveTab] = useState("history");
     const [historyData, setHistoryData] = useState({});
     const [preferences, setPreferences] = useState({
         liked_meals: [],
@@ -14,7 +14,6 @@ const Diary = () => {
     const [loading, setLoading] = useState(false);
     const { toast } = useToast();
 
-    // Fetch History
     const fetchHistory = async () => {
         setLoading(true);
         try {
@@ -30,7 +29,6 @@ const Diary = () => {
         }
     };
 
-    // Fetch Preferences
     const fetchPreferences = async () => {
         setLoading(true);
         try {
@@ -46,7 +44,6 @@ const Diary = () => {
         }
     };
 
-    // Remove Preference (Undo)
     const handleRemovePreference = async (itemId, type) => {
         if (!window.confirm("Bạn có chắc muốn xóa sở thích này?")) return;
 
@@ -59,7 +56,7 @@ const Diary = () => {
 
             if (res.ok) {
                 toast.success("Đã xóa sở thích thành công!");
-                fetchPreferences(); // Reload
+                fetchPreferences();
             } else {
                 toast.error("Có lỗi xảy ra");
             }
@@ -80,7 +77,7 @@ const Diary = () => {
                 <p className="diary-subtitle">Theo dõi lịch sử và dạy AI hiểu sở thích của bạn</p>
             </div>
 
-            {/* TABS */}
+            {}
             <div className="diary-tabs">
                 <button
                     className={`diary-tab-btn ${activeTab === "history" ? "active" : ""}`}
@@ -96,7 +93,7 @@ const Diary = () => {
                 </button>
             </div>
 
-            {/* HISTORY CONTENT */}
+            {}
             {activeTab === "history" && (
                 <div className="history-section">
                     <div className="history-controls">
@@ -150,11 +147,11 @@ const Diary = () => {
                 </div>
             )}
 
-            {/* PREFERENCES CONTENT */}
+            {}
             {activeTab === "preferences" && (
                 <div className="preferences-section">
                     <div className="preferences-grid">
-                        {/* LIKED COLUMN */}
+                        {}
                         <div className="pref-column">
                             <div className="pref-header">
                                 <span className="pref-icon">👍</span>
@@ -188,7 +185,7 @@ const Diary = () => {
                             </div>
                         </div>
 
-                        {/* DISLIKED COLUMN */}
+                        {}
                         <div className="pref-column">
                             <div className="pref-header">
                                 <span className="pref-icon">👎</span>

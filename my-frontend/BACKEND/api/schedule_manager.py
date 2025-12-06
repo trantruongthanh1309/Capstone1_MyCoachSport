@@ -12,7 +12,6 @@ def get_busy_slots():
     user_id = session['user_id']
     slots = UserSchedule.query.filter_by(User_id=user_id).all()
     
-    # 🔥 DÙNG TIẾNG ANH: morning, afternoon, evening
     schedule = {
         "mon": {"morning": None, "afternoon": None, "evening": None},
         "tue": {"morning": None, "afternoon": None, "evening": None},
@@ -35,19 +34,17 @@ def save_busy_slots():
         return jsonify({"error": "Chưa đăng nhập"}), 401
     
     user_id = session['user_id']
-    data = request.json  # {"mon": {"morning": "Meeting", ...}, ...}
+    data = request.json
     
-    # Xóa lịch cũ
     UserSchedule.query.filter_by(User_id=user_id).delete()
     
-    # Thêm lịch mới — chỉ lưu nếu có ghi chú
     for day, periods in data.items():
         for period, note in periods.items():
             if note and isinstance(note, str) and note.strip():
                 new_slot = UserSchedule(
                     User_id=user_id,
                     DayOfWeek=day,
-                    Period=period,          # ← period là "morning", "afternoon", "evening"
+                    Period=period,
                     Note=note.strip()
                 )
                 db.session.add(new_slot)

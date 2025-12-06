@@ -7,8 +7,6 @@ from sqlalchemy import text
 
 leaderboard_bp = Blueprint('leaderboard_new', __name__, url_prefix='/api/leaderboard')
 
-# ==================== WORKOUT LOGS ====================
-
 @leaderboard_bp.route('/log-workout', methods=['POST'])
 def log_workout():
     """Ghi nhận bài tập đã hoàn thành"""
@@ -27,7 +25,6 @@ def log_workout():
         if not workout_name:
             return jsonify({'error': 'Thiếu tên bài tập'}), 400
         
-        # Tính điểm bằng Stored Procedure
         result = db.session.execute(
             text("DECLARE @points INT; EXEC @points = sp_CalculateWorkoutPoints :workout_name, :duration, :difficulty, :sport; SELECT @points AS points"),
             {
@@ -39,7 +36,6 @@ def log_workout():
         )
         points = result.scalar()
         
-        # Tạo workout log
         workout_log = WorkoutLog(
             User_id=user_id,
             Workout_name=workout_name,
@@ -52,7 +48,6 @@ def log_workout():
         db.session.add(workout_log)
         db.session.commit()
         
-        # Kiểm tra và mở khóa achievements
         check_and_unlock_achievements(user_id)
         
         return jsonify({
@@ -65,7 +60,6 @@ def log_workout():
         db.session.rollback()
         current_app.logger.error(f"Error logging workout: {str(e)}")
         return jsonify({'error': 'Không thể ghi nhận bài tập'}), 500
-
 
 @leaderboard_bp.route('/my-workouts', methods=['GET'])
 def get_my_workouts():
@@ -92,7 +86,6 @@ def get_my_workouts():
         current_app.logger.error(f"Error fetching workouts: {str(e)}")
         return jsonify({'error': 'Lỗi khi lấy dữ liệu'}), 500
 
-
 @leaderboard_bp.route('/complete-schedule-item', methods=['POST'])
 def complete_schedule_item():
     """Đánh dấu hoàn thành item trong schedule (workout hoặc meal)"""
@@ -107,7 +100,6 @@ def complete_schedule_item():
         if not schedule_id:
             return jsonify({'error': 'Thiếu schedule_id'}), 400
         
-        # Update IsCompleted = 1 trong UserPlans
         update_query = text("""
             UPDATE UserPlans
             SET IsCompleted = 1
@@ -123,7 +115,6 @@ def complete_schedule_item():
         if result.rowcount == 0:
             return jsonify({'error': 'Không tìm thấy schedule item hoặc đã hoàn thành rồi'}), 404
         
-        # Lấy thông tin item để tính điểm
         item_query = text("""
             SELECT Type, MealId, WorkoutId, Date, Slot
             FROM UserPlans
@@ -134,22 +125,18 @@ def complete_schedule_item():
         points = 0
         
         if item.Type == 'meal':
-            # Lấy thông tin meal
             meal_query = text("""
                 SELECT Kcal, Protein FROM Meals WHERE Id = :meal_id
             """)
             meal = db.session.execute(meal_query, {'meal_id': item.MealId}).first()
             
             if meal:
-                # Tính điểm meal
                 calories = meal.Kcal or 0
                 protein = meal.Protein or 0
-                time_slot = item.Slot  # morning, afternoon, evening
+                time_slot = item.Slot
                 
-                # Hệ số bữa ăn
                 time_multiplier = 1.2 if time_slot == 'morning' else (1.0 if time_slot == 'afternoon' else 0.9)
                 
-                # Bonus protein
                 protein_bonus = 10 if protein >= 30 else (5 if protein >= 20 else 0)
                 
                 points = int((calories / 10) * time_multiplier) + protein_bonus
@@ -157,18 +144,15 @@ def complete_schedule_item():
                     points = 100
         
         elif item.Type == 'workout':
-            # Lấy thông tin workout
             workout_query = text("""
                 SELECT Duration_min, Sport FROM Workouts WHERE Id = :workout_id
             """)
             workout = db.session.execute(workout_query, {'workout_id': item.WorkoutId}).first()
             
             if workout:
-                # Tính điểm workout
                 duration = workout.Duration_min or 0
                 sport = workout.Sport or ''
                 
-                # Hệ số môn thể thao
                 sport_multiplier = {
                     'Yoga': 0.8,
                     'Chạy bộ': 1.0,
@@ -179,11 +163,10 @@ def complete_schedule_item():
                     'Bơi lội': 1.5
                 }.get(sport, 1.0)
                 
-                difficulty_multiplier = 1.5  # Medium default
+                difficulty_multiplier = 1.5
                 
                 points = int(duration * difficulty_multiplier * sport_multiplier)
         
-        # Lưu điểm vào WorkoutLogs
         if item.Type == 'workout':
             workout_log_query = text("""
                 INSERT INTO WorkoutLogs (User_id, Workout_name, Sport, Duration_minutes, Difficulty, Points_earned, Completed_at)
@@ -198,7 +181,6 @@ def complete_schedule_item():
             })
             db.session.commit()
         
-        # Cập nhật UserStats
         stats_query = text("""
             IF NOT EXISTS (SELECT 1 FROM UserStats WHERE User_id = :user_id)
             BEGIN
@@ -219,7 +201,6 @@ def complete_schedule_item():
         db.session.execute(stats_query, {'user_id': user_id, 'points': points})
         db.session.commit()
         
-        # Kiểm tra achievements
         check_and_unlock_achievements(user_id)
         
         return jsonify({
@@ -233,10 +214,6 @@ def complete_schedule_item():
         current_app.logger.error(f"Error completing schedule item: {str(e)}")
         return jsonify({'error': 'Không thể hoàn thành'}), 500
 
-
-
-# ==================== LEADERBOARD ====================
-
 @leaderboard_bp.route('/rankings', methods=['GET'])
 def get_rankings():
     """Lấy bảng xếp hạng"""
@@ -245,7 +222,6 @@ def get_rankings():
         per_page = request.args.get('per_page', 50, type=int)
         sport_filter = request.args.get('sport')
         
-        # Sử dụng View đã tạo
         query = text("""
             SELECT * FROM vw_Leaderboard
             ORDER BY Total_points DESC
@@ -283,7 +259,6 @@ def get_rankings():
         current_app.logger.error(f"Error fetching rankings: {str(e)}")
         return jsonify({'error': 'Lỗi khi lấy bảng xếp hạng'}), 500
 
-
 @leaderboard_bp.route('/my-stats', methods=['GET'])
 def get_my_stats():
     """Lấy thống kê cá nhân"""
@@ -295,18 +270,15 @@ def get_my_stats():
         stats = UserStats.query.filter_by(User_id=user_id).first()
         
         if not stats:
-            # Tạo stats mới nếu chưa có
             stats = UserStats(User_id=user_id)
             db.session.add(stats)
             db.session.commit()
         
-        # Lấy rank từ view
         rank_query = text("""
             SELECT Rank FROM vw_Leaderboard WHERE User_id = :user_id
         """)
         rank_result = db.session.execute(rank_query, {'user_id': user_id}).scalar()
         
-        # Lấy achievements đã mở khóa
         achievements = db.session.query(Achievement)\
             .join(UserAchievement, Achievement.Id == UserAchievement.Achievement_id)\
             .filter(UserAchievement.User_id == user_id)\
@@ -323,9 +295,6 @@ def get_my_stats():
         current_app.logger.error(f"Error fetching stats: {str(e)}")
         return jsonify({'error': 'Lỗi khi lấy thống kê'}), 500
 
-
-# ==================== ACHIEVEMENTS ====================
-
 @leaderboard_bp.route('/achievements', methods=['GET'])
 def get_all_achievements():
     """Lấy tất cả achievements"""
@@ -337,7 +306,6 @@ def get_all_achievements():
         for achievement in achievements:
             ach_dict = achievement.to_dict()
             
-            # Kiểm tra xem user đã mở khóa chưa
             if user_id:
                 unlocked = UserAchievement.query.filter_by(
                     User_id=user_id,
@@ -359,7 +327,6 @@ def get_all_achievements():
         current_app.logger.error(f"Error fetching achievements: {str(e)}")
         return jsonify({'error': 'Lỗi khi lấy thành tựu'}), 500
 
-
 def check_and_unlock_achievements(user_id):
     """Kiểm tra và mở khóa achievements tự động"""
     try:
@@ -367,7 +334,6 @@ def check_and_unlock_achievements(user_id):
         if not stats:
             return
         
-        # Lấy tất cả achievements chưa mở khóa
         unlocked_ids = db.session.query(UserAchievement.Achievement_id)\
             .filter_by(User_id=user_id).all()
         unlocked_ids = [id[0] for id in unlocked_ids]
@@ -393,7 +359,6 @@ def check_and_unlock_achievements(user_id):
                 )
                 db.session.add(user_achievement)
                 
-                # Thêm điểm thưởng
                 stats.Total_points += achievement.Points_reward
         
         db.session.commit()
@@ -401,9 +366,6 @@ def check_and_unlock_achievements(user_id):
     except Exception as e:
         current_app.logger.error(f"Error checking achievements: {str(e)}")
         db.session.rollback()
-
-
-# ==================== STATISTICS ====================
 
 @leaderboard_bp.route('/stats/overview', methods=['GET'])
 def get_stats_overview():
@@ -413,7 +375,6 @@ def get_stats_overview():
         total_workouts = db.session.query(db.func.sum(UserStats.Total_workouts)).scalar() or 0
         total_points = db.session.query(db.func.sum(UserStats.Total_points)).scalar() or 0
         
-        # Top 3 users
         top_users = db.session.execute(text("""
             SELECT TOP 3 * FROM vw_Leaderboard ORDER BY Total_points DESC
         """))

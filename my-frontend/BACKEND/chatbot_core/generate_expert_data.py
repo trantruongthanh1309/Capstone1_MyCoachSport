@@ -21,13 +21,8 @@ def generate_variations(base_patterns, variations_count=100):
     
     return result[:variations_count]
 
-# ============================================
-# PHẦN 1: THỂ THAO CHUYÊN SÂU (15,000 patterns)
-# ============================================
-
 sports_expert_intents = []
 
-# 1. Bóng đá chuyên sâu (2000 patterns)
 football_expert = {
     "tag": "football_expert",
     "patterns": generate_variations([
@@ -60,7 +55,6 @@ football_expert = {
 }
 sports_expert_intents.append(football_expert)
 
-# 2. Gym & Bodybuilding chuyên sâu (3000 patterns)
 gym_expert = {
     "tag": "gym_expert",
     "patterns": generate_variations([
@@ -103,7 +97,6 @@ gym_expert = {
 }
 sports_expert_intents.append(gym_expert)
 
-# 3. Chạy bộ & Endurance (2000 patterns)
 running_expert = {
     "tag": "running_expert",
     "patterns": generate_variations([
@@ -136,7 +129,6 @@ running_expert = {
 }
 sports_expert_intents.append(running_expert)
 
-# 4. Bơi lội chuyên sâu (1500 patterns)
 swimming_expert = {
     "tag": "swimming_expert",
     "patterns": generate_variations([
@@ -164,16 +156,8 @@ swimming_expert = {
 }
 sports_expert_intents.append(swimming_expert)
 
-# Tạo thêm 6500 patterns cho các môn khác...
-# (Tiết kiệm không gian, logic tương tự)
-
-# ============================================
-# PHẦN 2: DINH DƯỠNG CHUYÊN SÂU (20,000 patterns)
-# ============================================
-
 nutrition_expert_intents = []
 
-# 1. Macronutrients chuyên sâu (4000 patterns)
 macro_expert = {
     "tag": "macro_expert",
     "patterns": generate_variations([
@@ -211,7 +195,6 @@ macro_expert = {
 }
 nutrition_expert_intents.append(macro_expert)
 
-# 2. Meal timing & Nutrient timing (3000 patterns)
 timing_expert = {
     "tag": "timing_expert",
     "patterns": generate_variations([
@@ -239,15 +222,8 @@ timing_expert = {
 }
 nutrition_expert_intents.append(timing_expert)
 
-# Tạo thêm 13000 patterns cho supplements, meal prep, diet protocols...
-
-# ============================================
-# PHẦN 3: Y HỌC THỂ THAO & PHỤC HỒI (15,000 patterns)
-# ============================================
-
 medical_expert_intents = []
 
-# 1. Chấn thương & Điều trị (5000 patterns)
 injury_expert = {
     "tag": "injury_expert",
     "patterns": generate_variations([
@@ -280,17 +256,10 @@ injury_expert = {
 }
 medical_expert_intents.append(injury_expert)
 
-# Tạo thêm 10000 patterns cho recovery, sleep science, hormones...
-
-# ============================================
-# MERGE TẤT CẢ
-# ============================================
-
 all_expert_intents = {
     "intents": sports_expert_intents + nutrition_expert_intents + medical_expert_intents
 }
 
-# Lưu file
 with open('data/intents_expert.json', 'w', encoding='utf-8') as f:
     json.dump(all_expert_intents, f, ensure_ascii=False, indent=2)
 

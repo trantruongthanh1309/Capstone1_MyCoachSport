@@ -63,14 +63,12 @@ export default function NewsFeed() {
     };
 
     const handlePostCreated = (newPost) => {
-        // Nếu đang xem "Tất cả" hoặc đúng môn thể thao vừa đăng thì thêm vào đầu
         if (selectedSport === "All" || selectedSport === newPost.sport) {
             setPosts([newPost, ...posts]);
         }
     };
 
     const handleScroll = () => {
-        // Improved scroll detection
         const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
         const scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
         const clientHeight = document.documentElement.clientHeight || window.innerHeight;
@@ -93,9 +91,9 @@ export default function NewsFeed() {
 
     return (
     <div className="newsfeed-container">
-            {/* Left Column: Feed */}
+            {}
             <div className="feed-column">
-        {/* Hero header */}
+        {}
         <header className="feed-hero">
           <div className="feed-hero-left">
             <h1 className="feed-hero-title">Bảng tin thể thao</h1>
@@ -108,7 +106,7 @@ export default function NewsFeed() {
           </div>
         </header>
 
-        {/* Sport Filter Bar */}
+        {}
         <div className="sport-filter-bar">
                     {SPORTS_FILTER.map(sport => (
                         <div
@@ -154,7 +152,7 @@ export default function NewsFeed() {
                 )}
             </div>
 
-            {/* Right Column: Messenger */}
+            {}
             <Messenger
                 currentUserId={currentUser?.user_id}
                 startChatWithUser={chatTarget}

@@ -1,15 +1,8 @@
-# Backend API for Swap Feature
-# Thêm vào file api/ai_coach.py hoặc tạo file mới
 
 from flask import Blueprint, request, jsonify
 from sqlalchemy import text
 from db import db
 from datetime import datetime
-
-# Nếu tạo file mới, uncomment dòng này:
-# swap_bp = Blueprint('swap', __name__)
-
-# Nếu thêm vào ai_coach.py, dùng ai_coach_bp
 
 @ai_coach_bp.route('/swap', methods=['POST'])
 def swap_schedule_item():
@@ -37,7 +30,6 @@ def swap_schedule_item():
             return jsonify({"success": False, "error": "Missing required fields"}), 400
         
         if item_type == "meal":
-            # Lấy thông tin meal cũ để biết MealType
             old_meal_query = text("""
                 SELECT MealType FROM dbo.Meals WHERE Id = :meal_id
             """)
@@ -48,7 +40,6 @@ def swap_schedule_item():
             
             meal_type = old_meal[0]
             
-            # Xóa meal cũ khỏi schedule
             delete_query = text("""
                 DELETE FROM dbo.UserSchedule 
                 WHERE UserId = :user_id 
@@ -61,7 +52,6 @@ def swap_schedule_item():
                 "meal_id": old_item_id
             })
             
-            # Thêm meal mới vào schedule
             insert_query = text("""
                 INSERT INTO dbo.UserSchedule (UserId, Date, MealId, MealType)
                 VALUES (:user_id, :date, :meal_id, :meal_type)
@@ -74,7 +64,6 @@ def swap_schedule_item():
             })
             
         elif item_type == "workout":
-            # Lấy thông tin workout cũ để biết time slot
             old_workout_query = text("""
                 SELECT TimeSlot FROM dbo.UserSchedule 
                 WHERE UserId = :user_id 
@@ -92,7 +81,6 @@ def swap_schedule_item():
             
             time_slot = old_workout[0]
             
-            # Xóa workout cũ
             delete_query = text("""
                 DELETE FROM dbo.UserSchedule 
                 WHERE UserId = :user_id 
@@ -105,7 +93,6 @@ def swap_schedule_item():
                 "workout_id": old_item_id
             })
             
-            # Thêm workout mới
             insert_query = text("""
                 INSERT INTO dbo.UserSchedule (UserId, Date, WorkoutId, TimeSlot)
                 VALUES (:user_id, :date, :workout_id, :time_slot)
@@ -134,7 +121,3 @@ def swap_schedule_item():
             "error": str(e)
         }), 500
 
-
-# Nếu tạo file mới, thêm vào app.py:
-# from api.swap import swap_bp
-# app.register_blueprint(swap_bp, url_prefix='/api/swap')

@@ -6,11 +6,10 @@ class ChatHistory(db.Model):
     
     Id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     User_id = db.Column(db.Integer, db.ForeignKey('Users.Id'), nullable=False)
-    Message = db.Column(db.Text, nullable=False)  # Tin nhắn của user
-    Response = db.Column(db.Text, nullable=False)  # Phản hồi của AI
+    Message = db.Column(db.Text, nullable=False)
+    Response = db.Column(db.Text, nullable=False)
     Timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     
-    # Relationship
     user = db.relationship('User', backref=db.backref('chat_history', lazy=True))
     
     def to_dict(self):

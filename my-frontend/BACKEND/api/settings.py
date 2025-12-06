@@ -17,7 +17,6 @@ def get_settings():
     if not user:
         return jsonify({"error": "Không tìm thấy user"}), 404
     
-    # Parse JSON fields
     preferences = json.loads(user.Preferences) if user.Preferences else {
         "theme": "light",
         "language": "vi",
@@ -74,7 +73,6 @@ def update_settings():
     try:
         data = request.get_json()
         
-        # Update profile
         if 'profile' in data:
             profile = data['profile']
             if 'name' in profile:
@@ -86,15 +84,12 @@ def update_settings():
             if 'bio' in profile:
                 user.Bio = profile['bio']
         
-        # Update preferences
         if 'preferences' in data:
             user.Preferences = json.dumps(data['preferences'])
         
-        # Update privacy
         if 'privacy' in data:
             user.Privacy = json.dumps(data['privacy'])
         
-        # Update workout/notification settings
         if 'workoutSettings' in data:
             user.NotificationSettings = json.dumps(data['workoutSettings'])
         
@@ -122,7 +117,6 @@ def export_data():
     if not user:
         return jsonify({"error": "Không tìm thấy user"}), 404
     
-    # Collect all user data
     user_data = {
         "profile": {
             "id": user.Id,
@@ -160,7 +154,6 @@ def reset_settings():
         return jsonify({"error": "Không tìm thấy user"}), 404
     
     try:
-        # Reset to default values
         user.Avatar = None
         user.Bio = None
         user.Preferences = json.dumps({

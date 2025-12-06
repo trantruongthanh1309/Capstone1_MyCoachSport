@@ -1,4 +1,4 @@
-/* Toast Notification Styles */
+
 .toast {
     position: fixed;
     top: 80px;
@@ -104,7 +104,6 @@
     }
 }
 
-/* Toast Container for multiple toasts */
 .toast-container {
     position: fixed;
     top: 80px;
@@ -123,7 +122,6 @@
     right: auto;
 }
 
-/* Mobile responsive */
 @media (max-width: 640px) {
     .toast {
         left: 20px;

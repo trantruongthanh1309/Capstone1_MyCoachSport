@@ -1,6 +1,5 @@
-/* App.css - Layout & Navigation Only */
 
-/* Navbar - Fixed at top */
+
 .navbar {
   background-color: #1e293b;
   color: white;
@@ -47,7 +46,6 @@
   background: rgba(59, 130, 246, 0.15);
 }
 
-/* Profile Menu */
 .profile-menu {
   position: relative;
 }
@@ -112,7 +110,6 @@
   text-decoration: none;
 }
 
-/* Footer */
 .footer {
   background-color: #1e293b;
   color: #94a3b8;

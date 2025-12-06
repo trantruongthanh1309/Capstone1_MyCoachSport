@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -8,7 +7,6 @@ from db import db
 from app import app
 
 with app.app_context():
-    # Lấy 10 record đầu tiên có DayOfWeek
     schedules = UserSchedule.query.filter(UserSchedule.DayOfWeek.isnot(None)).limit(10).all()
     
     print("=" * 60)

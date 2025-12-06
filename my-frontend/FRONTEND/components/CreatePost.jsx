@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import "../pages/NewsFeed.css";
+import ImageUploader from "./ImageUploader";
 
 import config from "../config";
 
@@ -30,10 +32,22 @@ export default function CreatePost({ onPostCreated, userAvatar }) {
     const [selectedTopic, setSelectedTopic] = useState(TOPICS[0]);
     const [selectedSport, setSelectedSport] = useState(SPORTS[0]);
     const [loading, setLoading] = useState(false);
+    const [toast, setToast] = useState(null);
+
+    useEffect(() => {
+        if (toast) {
+            const timer = setTimeout(() => setToast(null), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [toast]);
+
+    const showToast = (message, type = 'success') => {
+        setToast({ message, type });
+    };
 
     const handleSubmit = async () => {
         if (!content.trim()) {
-            alert("Vui lòng nhập nội dung bài viết trước khi đăng.");
+            showToast("Vui lòng nhập nội dung bài viết trước khi đăng.", "error");
             return;
         }
 
@@ -44,7 +58,6 @@ export default function CreatePost({ onPostCreated, userAvatar }) {
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
                 body: JSON.stringify({
-                    // Tiêu đề có thể rỗng, backend xử lý mặc định nếu cần
                     title: title.trim() || null,
                     content,
                     image_url: imageUrl,
@@ -57,19 +70,18 @@ export default function CreatePost({ onPostCreated, userAvatar }) {
             console.log("📝 Post creation response:", data);
 
             if (res.ok && data.success) {
-                alert("✅ Bài viết đã được gửi! Admin sẽ duyệt trong thời gian sớm nhất.");
-                // ONLY add to UI if backend confirms success
+                showToast("✅ Bài viết đã được gửi! Admin sẽ duyệt sớm.", "success");
                 if (data.post) {
                     onPostCreated(data.post);
                 }
                 setIsOpen(false);
                 resetForm();
             } else {
-                alert(`❌ Lỗi: ${data.message || 'Không thể đăng bài. Vui lòng thử lại.'}`);
+                showToast(`❌ Lỗi: ${data.message || 'Không thể đăng bài.'}`, "error");
             }
         } catch (err) {
             console.error("❌ Error creating post:", err);
-            alert("❌ Lỗi kết nối! Vui lòng kiểm tra internet và thử lại.");
+            showToast("❌ Lỗi kết nối! Vui lòng thử lại.", "error");
         } finally {
             setLoading(false);
         }
@@ -81,6 +93,33 @@ export default function CreatePost({ onPostCreated, userAvatar }) {
         setImageUrl("");
         setSelectedTopic(TOPICS[0]);
         setSelectedSport(SPORTS[0]);
+    };
+
+    const handleFileUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setLoading(true);
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const res = await fetch(`${API_BASE}/api/upload`, {
+                method: "POST",
+                body: formData
+            });
+            const data = await res.json();
+            if (data.url) {
+                setImageUrl(data.url);
+            } else {
+                alert("Upload thất bại: " + (data.error || "Lỗi không xác định"));
+            }
+        } catch (err) {
+            console.error("Upload error:", err);
+            alert("Lỗi kết nối khi upload ảnh.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -106,18 +145,18 @@ export default function CreatePost({ onPostCreated, userAvatar }) {
                 </div>
             </div>
 
-            {isOpen && (
-                <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setIsOpen(false)}>
-                    <div className="modal-content">
-                        <div className="modal-header">
+            {isOpen && createPortal(
+                <div className="create-post-modal-overlay" onClick={(e) => e.target === e.currentTarget && setIsOpen(false)}>
+                    <div className="create-post-modal-content">
+                        <div className="create-post-modal-header">
                             <h3>Tạo bài viết mới</h3>
                             <button className="close-modal" onClick={() => setIsOpen(false)}>✖</button>
                         </div>
-                        <div className="modal-body">
+                        <div className="create-post-modal-body">
 
-                            {/* Sport Selector */}
+                            { }
                             <div style={{ marginBottom: 15 }}>
-                                <label style={{ display: 'block', marginBottom: 5, fontSize: '0.9rem', color: '#94a3b8' }}>Môn thể thao:</label>
+                                <label style={{ display: 'block', marginBottom: 5, fontSize: '0.9rem', color: '#1e293b', fontWeight: 'bold' }}>Môn thể thao:</label>
                                 <div className="topic-selector">
                                     {SPORTS.map(sport => (
                                         <div
@@ -131,9 +170,9 @@ export default function CreatePost({ onPostCreated, userAvatar }) {
                                 </div>
                             </div>
 
-                            {/* Topic Selector */}
+                            { }
                             <div style={{ marginBottom: 15 }}>
-                                <label style={{ display: 'block', marginBottom: 5, fontSize: '0.9rem', color: '#94a3b8' }}>Chủ đề:</label>
+                                <label style={{ display: 'block', marginBottom: 5, fontSize: '0.9rem', color: '#1e293b', fontWeight: 'bold' }}>Chủ đề:</label>
                                 <div className="topic-selector">
                                     {TOPICS.map(topic => (
                                         <div
@@ -147,7 +186,7 @@ export default function CreatePost({ onPostCreated, userAvatar }) {
                                 </div>
                             </div>
 
-                            {/* Title Input */}
+                            { }
                             <input
                                 className="create-post-title"
                                 placeholder="Tiêu đề bài viết (ngắn gọn, súc tích)..."
@@ -155,7 +194,7 @@ export default function CreatePost({ onPostCreated, userAvatar }) {
                                 onChange={(e) => setTitle(e.target.value)}
                             />
 
-                            {/* Content Input */}
+                            { }
                             <textarea
                                 className="create-post-textarea"
                                 placeholder={`Nội dung chi tiết về ${selectedTopic.label.toLowerCase()}...`}
@@ -163,17 +202,46 @@ export default function CreatePost({ onPostCreated, userAvatar }) {
                                 onChange={(e) => setContent(e.target.value)}
                             />
 
-                            <input
-                                type="text"
-                                placeholder="Dán link ảnh vào đây (URL)..."
-                                className="comment-input"
-                                style={{ width: '100%', marginBottom: 15, borderRadius: 8 }}
-                                value={imageUrl}
-                                onChange={e => setImageUrl(e.target.value)}
-                            />
+                            <label style={{ display: 'block', marginBottom: 8, fontSize: '0.9rem', color: '#1e293b', fontWeight: 'bold' }}>Hình ảnh (Tùy chọn):</label>
+                            <div style={{ marginBottom: 15 }}>
+                                <label htmlFor="file-upload" className="custom-file-upload" style={{
+                                    display: 'inline-block',
+                                    padding: '10px 20px',
+                                    cursor: 'pointer',
+                                    background: '#e2e8f0',
+                                    color: '#333',
+                                    borderRadius: '12px',
+                                    fontWeight: '600',
+                                    fontSize: '0.9rem',
+                                    border: '1px solid #cbd5e1',
+                                    transition: 'all 0.2s'
+                                }}>
+                                    📷 Chọn ảnh từ máy
+                                </label>
+                                <input
+                                    id="file-upload"
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleFileUpload}
+                                    style={{ display: 'none' }}
+                                />
+                                {loading && <span style={{ marginLeft: 10, color: '#666' }}>Đang tải lên...</span>}
+                            </div>
 
                             {imageUrl && (
-                                <img src={imageUrl} alt="Preview" className="image-preview" onError={() => setImageUrl('')} />
+                                <div style={{ position: 'relative', marginBottom: 15, textAlign: 'center' }}>
+                                    <img src={imageUrl} alt="Preview" className="image-preview" onError={() => setImageUrl('')} style={{ width: 'auto', maxWidth: '100%', borderRadius: '8px', maxHeight: '180px', objectFit: 'contain', border: '1px solid #e2e8f0' }} />
+                                    <button
+                                        onClick={() => setImageUrl('')}
+                                        style={{
+                                            position: 'absolute', top: -10, right: -10, background: '#ef4444',
+                                            color: 'white', border: 'none', borderRadius: '50%', width: 24, height: 24, cursor: 'pointer',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '12px', boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                                        }}
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
                             )}
 
                             <button
@@ -186,7 +254,14 @@ export default function CreatePost({ onPostCreated, userAvatar }) {
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
+            )}
+            {toast && createPortal(
+                <div className={`custom-toast ${toast.type}`}>
+                    {toast.type === 'success' ? '🎉' : '⚠️'} {toast.message}
+                </div>,
+                document.body
             )}
         </>
     );

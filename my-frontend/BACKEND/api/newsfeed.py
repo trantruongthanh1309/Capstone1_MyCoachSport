@@ -5,22 +5,16 @@ from datetime import datetime
 
 newsfeed_bp = Blueprint('newsfeed', __name__)
 
-# --- HELPER: Lấy thông tin user hiện tại ---
 def get_current_user_id():
-    # Ưu tiên lấy từ session thực
     if 'user_id' in session:
         return session['user_id']
-    # Fallback cho dev (nếu bạn đang test mà chưa login)
-    # CẢNH BÁO: Chỉ dùng khi dev.
     return 18 # ID mặc định của bạn
 
-# 1. Lấy danh sách bài viết
 @newsfeed_bp.route('/', methods=['GET'])
 def get_posts():
     try:
         user_id = get_current_user_id()
         
-        # Query Join Users để lấy tên và avatar
         query = text("""
             SELECT 
                 p.Id, 
@@ -41,9 +35,7 @@ def get_posts():
         
         posts = []
         for row in result:
-            # Check if liked
             is_liked = False
-            # (Logic check like tạm thời bỏ qua để tối ưu tốc độ, sẽ thêm sau nếu cần)
 
             posts.append({
                 "id": row[0],
@@ -67,7 +59,6 @@ def get_posts():
         print(f"❌ ERROR get_posts: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
-# 2. Đăng bài mới
 @newsfeed_bp.route('/create', methods=['POST'])
 def create_post():
     try:
@@ -79,7 +70,6 @@ def create_post():
         if not content:
             return jsonify({"success": False, "error": "Nội dung trống"}), 400
 
-        # Insert vào DB đúng cột
         query = text("""
             INSERT INTO dbo.Posts 
             (User_id, Content, Image, Status, CreatedAt, Likes, Comments, UpdatedAt)
@@ -101,7 +91,6 @@ def create_post():
         print(f"❌ ERROR create_post: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
-# 3. Like bài viết
 @newsfeed_bp.route('/like', methods=['POST'])
 def like_post():
     try:
@@ -109,8 +98,6 @@ def like_post():
         data = request.json
         post_id = data.get('post_id')
 
-        # Tạm thời chỉ tăng số like trực tiếp (Simple Mode)
-        # Để làm full tính năng Like/Unlike cần bảng Logs hoặc PostLikes riêng
         query = text("UPDATE dbo.Posts SET Likes = Likes + 1 WHERE Id = :pid")
         db.session.execute(query, {"pid": post_id})
         db.session.commit()

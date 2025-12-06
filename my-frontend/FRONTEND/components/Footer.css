@@ -1,4 +1,4 @@
-/* ==================== FOOTER ==================== */
+
 .footer {
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   color: white;
@@ -58,7 +58,6 @@
   z-index: 2;
 }
 
-/* ==================== FOOTER TOP ==================== */
 .footer-top {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr 1.5fr;
@@ -72,7 +71,6 @@
   flex-direction: column;
 }
 
-/* ==================== FOOTER LOGO ==================== */
 .footer-logo {
   display: flex;
   align-items: center;
@@ -115,7 +113,6 @@
   font-size: 0.95rem;
 }
 
-/* ==================== SOCIAL LINKS ==================== */
 .social-links {
   display: flex;
   gap: 12px;
@@ -175,7 +172,6 @@
   box-shadow: 0 8px 20px rgba(255, 0, 0, 0.4);
 }
 
-/* ==================== FOOTER TITLE ==================== */
 .footer-title {
   font-size: 1.15rem;
   font-weight: 700;
@@ -196,7 +192,6 @@
   border-radius: 2px;
 }
 
-/* ==================== FOOTER LINKS ==================== */
 .footer-links {
   list-style: none;
   padding: 0;
@@ -234,7 +229,6 @@
   left: -15px;
 }
 
-/* ==================== NEWSLETTER ==================== */
 .newsletter {
   display: flex;
   flex-direction: column;
@@ -297,7 +291,6 @@
   transform: translateY(0);
 }
 
-/* ==================== FOOTER BOTTOM ==================== */
 .footer-bottom {
   display: flex;
   justify-content: space-between;
@@ -335,7 +328,6 @@
   color: rgba(255, 255, 255, 0.3);
 }
 
-/* ==================== RESPONSIVE ==================== */
 @media (max-width: 1024px) {
   .footer-top {
     grid-template-columns: repeat(2, 1fr);

@@ -5,19 +5,16 @@ from datetime import datetime
 
 logs_bp = Blueprint('logs', __name__)
 
-# Helper: Lấy user_id từ session
 def get_current_user_id():
     if 'user_id' in session:
         return session['user_id']
     return 18 # Fallback cho dev
 
-# 1. Lấy danh sách Logs của User
 @logs_bp.route('', methods=['GET'])
 def get_logs():
     try:
         user_id = get_current_user_id()
         
-        # Query lấy logs kèm thông tin Meal và Workout
         query = text("""
             SELECT 
                 l.Id, l.Day, l.Notes, l.RPE, l.Rating, l.FeedbackType, l.CreatedAt,
@@ -52,7 +49,6 @@ def get_logs():
         print(f"❌ ERROR get_logs: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
-# 2. Thêm Log mới
 @logs_bp.route('/create', methods=['POST'])
 def create_log():
     try:
@@ -67,7 +63,6 @@ def create_log():
         rating = data.get('rating')
         feedback_type = data.get('feedback_type')
 
-        # Insert vào DB
         query = text("""
             INSERT INTO dbo.Logs 
             (User_id, Day, Meal_id, Workout_id, Notes, RPE, Rating, FeedbackType, CreatedAt)

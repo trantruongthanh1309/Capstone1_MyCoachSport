@@ -28,7 +28,6 @@ def get_settings():
         settings_db = SystemSetting.query.all()
         settings_dict = {s.Key: json.loads(s.Value) for s in settings_db}
         
-        # Merge with defaults
         final_settings = DEFAULT_SETTINGS.copy()
         final_settings.update(settings_dict)
         
@@ -71,7 +70,6 @@ def clear_cache():
         return auth_error
     
     try:
-        # Mock clear cache
         return jsonify({'success': True, 'message': 'Cache cleared'}), 200
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -83,7 +81,6 @@ def backup_database():
         return auth_error
     
     try:
-        # Mock backup
         return jsonify({'success': True, 'message': 'Backup started'}), 200
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500

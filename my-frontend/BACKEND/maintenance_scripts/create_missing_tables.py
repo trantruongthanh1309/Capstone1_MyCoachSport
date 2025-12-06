@@ -1,7 +1,6 @@
 import sys
 import os
 
-# Add parent directory to path to import app and models
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app import app

@@ -17,17 +17,16 @@ import AdminLayout from "./admin/pages/AdminLayout";
 import { AdminRoute } from "./admin/components/ProtectedRoute";
 import { ToastProvider } from "./contexts/ToastContext";
 
-
 export default function App() {
   const location = useLocation();
+  const path = location.pathname.toLowerCase();
 
-  // Ẩn Navbar ở trang Login, Register, ForgotPassword VÀ tất cả trang Admin
-  const isAdminPage = location.pathname.startsWith("/admin");
+  const isAdminPage = path.startsWith("/admin");
   const hideNavbar =
-    location.pathname === "/" ||
-    location.pathname === "/login" ||
-    location.pathname === "/register" ||
-    location.pathname === "/forgot-password" ||
+    path === "/" ||
+    path === "/login" ||
+    path === "/register" ||
+    path === "/forgot-password" ||
     isAdminPage;
 
   return (
@@ -36,13 +35,13 @@ export default function App() {
         {!hideNavbar && <Navbar />}
         <div className={`main-content ${isAdminPage ? "admin-mode" : ""}`}>
           <Routes>
-            {/* Public - Auth Pages */}
+            { }
             <Route path="/" element={<Login />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
 
-            {/* User Pages */}
+            { }
             <Route path="/home" element={<Home />} />
             <Route path="/planner" element={<Planner />} />
             <Route path="/schedule-manager" element={<WorkScheduleManager />} />
@@ -54,7 +53,7 @@ export default function App() {
             <Route path="/videos" element={<Videos />} />
             <Route path="/settings" element={<Settings />} />
 
-            {/* Admin Pages - Protected */}
+            { }
             <Route
               path="/admin/*"
               element={

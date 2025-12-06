@@ -10,14 +10,12 @@ const AdminWorkouts = () => {
     difficulties: []
   });
 
-  // Pagination & Filters
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSport, setSelectedSport] = useState('');
   const [selectedDifficulty, setSelectedDifficulty] = useState('');
 
-  // Modal
   const [showModal, setShowModal] = useState(false);
   const [editingWorkout, setEditingWorkout] = useState(null);
   const [formData, setFormData] = useState({
@@ -30,7 +28,6 @@ const AdminWorkouts = () => {
     tags: ''
   });
 
-  // Fetch workouts
   const fetchWorkouts = async () => {
     try {
       setLoading(true);
@@ -62,7 +59,6 @@ const AdminWorkouts = () => {
     }
   };
 
-  // Fetch stats
   const fetchStats = async () => {
     try {
       const response = await fetch('/api/admin/workouts/stats', {
@@ -79,7 +75,6 @@ const AdminWorkouts = () => {
     }
   };
 
-  // Fetch filters
   const fetchFilters = async () => {
     try {
       const [sportsRes, difficultiesRes] = await Promise.all([
@@ -107,7 +102,6 @@ const AdminWorkouts = () => {
     fetchFilters();
   }, [currentPage, searchTerm, selectedSport, selectedDifficulty]);
 
-  // Handle form
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -326,7 +320,7 @@ const AdminWorkouts = () => {
         </>
       )}
 
-      {/* Modal */}
+      {}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>

@@ -1,4 +1,3 @@
-# api/smart_swap.py - Smart meal/workout swap with scoring
 from flask import Blueprint, request, jsonify
 from sqlalchemy import text
 from db import db
@@ -26,7 +25,6 @@ def score_meal_for_swap(meal, user, current_meal_kcal, current_meal_protein, tim
     """
     score = 0
     
-    # 1. Check allergies/dislikes (CRITICAL - return -1000 if found)
     if meal.get('IngredientTags'):
         ingredients = set(i.strip().lower() for i in meal['IngredientTags'].split(','))
         allergies = set(a.lower() for a in parse_list(user.get('Allergies', '[]')))
@@ -36,7 +34,6 @@ def score_meal_for_swap(meal, user, current_meal_kcal, current_meal_protein, tim
         if ingredients & forbidden:
             return -1000
     
-    # 2. Calorie similarity (Max 40 points)
     kcal_diff = abs(meal['Kcal'] - current_meal_kcal)
     if kcal_diff <= 50:
         score += 40
@@ -45,26 +42,21 @@ def score_meal_for_swap(meal, user, current_meal_kcal, current_meal_protein, tim
     else:
         score += 5
         
-    # 3. Protein similarity (Max 30 points)
-    # Rất quan trọng cho người tập thể thao
     protein_diff = abs(meal.get('Protein', 0) - current_meal_protein)
     if protein_diff <= 5:
         score += 30
     elif protein_diff <= 10:
         score += 15
     
-    # 4. Sport compatibility (Max 50 points - Tăng trọng số)
     user_sport = (user.get('Sport') or '').lower()
     if meal.get('SportTags') and user_sport:
         sport_tags = set(s.strip().lower() for s in meal['SportTags'].split(','))
         if user_sport in sport_tags:
             score += 50
     
-    # 5. Meal type appropriateness (Max 30 points)
     meal_type = (meal.get('MealType') or '').lower()
     meal_timing = (meal.get('MealTiming') or '').lower() # Cột mới thêm
     
-    # Map time_slot to keywords
     keywords = []
     if time_slot == 'morning':
         keywords = ['breakfast', 'sáng', 'morning', 'preworkout']
@@ -75,7 +67,6 @@ def score_meal_for_swap(meal, user, current_meal_kcal, current_meal_protein, tim
     elif time_slot == 'snack':
         keywords = ['snack', 'ăn vặt']
         
-    # Check match in MealType or MealTiming
     is_match = False
     for kw in keywords:
         if kw in meal_type or kw in meal_timing:
@@ -85,13 +76,11 @@ def score_meal_for_swap(meal, user, current_meal_kcal, current_meal_protein, tim
     if is_match:
         score += 30
     else:
-        # Phạt nặng nếu ăn món sáng vào tối hoặc ngược lại
         if time_slot == 'morning' and ('dinner' in meal_type or 'tối' in meal_type):
             score -= 50
         elif time_slot == 'evening' and ('breakfast' in meal_type or 'sáng' in meal_type):
             score -= 50
     
-    # 6. Goal compatibility (bonus 20 points)
     goal = (user.get('Goal') or '').lower()
     protein = meal.get('Protein', 0)
     kcal = meal.get('Kcal', 0)
@@ -111,16 +100,14 @@ def score_workout_for_swap(workout, user):
     - Sport compatibility
     - Intensity match with user goal
     """
-    score = 50  # Base score
+    score = 50
     
-    # 1. Sport compatibility (30 points)
     user_sport = (user.get('Sport') or '').lower()
     workout_sport = (workout.get('Sport') or '').lower()
     
     if user_sport and user_sport in workout_sport:
         score += 30
     
-    # 2. Goal compatibility (20 points)
     goal = (user.get('Goal') or '').lower()
     intensity = (workout.get('Intensity') or '').lower()
     workout_name = (workout.get('Name') or '').lower()
@@ -143,12 +130,11 @@ def suggest_meal_swap():
         data = request.json
         user_id = data.get('user_id')
         current_meal_id = data.get('current_meal_id')
-        time_slot = data.get('time_slot')  # morning, afternoon, evening
+        time_slot = data.get('time_slot')
         
         if not all([user_id, current_meal_id, time_slot]):
             return jsonify({"error": "Missing required fields"}), 400
         
-        # Get user profile
         user_query = text("""
             SELECT Sport, Goal, Allergies, DislikedIngredients 
             FROM dbo.Users WHERE Id = :user_id
@@ -165,7 +151,6 @@ def suggest_meal_swap():
             "DislikedIngredients": user_result[3]
         }
         
-        # Get current meal info
         current_meal_query = text("""
             SELECT Kcal, Protein, MealType FROM dbo.Meals WHERE Id = :meal_id
         """)
@@ -177,11 +162,9 @@ def suggest_meal_swap():
         current_kcal = current_meal_result[0]
         current_protein = current_meal_result[1] or 0
         
-        # Get alternative meals (within ±100 kcal range)
         min_kcal = current_kcal - 100
         max_kcal = current_kcal + 100
         
-        # Lấy danh sách rộng hơn, không lọc cứng MealType để hàm score tự xử lý
         alternatives_query = text("""
             SELECT Id, Name, Kcal, Protein, Carb, Fat, MealType, SportTags, IngredientTags, MealTiming
             FROM dbo.Meals 
@@ -196,7 +179,6 @@ def suggest_meal_swap():
             "current_meal_id": current_meal_id
         }).fetchall()
         
-        # Score each alternative
         scored_meals = []
         for row in alternatives_result:
             meal = {
@@ -214,17 +196,15 @@ def suggest_meal_swap():
             
             score = score_meal_for_swap(meal, user, current_kcal, current_protein, time_slot)
             
-            if score > 0:  # Only include meals with positive score
+            if score > 0:
                 scored_meals.append({
                     "meal": meal,
                     "score": score,
                     "kcal_diff": abs(meal['Kcal'] - current_kcal)
                 })
         
-        # Sort by score (descending)
         scored_meals.sort(key=lambda x: x['score'], reverse=True)
         
-        # Return top 5 suggestions
         top_suggestions = scored_meals[:5]
         
         return jsonify({
@@ -261,7 +241,6 @@ def suggest_workout_swap():
         if not all([user_id, current_workout_id]):
             return jsonify({"error": "Missing required fields"}), 400
         
-        # Get user profile
         user_query = text("""
             SELECT Sport, Goal FROM dbo.Users WHERE Id = :user_id
         """)
@@ -275,7 +254,6 @@ def suggest_workout_swap():
             "Goal": user_result[1]
         }
         
-        # Get current workout intensity
         current_workout_query = text("""
             SELECT Intensity FROM dbo.Workouts WHERE Id = :workout_id
         """)
@@ -286,7 +264,6 @@ def suggest_workout_swap():
         
         current_intensity = current_workout_result[0]
         
-        # Get alternative workouts (same intensity)
         alternatives_query = text("""
             SELECT Id, Name, Sport, Intensity, Duration_min, MuscleGroups, Equipment
             FROM dbo.Workouts 
@@ -299,7 +276,6 @@ def suggest_workout_swap():
             "current_workout_id": current_workout_id
         }).fetchall()
         
-        # Score each alternative
         scored_workouts = []
         for row in alternatives_result:
             workout = {
@@ -318,10 +294,8 @@ def suggest_workout_swap():
                 "score": score
             })
         
-        # Sort by score (descending)
         scored_workouts.sort(key=lambda x: x['score'], reverse=True)
         
-        # Return top 5 suggestions
         top_suggestions = scored_workouts[:5]
         
         return jsonify({

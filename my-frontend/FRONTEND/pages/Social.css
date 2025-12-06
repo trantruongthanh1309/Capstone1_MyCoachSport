@@ -1,4 +1,4 @@
-/* Cơ bản cho phần layout */
+
 .fb-wrap {
   display: flex;
   padding-top: 20px;
@@ -47,7 +47,6 @@
   background-color: #f1f1f1;
 }
 
-/* Phần composer */
 .fb-input, .fb-textarea {
   width: 100%;
   padding: 10px;
@@ -62,7 +61,6 @@
   outline: none;
 }
 
-/* Hiệu ứng button */
 .fb-btn-primary {
   background-color: #4CAF50;
   color: white;
@@ -90,7 +88,6 @@
   background-color: #f1f1f1;
 }
 
-/* Phần post */
 .fb-post {
   margin-bottom: 20px;
 }
@@ -145,7 +142,6 @@
   color: #4CAF50;
 }
 
-/* Scrollable Sidebar */
 .fb-left, .fb-right {
   position: sticky;
   top: 16px;
@@ -156,12 +152,10 @@
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Hover effect for post actions */
 .fb-post-actions button:hover {
   background-color: #ddd;
 }
 
-/* Effect for new posts */
 @keyframes newPost {
   0% { opacity: 0.5; transform: translateY(-10px); }
   100% { opacity: 1; transform: translateY(0); }

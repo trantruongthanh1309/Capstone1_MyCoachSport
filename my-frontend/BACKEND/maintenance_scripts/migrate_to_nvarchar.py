@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Migration script: Chuyển các cột VARCHAR sang NVARCHAR để hỗ trợ tiếng Việt
 """
@@ -19,7 +18,6 @@ try:
     print("✅ Kết nối thành công!")
     print("\n🔄 Bắt đầu migration VARCHAR → NVARCHAR...")
     
-    # Danh sách các cột cần chuyển đổi
     migrations = [
         ("Title", "NVARCHAR(255)"),
         ("Content", "NVARCHAR(MAX)"),

@@ -1,36 +1,26 @@
 import json
 import random
 
-# ============================================
-# PHẦN 1: DỮ LIỆU THỂ THAO (3000+ patterns)
-# ============================================
-
 sports_intents = []
 
-# 1. Bóng đá (500 patterns)
 football_patterns = [
-    # Kỹ thuật cơ bản
     "Cách sút bóng mạnh", "Kỹ thuật sút penalty", "Cách chuyền bóng chính xác",
     "Kỹ thuật đỡ bóng", "Cách đánh đầu", "Kỹ thuật rê bóng",
     "Cách phòng thủ trong bóng đá", "Kỹ thuật cắt bóng", "Cách đá phạt trực tiếp",
     "Kỹ thuật đá corner", "Cách làm thủ môn", "Kỹ thuật bắt bóng thủ môn",
     
-    # Chiến thuật
     "Sơ đồ 4-3-3 là gì", "Chiến thuật pressing", "Cách phản công nhanh",
     "Sơ đồ 4-4-2", "Chiến thuật tiki-taka", "Cách đá phòng ngự phản công",
     "Sơ đồ 3-5-2", "Chiến thuật catenaccio", "Cách chơi wing back",
     
-    # Thể lực
     "Bài tập thể lực cho cầu thủ", "Cách tăng tốc độ chạy", "Bài tập tăng sức bền",
     "Cách tăng sức bật", "Bài tập plyometric cho bóng đá", "Cách tăng sức mạnh chân",
     "Bài tập HIIT cho cầu thủ", "Cách cải thiện thể lực", "Bài tập sprint",
     
-    # Dinh dưỡng
     "Cầu thủ nên ăn gì", "Chế độ ăn trước trận", "Ăn gì sau khi đá bóng",
     "Nước uống cho cầu thủ", "Carb loading là gì", "Protein cho cầu thủ",
 ]
 
-# Mở rộng patterns bóng đá lên 500
 for i in range(50):
     football_patterns.extend([
         f"Cách rê bóng qua đối thủ kiểu {i+1}",
@@ -53,7 +43,6 @@ sports_intents.append({
     ]
 })
 
-# 2. Bóng rổ (500 patterns)
 basketball_patterns = [
     "Cách ném rổ chuẩn", "Kỹ thuật layup", "Cách dribble hiệu quả",
     "Kỹ thuật crossover", "Cách phòng thủ man-to-man", "Kỹ thuật rebound",
@@ -83,7 +72,6 @@ sports_intents.append({
     ]
 })
 
-# 3. Cầu lông (300 patterns)
 badminton_patterns = [
     "Cách cầm vợt cầu lông", "Kỹ thuật smash", "Cách đánh cầu cao",
     "Kỹ thuật drop shot", "Cách di chuyển sân cầu", "Kỹ thuật phát cầu",
@@ -112,7 +100,6 @@ sports_intents.append({
     ]
 })
 
-# 4. Bơi lội (300 patterns)
 swimming_patterns = [
     "Cách bơi sải", "Kỹ thuật bơi ếch", "Cách bơi ngửa",
     "Kỹ thuật bơi bướm", "Cách thở khi bơi", "Kỹ thuật lật người",
@@ -141,7 +128,6 @@ sports_intents.append({
     ]
 })
 
-# 5. Chạy bộ & Marathon (300 patterns)
 running_patterns = [
     "Cách chạy bộ đúng tư thế", "Kỹ thuật chạy marathon", "Cách tăng tốc độ chạy",
     "Kỹ thuật hít thở khi chạy", "Cách chạy không bị đau đầu gối", "Kỹ thuật sprint",
@@ -170,7 +156,6 @@ sports_intents.append({
     ]
 })
 
-# 6. Gym & Bodybuilding (500 patterns)
 gym_patterns = [
     "Cách tập ngực to", "Kỹ thuật bench press", "Cách tập lưng xô",
     "Kỹ thuật deadlift", "Cách tập chân to", "Kỹ thuật squat",
@@ -200,7 +185,6 @@ sports_intents.append({
     ]
 })
 
-# 7. Võ thuật (300 patterns)
 martial_arts_patterns = [
     "Cách đấm boxing", "Kỹ thuật jab", "Cách đá Muay Thai",
     "Kỹ thuật low kick", "Cách vật judo", "Kỹ thuật throw",
@@ -229,7 +213,6 @@ sports_intents.append({
     ]
 })
 
-# 8. Yoga & Pilates (200 patterns)
 yoga_patterns = [
     "Tư thế yoga cơ bản", "Cách tập downward dog", "Kỹ thuật warrior pose",
     "Cách tập tree pose", "Kỹ thuật sun salutation", "Cách tập child pose",
@@ -258,13 +241,8 @@ sports_intents.append({
     ]
 })
 
-# ============================================
-# PHẦN 2: DỮ LIỆU MÓN ĂN (3000+ patterns)
-# ============================================
-
 food_intents = []
 
-# 1. Protein (500 patterns)
 protein_patterns = [
     "Ức gà có bao nhiêu protein", "Thịt bò protein", "Cá hồi dinh dưỡng",
     "Trứng gà protein", "Tôm protein", "Sữa whey protein",
@@ -293,7 +271,6 @@ food_intents.append({
     ]
 })
 
-# 2. Carbohydrates (500 patterns)
 carb_patterns = [
     "Cơm trắng bao nhiêu calo", "Khoai lang dinh dưỡng", "Yến mạch calo",
     "Bánh mì calo", "Mì ý calo", "Khoai tây calo",
@@ -322,7 +299,6 @@ food_intents.append({
     ]
 })
 
-# 3. Healthy Fats (300 patterns)
 fat_patterns = [
     "Bơ dinh dưỡng", "Hạt hạnh nhân calo", "Dầu olive tác dụng",
     "Cá hồi omega 3", "Trứng gà chất béo", "Hạt óc chó dinh dưỡng",
@@ -351,7 +327,6 @@ food_intents.append({
     ]
 })
 
-# 4. Vegetables (300 patterns)
 vegetable_patterns = [
     "Bông cải xanh dinh dưỡng", "Cà rốt vitamin", "Rau chân vịt dinh dưỡng",
     "Cà chua dinh dưỡng", "Dưa chuột calo", "Súp lơ xanh vitamin",
@@ -380,7 +355,6 @@ food_intents.append({
     ]
 })
 
-# 5. Fruits (300 patterns)
 fruit_patterns = [
     "Chuối dinh dưỡng", "Táo calo", "Cam vitamin C",
     "Nho đen chất chống oxy hóa", "Dâu tây dinh dưỡng", "Xoài calo",
@@ -409,7 +383,6 @@ food_intents.append({
     ]
 })
 
-# 6. Meal Prep (300 patterns)
 meal_prep_patterns = [
     "Cách meal prep", "Thực đơn meal prep tuần", "Công thức meal prep",
     "Cách bảo quản thức ăn", "Meal prep cho người tập gym", "Thực đơn giảm cân",
@@ -438,7 +411,6 @@ food_intents.append({
     ]
 })
 
-# 7. Supplements (200 patterns)
 supplement_patterns = [
     "Whey protein là gì", "Creatine tác dụng", "BCAA là gì",
     "Pre-workout là gì", "Mass gainer tác dụng", "Glutamine là gì",
@@ -467,7 +439,6 @@ food_intents.append({
     ]
 })
 
-# 8. Hydration (200 patterns)
 hydration_patterns = [
     "Uống bao nhiêu nước mỗi ngày", "Nước điện giải là gì", "Tác dụng của nước",
     "Uống nước khi nào", "Nước dừa tác dụng", "Nước chanh tác dụng",
@@ -496,13 +467,8 @@ food_intents.append({
     ]
 })
 
-# ============================================
-# PHẦN 3: DỮ LIỆU SỨC KHỎE CHUYÊN MÔN (3000+ patterns)
-# ============================================
-
 health_intents = []
 
-# 1. Sports Medicine (500 patterns)
 sports_medicine_patterns = [
     "Chấn thương ACL là gì", "Cách điều trị viêm gân", "Đau khớp gối khi tập",
     "Chấn thương vai rotator cuff", "Cách phục hồi chấn thương", "Viêm cơ là gì",
@@ -531,7 +497,6 @@ health_intents.append({
     ]
 })
 
-# 2. Exercise Physiology (500 patterns)
 physiology_patterns = [
     "Cơ bắp phát triển như thế nào", "Quá trình tổng hợp protein", "Glycogen là gì",
     "ATP là gì", "Hệ năng lượng aerobic", "Hệ năng lượng anaerobic",
@@ -560,7 +525,6 @@ health_intents.append({
     ]
 })
 
-# 3. Nutrition Science (500 patterns)
 nutrition_patterns = [
     "Calo là gì", "TDEE là gì", "BMR là gì",
     "Macro là gì", "Micro là gì", "Chỉ số đường huyết",
@@ -589,7 +553,6 @@ health_intents.append({
     ]
 })
 
-# 4. Recovery & Sleep (300 patterns)
 recovery_patterns = [
     "Tầm quan trọng của giấc ngủ", "Cách ngủ ngon", "Ngủ bao nhiêu là đủ",
     "Phục hồi cơ bắp", "Massage thể thao", "Foam rolling",
@@ -618,7 +581,6 @@ health_intents.append({
     ]
 })
 
-# 5. Mental Health & Motivation (300 patterns)
 mental_patterns = [
     "Cách giữ động lực tập luyện", "Vượt qua plateau", "Stress và tập luyện",
     "Thiền và thể thao", "Cách đặt mục tiêu", "Tư duy tích cực",
@@ -647,7 +609,6 @@ health_intents.append({
     ]
 })
 
-# 6. Hormones & Endocrinology (300 patterns)
 hormone_patterns = [
     "Testosterone là gì", "Cách tăng testosterone tự nhiên", "Cortisol là gì",
     "Growth hormone", "Insulin và tập luyện", "Estrogen ở nam giới",
@@ -676,7 +637,6 @@ health_intents.append({
     ]
 })
 
-# 7. Biomechanics (200 patterns)
 biomechanics_patterns = [
     "Tư thế squat đúng", "Kỹ thuật deadlift an toàn", "Cách bench press đúng",
     "Tư thế chạy bộ", "Kỹ thuật nhảy", "Cách đánh golf",
@@ -705,7 +665,6 @@ health_intents.append({
     ]
 })
 
-# 8. Aging & Fitness (200 patterns)
 aging_patterns = [
     "Tập luyện ở tuổi 40", "Cách giữ cơ bắp khi già", "Tập luyện người cao tuổi",
     "Sarcopenia là gì", "Osteoporosis và tập luyện", "Tập luyện tuổi 50",
@@ -734,15 +693,10 @@ health_intents.append({
     ]
 })
 
-# ============================================
-# MERGE TẤT CẢ DỮ LIỆU
-# ============================================
-
 all_intents = {
     "intents": sports_intents + food_intents + health_intents
 }
 
-# Lưu file
 with open('data/intents_extended.json', 'w', encoding='utf-8') as f:
     json.dump(all_intents, f, ensure_ascii=False, indent=4)
 

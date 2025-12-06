@@ -4,7 +4,7 @@ import './AdminFeedback.css';
 const AdminFeedback = () => {
   const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all'); // all, pending, resolved
+  const [filter, setFilter] = useState('all');
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [stats, setStats] = useState({ total: 0, pending: 0, resolved: 0 });
@@ -139,7 +139,7 @@ const AdminFeedback = () => {
         <h1>Quản Lý Feedback</h1>
       </div>
 
-      {/* Stats */}
+      {}
       <div className="feedback-stats">
         <div className="stat-box">
           <div className="stat-value">{stats.total}</div>
@@ -155,7 +155,7 @@ const AdminFeedback = () => {
         </div>
       </div>
 
-      {/* Filters */}
+      {}
       <div className="feedback-filters">
         <button
           className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
@@ -177,7 +177,7 @@ const AdminFeedback = () => {
         </button>
       </div>
 
-      {/* Feedback List */}
+      {}
       {loading ? (
         <div className="loading">Đang tải...</div>
       ) : (
@@ -249,7 +249,7 @@ const AdminFeedback = () => {
         </div>
       )}
 
-      {/* Modal */}
+      {}
       {showModal && selectedFeedback && (
         <FeedbackModal
           feedback={selectedFeedback}
@@ -261,7 +261,6 @@ const AdminFeedback = () => {
   );
 };
 
-// Modal Component
 const FeedbackModal = ({ feedback, onClose, onReply }) => {
   const [reply, setReply] = useState(feedback.response || '');
 

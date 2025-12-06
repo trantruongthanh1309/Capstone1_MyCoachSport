@@ -27,7 +27,6 @@ def get_meals():
         if meal_type:
             query = query.filter(Meal.MealType == meal_type)
             
-        # Order by ID desc
         query = query.order_by(Meal.Id.desc())
         
         pagination = query.paginate(page=page, per_page=per_page, error_out=False)
@@ -167,9 +166,6 @@ def get_meal_sports_filter():
     if auth_error:
         return auth_error
     try:
-        # Mock sports list or extract from tags if possible. 
-        # Since SportTags is comma separated string, it's hard to distinct efficiently in SQL.
-        # We'll return a static list or common sports for now.
         sports = ['football', 'basketball', 'gym', 'running', 'swimming', 'yoga']
         return jsonify({'success': True, 'data': sports}), 200
     except Exception as e:

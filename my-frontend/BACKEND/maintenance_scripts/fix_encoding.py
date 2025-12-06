@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
 """
 Script để sửa dữ liệu tiếng Việt bị lỗi encoding trong database
 """
 import pyodbc
 
-# Kết nối tới SQL Server
 conn_str = (
     'DRIVER={ODBC Driver 17 for SQL Server};'
     'SERVER=MSI\\SQLEXPRESS01;'
@@ -24,7 +22,6 @@ try:
     
     print("✅ Kết nối thành công với UTF-8 encoding!")
     
-    # Lấy tất cả bài post có tiếng Việt bị lỗi
     cursor.execute("""
         SELECT Id, Title, Content, Sport, Topic 
         FROM SocialPosts 
@@ -38,10 +35,9 @@ try:
         print("\n⚠️  CẢNH BÁO: Dữ liệu đã bị lưu sai encoding vào database.")
         print("   Giải pháp: Xóa các bài post lỗi và đăng lại với encoding đúng.")
         print("\n   Các bài post bị lỗi:")
-        for post in broken_posts[:5]:  # Hiển thị 5 bài đầu
+        for post in broken_posts[:5]:
             print(f"   - ID {post.Id}: {post.Title}")
     
-    # Test: Thử insert một bài mới với tiếng Việt
     test_title = "Bài test tiếng Việt: Lịch tập luyện"
     test_content = "Hôm nay tôi đã tập gym rất vui. Sức khỏe tốt!"
     
@@ -53,7 +49,6 @@ try:
     conn.commit()
     print(f"\n✅ Đã insert test post: '{test_title}'")
     
-    # Đọc lại để kiểm tra
     cursor.execute("SELECT TOP 1 Title, Content FROM SocialPosts ORDER BY Id DESC")
     result = cursor.fetchone()
     print(f"✅ Đọc lại: Title = '{result.Title}'")

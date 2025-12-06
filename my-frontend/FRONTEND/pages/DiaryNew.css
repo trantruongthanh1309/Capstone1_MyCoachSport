@@ -1,4 +1,4 @@
-/* DiaryNew.css */
+
 
 .diary-container {
     padding: 30px;
@@ -26,7 +26,6 @@
     font-size: 1.1rem;
 }
 
-/* TABS */
 .diary-tabs {
     display: flex;
     justify-content: center;
@@ -62,7 +61,6 @@
     transform: translateY(-2px);
 }
 
-/* HISTORY SECTION */
 .history-controls {
     display: flex;
     justify-content: space-between;
@@ -174,7 +172,6 @@
     font-size: 1.2rem;
 }
 
-/* PREFERENCES SECTION */
 .preferences-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -269,7 +266,6 @@
     color: #ef4444;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
     .preferences-grid {
         grid-template-columns: 1fr;

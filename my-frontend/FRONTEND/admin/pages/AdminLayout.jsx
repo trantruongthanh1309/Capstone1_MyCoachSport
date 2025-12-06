@@ -1,4 +1,3 @@
-// AdminLayout.jsx
 import React, { useState } from "react";
 import AdminDashboard from "./AdminDashboard";
 import AdminUsers from "./AdminUsers";
@@ -80,7 +79,7 @@ export default function AdminLayout() {
 
   return (
     <div className="admin-layout">
-      {/* Sidebar */}
+      {}
       <aside className={`admin-sidebar ${sidebarOpen ? "open" : "closed"}`}>
         <div className="sidebar-header">
           <div className="logo">
@@ -124,7 +123,7 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      {/* Main Content */}
+      {}
       <main className={`admin-main ${sidebarOpen ? "" : "expanded"}`}>
         <CurrentComponent />
       </main>

@@ -20,7 +20,6 @@ export default function Profile() {
 
   const [isEditing, setIsEditing] = useState(false);
 
-  // Fetch profile từ API
   useEffect(() => {
     if (!userId) return;
 
@@ -49,7 +48,6 @@ export default function Profile() {
       .catch((err) => console.warn("Error fetching profile:", err));
   }, [userId]);
 
-  // Lưu hồ sơ
   const saveProfile = () => {
     console.log("Lưu hồ sơ đang được gọi...");
 
@@ -103,7 +101,6 @@ export default function Profile() {
     setProfile({ ...profile, avatar: url });
   };
 
-  // Tính toán BMI và TDEE
   const bmi = (profile.weight / Math.pow(profile.height / 100, 2)).toFixed(1);
   const tdee = Math.round(
     (10 * profile.weight +
@@ -126,14 +123,14 @@ export default function Profile() {
     <div className="profile-wrapper">
       <div className="profile-container">
 
-        {/* Cột trái - Form */}
+        { }
         <div className="profile-left">
-          <div className="profile-header">
-            <h1 className="profile-title">Hồ Sơ Cá Nhân</h1>
+          <div className="user-profile-header">
+            <h1 className="user-profile-title">Hồ Sơ Cá Nhân</h1>
             <div className="profile-subtitle">Quản lý thông tin của bạn</div>
           </div>
 
-          {/* Avatar */}
+          { }
           <div className="avatar-section">
             <div className="avatar-box">
               <img
@@ -152,10 +149,10 @@ export default function Profile() {
             <p className="avatar-info">{profile.sex}, {profile.age} tuổi</p>
           </div>
 
-          {/* Form */}
+          { }
           <div className="form-section">
 
-            {/* User ID */}
+            { }
             <div className="form-group">
               <label className="form-label">
                 <span className="label-icon">🆔</span>
@@ -174,7 +171,7 @@ export default function Profile() {
               />
             </div>
 
-            {/* Tên */}
+            { }
             <div className="form-group">
               <label className="form-label">
                 <span className="label-icon">👤</span>
@@ -190,7 +187,7 @@ export default function Profile() {
               />
             </div>
 
-            {/* Tuổi và Giới tính */}
+            { }
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label">
@@ -224,7 +221,7 @@ export default function Profile() {
               </div>
             </div>
 
-            {/* Cân nặng và Chiều cao */}
+            { }
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label">
@@ -257,7 +254,7 @@ export default function Profile() {
               </div>
             </div>
 
-            {/* Môn thể thao */}
+            { }
             <div className="form-group">
               <label className="form-label">
                 <span className="label-icon">⚽</span>
@@ -273,7 +270,7 @@ export default function Profile() {
               />
             </div>
 
-            {/* Hoạt động thể chất */}
+            { }
             <div className="form-group">
               <label className="form-label">
                 <span className="label-icon">⚡</span>
@@ -291,7 +288,7 @@ export default function Profile() {
               </select>
             </div>
 
-            {/* Mục tiêu */}
+            { }
             <div className="form-group">
               <label className="form-label">
                 <span className="label-icon">🎯</span>
@@ -309,7 +306,7 @@ export default function Profile() {
               </select>
             </div>
 
-            {/* Buttons */}
+            { }
             <div className="button-group">
               {!isEditing ? (
                 <button onClick={() => setIsEditing(true)} className="btn btn-edit">
@@ -332,7 +329,7 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Cột phải - Stats */}
+        { }
         <div className="profile-right">
           <div className="stats-header">
             <h2 className="stats-title">
@@ -341,8 +338,8 @@ export default function Profile() {
             </h2>
           </div>
 
-          {/* BMI Card */}
-          <div className="stat-card bmi-card">
+          { }
+          <div className="user-stat-card bmi-card">
             <div className="stat-card-header">
               <h3 className="stat-card-title">
                 <span className="card-icon">📈</span>
@@ -362,7 +359,7 @@ export default function Profile() {
                   style={{ left: `${Math.min(Math.max((parseFloat(bmi) / 40) * 100, 0), 100)}%` }}
                 ></div>
               </div>
-              <div className="bmi-labels">
+              <div className="user-bmi-labels">
                 <span>Thiếu</span>
                 <span>Chuẩn</span>
                 <span>Thừa</span>
@@ -371,8 +368,8 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* TDEE Card */}
-          <div className="stat-card tdee-card">
+          { }
+          <div className="user-stat-card tdee-card">
             <div className="stat-card-header">
               <h3 className="stat-card-title">
                 <span className="card-icon">🔥</span>
@@ -408,8 +405,8 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* Info Card */}
-          <div className="info-card">
+          { }
+          <div className="user-info-card">
             <h4 className="info-title">
               <span className="info-icon">📝</span>
               Thông Tin Chi Tiết

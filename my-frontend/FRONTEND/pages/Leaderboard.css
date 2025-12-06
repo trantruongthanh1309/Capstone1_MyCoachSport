@@ -1,4 +1,4 @@
-/* Leaderboard.css - Modern & Clean Design */
+
 
 .leaderboard-container {
   min-height: 100vh;
@@ -43,7 +43,6 @@
   box-shadow: 0 12px 28px rgba(245, 87, 108, 0.5);
 }
 
-/* My Stats Card */
 .my-stats-card {
   background: white;
   border-radius: 20px;
@@ -123,7 +122,6 @@
   border-radius: 10px;
 }
 
-/* Tabs */
 .tabs {
   display: flex;
   gap: 16px;
@@ -155,7 +153,6 @@
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
-/* Rankings List */
 .rankings-list {
   max-width: 1200px;
   margin: 0 auto;
@@ -241,7 +238,6 @@
   color: #333;
 }
 
-/* Achievements Grid */
 .achievements-grid {
   max-width: 1200px;
   margin: 0 auto;
@@ -313,7 +309,6 @@
   font-weight: 700;
 }
 
-/* Modal */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -425,7 +420,6 @@
   box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .leaderboard-title {
     font-size: 2rem;

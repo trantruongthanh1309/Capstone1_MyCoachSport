@@ -23,7 +23,6 @@ def upload_file():
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
         
-        # Ensure the upload directory exists
         upload_folder = os.path.join(current_app.root_path, 'static', 'uploads')
         if not os.path.exists(upload_folder):
             os.makedirs(upload_folder)
@@ -31,8 +30,6 @@ def upload_file():
         file_path = os.path.join(upload_folder, filename)
         file.save(file_path)
         
-        # Construct the URL for the uploaded file
-        # Assuming the app serves static files from the 'static' folder
         file_url = url_for('static', filename=f'uploads/{filename}', _external=True)
         
         return jsonify({

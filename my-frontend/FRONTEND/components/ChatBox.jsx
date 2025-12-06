@@ -7,7 +7,7 @@ export default function ChatBox() {
   const [msg, setMsg] = useState("");
   const [log, setLog] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [isOpen, setIsOpen] = useState(false); // Trạng thái mở/đóng
+  const [isOpen, setIsOpen] = useState(false);
   const [userId, setUserId] = useState(
     localStorage.getItem("user_id") || sessionStorage.getItem("user_id")
   );
@@ -99,7 +99,7 @@ export default function ChatBox() {
 
   return (
     <>
-      {/* Floating Button */}
+      {}
       {!isOpen && (
         <button className="chat-float-btn" onClick={() => setIsOpen(true)}>
           <span className="chat-icon">💬</span>
@@ -107,7 +107,7 @@ export default function ChatBox() {
         </button>
       )}
 
-      {/* Chat Window */}
+      {}
       {isOpen && (
         <div className="chatbox-container chatbox-floating">
           <div className="chatbox-header">

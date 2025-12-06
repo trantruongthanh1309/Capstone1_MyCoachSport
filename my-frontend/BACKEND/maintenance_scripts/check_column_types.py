@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Script để kiểm tra kiểu dữ liệu của các cột
 """
@@ -18,7 +17,6 @@ try:
     
     print("✅ Kết nối thành công!")
     
-    # Kiểm tra kiểu dữ liệu của các cột
     cursor.execute("""
         SELECT 
             c.name AS ColumnName,

@@ -1,4 +1,3 @@
-// AdminPosts.jsx
 import React, { useState, useEffect } from 'react';
 import './AdminPosts.css';
 
@@ -242,7 +241,7 @@ export default function AdminPosts() {
         <p className="subtitle">Duyệt và quản lý bài đăng từ người dùng</p>
       </div>
 
-      {/* Stats Cards */}
+      {}
       {stats && (
         <div className="posts-stats">
           <div className="stat-card stat-pending" onClick={() => setFilters({ ...filters, status: 'pending' })}>
@@ -276,7 +275,7 @@ export default function AdminPosts() {
         </div>
       )}
 
-      {/* Filters & Bulk Actions */}
+      {}
       <div className="filters-bar">
         <div className="search-box">
           <input
@@ -317,7 +316,7 @@ export default function AdminPosts() {
         </button>
       </div>
 
-      {/* Posts Grid */}
+      {}
       <div className="posts-grid">
         <div className="select-all-bar">
           <label>
@@ -398,7 +397,7 @@ export default function AdminPosts() {
         </div>
       )}
 
-      {/* Pagination */}
+      {}
       {posts.length > 0 && (
         <div className="pagination">
           <button
@@ -417,7 +416,7 @@ export default function AdminPosts() {
         </div>
       )}
 
-      {/* Detail Modal */}
+      {}
       {showDetailModal && selectedPost && (
         <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -463,7 +462,7 @@ export default function AdminPosts() {
         </div>
       )}
 
-      {/* Reject Modal */}
+      {}
       {showRejectModal && selectedPost && (
         <div className="modal-overlay" onClick={() => setShowRejectModal(false)}>
           <div className="modal-content modal-small" onClick={(e) => e.stopPropagation()}>
