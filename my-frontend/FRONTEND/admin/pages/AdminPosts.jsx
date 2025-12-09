@@ -227,7 +227,7 @@ export default function AdminPosts() {
     return (
       <div className="admin-posts">
         <div className="loading-spinner">
-          <div className="spinner"></div>
+          <div className="admin-spinner"></div>
           <p>Đang tải dữ liệu...</p>
         </div>
       </div>
@@ -241,7 +241,7 @@ export default function AdminPosts() {
         <p className="subtitle">Duyệt và quản lý bài đăng từ người dùng</p>
       </div>
 
-      {}
+      { }
       {stats && (
         <div className="posts-stats">
           <div className="stat-card stat-pending" onClick={() => setFilters({ ...filters, status: 'pending' })}>
@@ -275,7 +275,7 @@ export default function AdminPosts() {
         </div>
       )}
 
-      {}
+      { }
       <div className="filters-bar">
         <div className="search-box">
           <input
@@ -316,18 +316,19 @@ export default function AdminPosts() {
         </button>
       </div>
 
-      {}
+      { }
+      <div className="select-all-bar">
+        <label>
+          <input
+            type="checkbox"
+            checked={selectedPosts.length === posts.length && posts.length > 0}
+            onChange={toggleSelectAll}
+          />
+          <span>Chọn tất cả</span>
+        </label>
+      </div>
+
       <div className="posts-grid">
-        <div className="select-all-bar">
-          <label>
-            <input
-              type="checkbox"
-              checked={selectedPosts.length === posts.length && posts.length > 0}
-              onChange={toggleSelectAll}
-            />
-            <span>Chọn tất cả</span>
-          </label>
-        </div>
 
         {posts.map(post => (
           <div key={post.id} className={`post-card ${selectedPosts.includes(post.id) ? 'selected' : ''}`}>
@@ -397,7 +398,7 @@ export default function AdminPosts() {
         </div>
       )}
 
-      {}
+      { }
       {posts.length > 0 && (
         <div className="pagination">
           <button
@@ -416,7 +417,7 @@ export default function AdminPosts() {
         </div>
       )}
 
-      {}
+      { }
       {showDetailModal && selectedPost && (
         <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -462,7 +463,7 @@ export default function AdminPosts() {
         </div>
       )}
 
-      {}
+      { }
       {showRejectModal && selectedPost && (
         <div className="modal-overlay" onClick={() => setShowRejectModal(false)}>
           <div className="modal-content modal-small" onClick={(e) => e.stopPropagation()}>

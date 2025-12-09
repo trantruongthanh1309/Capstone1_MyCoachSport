@@ -58,6 +58,11 @@ export default function SwapButton({ item, type, onSwapSuccess, userId }) {
                 new_item_id: selectedOption.Id,
                 type: type
             };
+            
+            // Thêm slot cho meal để backend biết swap đúng meal (morning/afternoon/evening)
+            if (type === "meal" && item.data.MealType) {
+                swapPayload.slot = item.data.MealType; // morning, afternoon, evening
+            }
 
             const swapRes = await fetch(swapEndpoint, {
                 method: "POST",

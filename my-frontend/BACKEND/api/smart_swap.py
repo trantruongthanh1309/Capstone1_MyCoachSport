@@ -25,8 +25,16 @@ def score_meal_for_swap(meal, user, current_meal_kcal, current_meal_protein, tim
     """
     score = 0
     
-    if meal.get('IngredientTags'):
-        ingredients = set(i.strip().lower() for i in meal['IngredientTags'].split(','))
+    # Parse ingredients từ IngredientTags hoặc Ingredients
+    ingredient_str = meal.get('IngredientTags') or meal.get('Ingredients') or ""
+    if ingredient_str:
+        # Nếu là JSON string, parse nó
+        if ingredient_str.startswith('[') or ingredient_str.startswith('{'):
+            ingredients = set(i.strip().lower() for i in parse_list(ingredient_str))
+        else:
+            # Nếu là comma-separated string
+            ingredients = set(i.strip().lower() for i in ingredient_str.split(',') if i.strip())
+        
         allergies = set(a.lower() for a in parse_list(user.get('Allergies', '[]')))
         dislikes = set(d.lower() for d in parse_list(user.get('DislikedIngredients', '[]')))
         forbidden = allergies | dislikes
@@ -49,8 +57,9 @@ def score_meal_for_swap(meal, user, current_meal_kcal, current_meal_protein, tim
         score += 15
     
     user_sport = (user.get('Sport') or '').lower()
-    if meal.get('SportTags') and user_sport:
-        sport_tags = set(s.strip().lower() for s in meal['SportTags'].split(','))
+    sport_tags_str = meal.get('SportTags') or meal.get('SuitableSports') or ""
+    if sport_tags_str and user_sport:
+        sport_tags = set(s.strip().lower() for s in sport_tags_str.split(','))
         if user_sport in sport_tags:
             score += 50
     
@@ -152,7 +161,7 @@ def suggest_meal_swap():
         }
         
         current_meal_query = text("""
-            SELECT Kcal, Protein, MealType FROM dbo.Meals WHERE Id = :meal_id
+            SELECT Kcal, Protein, MealTime FROM dbo.Meals WHERE Id = :meal_id
         """)
         current_meal_result = db.session.execute(current_meal_query, {"meal_id": current_meal_id}).fetchone()
         
@@ -166,7 +175,7 @@ def suggest_meal_swap():
         max_kcal = current_kcal + 100
         
         alternatives_query = text("""
-            SELECT Id, Name, Kcal, Protein, Carb, Fat, MealType, SportTags, IngredientTags, MealTiming
+            SELECT Id, Name, Kcal, Protein, Carb, Fat, MealTime, SuitableSports, Ingredients
             FROM dbo.Meals 
             WHERE Kcal >= :min_kcal 
             AND Kcal <= :max_kcal
@@ -188,10 +197,10 @@ def suggest_meal_swap():
                 "Protein": row[3],
                 "Carb": row[4],
                 "Fat": row[5],
-                "MealType": row[6],
-                "SportTags": row[7],
-                "IngredientTags": row[8],
-                "MealTiming": row[9]
+                "MealType": row[6],  # MealTime từ DB
+                "SportTags": row[7],  # SuitableSports từ DB
+                "IngredientTags": row[8] if row[8] else "",  # Ingredients từ DB
+                "MealTiming": row[6]  # Dùng MealTime cho MealTiming
             }
             
             score = score_meal_for_swap(meal, user, current_kcal, current_protein, time_slot)

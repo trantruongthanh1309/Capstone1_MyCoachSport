@@ -1,5 +1,4 @@
 from flask import Blueprint, request, jsonify
-from flask import Blueprint, request, jsonify
 from .admin_middleware import require_admin
 from models.meal import Meal
 from db import db
@@ -17,15 +16,15 @@ def get_meals():
         per_page = request.args.get('per_page', 20, type=int)
         search = request.args.get('search', '')
         sport = request.args.get('sport', '')
-        meal_type = request.args.get('meal_type', '')
+        meal_time = request.args.get('meal_time', '')
         
         query = Meal.query
         if search:
             query = query.filter(Meal.Name.contains(search))
         if sport:
-            query = query.filter(Meal.SportTags.contains(sport))
-        if meal_type:
-            query = query.filter(Meal.MealType == meal_type)
+            query = query.filter(Meal.SuitableSports.contains(sport))
+        if meal_time:
+            query = query.filter(Meal.MealTime.contains(meal_time))
             
         query = query.order_by(Meal.Id.desc())
         
@@ -38,10 +37,14 @@ def get_meals():
             'protein': m.Protein,
             'carb': m.Carb,
             'fat': m.Fat,
-            'meal_type': m.MealType,
-            'sport_tags': m.SportTags,
-            'ingredient_tags': m.IngredientTags,
-            'tags': m.Tags
+            'serving_size': m.ServingSize,
+            'meal_time': m.MealTime,
+            'suitable_sports': m.SuitableSports,
+            'ingredients': m.Ingredients,
+            'recipe': m.Recipe,
+            'cooking_time_min': m.CookingTimeMin,
+            'difficulty': m.Difficulty,
+            'image': m.Image
         } for m in pagination.items]
         
         return jsonify({
@@ -72,10 +75,14 @@ def create_meal():
             Protein=data.get('protein', 0),
             Carb=data.get('carb', 0),
             Fat=data.get('fat', 0),
-            MealType=data.get('meal_type'),
-            SportTags=data.get('sport_tags', ''),
-            IngredientTags=data.get('ingredient_tags', ''),
-            Tags=data.get('tags', '')
+            ServingSize=data.get('serving_size'),
+            MealTime=data.get('meal_time'), # 'Breakfast', 'Lunch', 'Dinner'
+            SuitableSports=data.get('suitable_sports', ''),
+            Ingredients=data.get('ingredients', ''),
+            Recipe=data.get('recipe', ''),
+            CookingTimeMin=data.get('cooking_time_min', 0),
+            Difficulty=data.get('difficulty', 'Medium'),
+            Image=data.get('image', '')
         )
         
         db.session.add(new_meal)
@@ -101,10 +108,14 @@ def update_meal(meal_id):
         meal.Protein = data.get('protein', meal.Protein)
         meal.Carb = data.get('carb', meal.Carb)
         meal.Fat = data.get('fat', meal.Fat)
-        meal.MealType = data.get('meal_type', meal.MealType)
-        meal.SportTags = data.get('sport_tags', meal.SportTags)
-        meal.IngredientTags = data.get('ingredient_tags', meal.IngredientTags)
-        meal.Tags = data.get('tags', meal.Tags)
+        meal.ServingSize = data.get('serving_size', meal.ServingSize)
+        meal.MealTime = data.get('meal_time', meal.MealTime)
+        meal.SuitableSports = data.get('suitable_sports', meal.SuitableSports)
+        meal.Ingredients = data.get('ingredients', meal.Ingredients)
+        meal.Recipe = data.get('recipe', meal.Recipe)
+        meal.CookingTimeMin = data.get('cooking_time_min', meal.CookingTimeMin)
+        meal.Difficulty = data.get('difficulty', meal.Difficulty)
+        meal.Image = data.get('image', meal.Image)
         
         db.session.commit()
         
@@ -139,9 +150,9 @@ def get_meals_stats():
         from sqlalchemy import func
         
         total_meals = Meal.query.count()
-        breakfast = Meal.query.filter_by(MealType='breakfast').count()
-        lunch = Meal.query.filter_by(MealType='lunch').count()
-        dinner = Meal.query.filter_by(MealType='dinner').count()
+        breakfast = Meal.query.filter(Meal.MealTime.contains('Bữa Sáng')).count()
+        lunch = Meal.query.filter(Meal.MealTime.contains('Bữa Trưa')).count()
+        dinner = Meal.query.filter(Meal.MealTime.contains('Bữa Tối')).count()
         
         avg_kcal = db.session.query(func.avg(Meal.Kcal)).scalar() or 0
         avg_protein = db.session.query(func.avg(Meal.Protein)).scalar() or 0
@@ -166,18 +177,19 @@ def get_meal_sports_filter():
     if auth_error:
         return auth_error
     try:
-        sports = ['football', 'basketball', 'gym', 'running', 'swimming', 'yoga']
+        sports = ['Bóng đá', 'Bóng rổ', 'Gym', 'Chạy bộ', 'Bơi lội', 'Yoga', 'Boxing', 'Đạp xe', 'Thể hình', 'Cardio']
         return jsonify({'success': True, 'data': sports}), 200
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @meals_admin_bp.route('/api/admin/meals/filters/meal-types', methods=['GET'])
 def get_meal_types_filter():
+    # Helper for frontend filters
     auth_error = require_admin()
     if auth_error:
         return auth_error
     try:
-        types = ['breakfast', 'lunch', 'dinner', 'snack']
+        types = ['Bữa Sáng', 'Bữa Trưa', 'Bữa Tối', 'Bữa Phụ', 'Trước Tập', 'Sau Tập']
         return jsonify({'success': True, 'data': types}), 200
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500

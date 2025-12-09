@@ -107,11 +107,37 @@ def swap_schedule_item():
             return jsonify({"success": False, "error": "Invalid date format"}), 400
         
         if item_type == "meal":
-            plan = UserPlan.query.filter_by(
-                UserId=user_id, 
-                Date=date_obj,
-                MealId=old_item_id
-            ).first()
+            # Lấy slot từ request
+            slot = data.get('slot')
+            
+            # Nếu không có slot từ request, tìm từ UserPlan hiện tại
+            if not slot:
+                existing_plan = UserPlan.query.filter_by(
+                    UserId=user_id,
+                    Date=date_obj,
+                    MealId=old_item_id,
+                    Type="meal"
+                ).first()
+                if existing_plan:
+                    slot = existing_plan.Slot
+            
+            # Tìm plan với cả MealId và Slot để đảm bảo swap đúng meal (morning/afternoon/evening)
+            if slot:
+                plan = UserPlan.query.filter_by(
+                    UserId=user_id, 
+                    Date=date_obj,
+                    MealId=old_item_id,
+                    Slot=slot,
+                    Type="meal"
+                ).first()
+            else:
+                # Fallback: chỉ filter theo MealId (có thể swap sai nếu có nhiều meal trong ngày)
+                plan = UserPlan.query.filter_by(
+                    UserId=user_id, 
+                    Date=date_obj,
+                    MealId=old_item_id,
+                    Type="meal"
+                ).first()
             
             if not plan:
                 return jsonify({"success": False, "error": "Old meal not found in schedule"}), 404
@@ -130,6 +156,13 @@ def swap_schedule_item():
                     "Protein": new_meal.Protein,
                     "Carb": new_meal.Carb,
                     "Fat": new_meal.Fat,
+                    "ServingSize": getattr(new_meal, 'ServingSize', ''),
+                    "SuitableSports": getattr(new_meal, 'SuitableSports', ''),
+                    "MealTime": getattr(new_meal, 'MealTime', ''),
+                    "Ingredients": getattr(new_meal, 'Ingredients', ''),
+                    "Recipe": getattr(new_meal, 'Recipe', ''),
+                    "Difficulty": getattr(new_meal, 'Difficulty', ''),
+                    "CookingTimeMin": getattr(new_meal, 'CookingTimeMin', 0),
                     "Image": getattr(new_meal, 'Image', None)
                 } if new_meal else None
             })

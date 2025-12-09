@@ -6,9 +6,9 @@ import "./Navbar.css";
 export default function Navbar() {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [userData, setUserData] = useState({
-    name: "Người dùng",
-    email: "user@example.com",
-    avatar: "https://png.pngtree.com/png-vector/20191110/ourmid/pngtree-avatar-icon-profile-icon-member-login-vector-isolated-png-image_1978396.jpg"
+    name: localStorage.getItem("user_name") || "Người dùng",
+    email: localStorage.getItem("user_email") || "user@example.com",
+    avatar: localStorage.getItem("user_avatar") || "https://png.pngtree.com/png-vector/20191110/ourmid/pngtree-avatar-icon-profile-icon-member-login-vector-isolated-png-image_1978396.jpg"
   });
   const navigate = useNavigate();
 
@@ -19,11 +19,16 @@ export default function Navbar() {
       .then(res => res.json())
       .then(data => {
         if (data.success) {
-          setUserData({
+          const newData = {
             name: data.name || "Người dùng",
             email: data.email || "user@example.com",
             avatar: data.avatar || "https://png.pngtree.com/png-vector/20191110/ourmid/pngtree-avatar-icon-profile-icon-member-login-vector-isolated-png-image_1978396.jpg"
-          });
+          };
+          setUserData(newData);
+          // Update localStorage
+          if (data.name) localStorage.setItem('user_name', data.name);
+          if (data.email) localStorage.setItem('user_email', data.email);
+          if (data.avatar) localStorage.setItem('user_avatar', data.avatar);
         }
       })
       .catch(err => console.error("Lỗi fetch user:", err));
@@ -34,9 +39,12 @@ export default function Navbar() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
     localStorage.removeItem("user_id");
+    localStorage.removeItem("role");
     localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("user_name");
+    localStorage.removeItem("user_email");
+    localStorage.removeItem("user_avatar");
     navigate("/");
   };
 
@@ -83,10 +91,10 @@ export default function Navbar() {
           </nav>
 
           <div className="user-profile">
-            {}
+            { }
             <NotificationBell />
 
-            {}
+            { }
             <div className="profile-wrapper" onClick={toggleProfileDropdown}>
               <img
                 src={userData.avatar}
@@ -96,7 +104,7 @@ export default function Navbar() {
               <div className="status-indicator"></div>
             </div>
 
-            {}
+            { }
             {showProfileDropdown && (
               <div className="profile-dropdown">
                 <div className="profile-header">

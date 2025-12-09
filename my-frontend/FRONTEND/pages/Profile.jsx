@@ -260,14 +260,30 @@ export default function Profile() {
                 <span className="label-icon">⚽</span>
                 Môn thể thao
               </label>
-              <input
-                type="text"
+              <select
                 value={profile.sport}
                 onChange={(e) => setProfile({ ...profile, sport: e.target.value })}
-                placeholder="Môn thể thao"
-                className="form-input"
+                className="form-input form-select"
                 disabled={!isEditing}
-              />
+              >
+                <option value="">-- Chọn môn thể thao --</option>
+                <option value="Bóng đá">⚽ Bóng đá</option>
+                <option value="Bóng rổ">🏀 Bóng rổ</option>
+                <option value="Gym">🏋️ Gym/Thể hình</option>
+                <option value="Chạy bộ">🏃 Chạy bộ</option>
+                <option value="Bơi lội">🏊 Bơi lội</option>
+                <option value="Yoga">🧘 Yoga</option>
+                <option value="Cầu lông">🏸 Cầu lông</option>
+                <option value="Tennis">🎾 Tennis</option>
+                <option value="Bóng chuyền">🏐 Bóng chuyền</option>
+                <option value="Boxing">🥊 Boxing</option>
+                <option value="Đạp xe">🚴 Đạp xe</option>
+                <option value="Cardio">❤️ Cardio</option>
+                <option value="Pilates">🧘 Pilates</option>
+                <option value="Bóng bàn">🏓 Bóng bàn</option>
+                <option value="Võ thuật">🥋 Võ thuật</option>
+                <option value="Khác">🎯 Khác</option>
+              </select>
             </div>
 
             { }

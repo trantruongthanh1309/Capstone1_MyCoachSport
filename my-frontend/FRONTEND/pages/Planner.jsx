@@ -95,13 +95,15 @@ export default function Planner() {
   const showItemDetail = (item) => {
     if (item.type === "meal") {
       setDetailItem({
+        type: "meal",
         title: item.data.Name,
-        content: `Calo: ${item.data.Kcal || 0} kcal\nProtein: ${item.data.Protein || 0}g\nCarb: ${item.data.Carb || 0}g\nFat: ${item.data.Fat || 0}g`,
+        data: item.data
       });
     } else {
       setDetailItem({
+        type: "workout",
         title: item.data.Name,
-        content: `Môn: ${item.data.Sport || "N/A"}\nNhóm cơ: ${item.data.MuscleGroups || "N/A"}\nThời gian: ${item.data.Duration_min || 0} phút\nCường độ: ${item.data.Intensity || "N/A"}\nDụng cụ: ${item.data.Equipment || "N/A"}`,
+        data: item.data
       });
     }
     setShowDetail(true);
@@ -402,17 +404,212 @@ export default function Planner() {
         </div>
       </div>
 
-      { }
-      {showDetail && (
+      {/* Detail Modal */}
+      {showDetail && detailItem && (
         <div className="modal-overlay" onClick={() => setShowDetail(false)}>
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-box detail-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3 className="modal-title">{detailItem?.title}</h3>
+              <h3 className="modal-title">{detailItem.title}</h3>
               <button className="modal-close" onClick={() => setShowDetail(false)}>✕</button>
             </div>
+
             <div className="modal-content">
-              <pre className="detail-pre">{detailItem?.content}</pre>
+              {detailItem.type === "workout" ? (
+                <div className="workout-detail">
+                  {/* Basic Info */}
+                  <div className="detail-section">
+                    <h4 className="section-title">📋 Thông Tin Cơ Bản</h4>
+                    <div className="info-grid">
+                      <div className="info-item">
+                        <span className="info-label">Môn thể thao:</span>
+                        <span className="info-value">{detailItem.data.Sport || "N/A"}</span>
+                      </div>
+                      <div className="info-item">
+                        <span className="info-label">Thời lượng:</span>
+                        <span className="info-value">{detailItem.data.Duration_min || 0} phút</span>
+                      </div>
+                      <div className="info-item">
+                        <span className="info-label">Cường độ:</span>
+                        <span className="info-value intensity-badge">{detailItem.data.Intensity || "N/A"}</span>
+                      </div>
+                      <div className="info-item">
+                        <span className="info-label">Độ khó:</span>
+                        <span className="info-value difficulty-badge">{detailItem.data.Difficulty || "N/A"}</span>
+                      </div>
+                      <div className="info-item">
+                        <span className="info-label">Dụng cụ:</span>
+                        <span className="info-value">{detailItem.data.Equipment || "Không cần"}</span>
+                      </div>
+                      <div className="info-item">
+                        <span className="info-label">Calo đốt:</span>
+                        <span className="info-value">🔥 {detailItem.data.CalorieBurn || 0} kcal</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Workout Details */}
+                  {(detailItem.data.Sets || detailItem.data.Reps || detailItem.data.RestTime) && (
+                    <div className="detail-section">
+                      <h4 className="section-title">💪 Chi Tiết Tập Luyện</h4>
+                      <div className="info-grid">
+                        {detailItem.data.Sets && (
+                          <div className="info-item">
+                            <span className="info-label">Số hiệp:</span>
+                            <span className="info-value">{detailItem.data.Sets}</span>
+                          </div>
+                        )}
+                        {detailItem.data.Reps && (
+                          <div className="info-item">
+                            <span className="info-label">Số lần/Thời gian:</span>
+                            <span className="info-value">{detailItem.data.Reps}</span>
+                          </div>
+                        )}
+                        {detailItem.data.RestTime && (
+                          <div className="info-item">
+                            <span className="info-label">Nghỉ giữa hiệp:</span>
+                            <span className="info-value">⏱️ {detailItem.data.RestTime}s</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Description */}
+                  {detailItem.data.Description && (
+                    <div className="detail-section">
+                      <h4 className="section-title">📝 Mô Tả</h4>
+                      <p className="detail-text">{detailItem.data.Description}</p>
+                    </div>
+                  )}
+
+                  {/* Instructions */}
+                  {detailItem.data.Instructions && (
+                    <div className="detail-section">
+                      <h4 className="section-title">📖 Hướng Dẫn Thực Hiện</h4>
+                      <div className="instructions-box">
+                        {detailItem.data.Instructions.split('\n').map((line, idx) => (
+                          <p key={idx} className="instruction-line">{line}</p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Safety Notes */}
+                  {detailItem.data.SafetyNotes && (
+                    <div className="detail-section safety-section">
+                      <h4 className="section-title">⚠️ Lưu Ý An Toàn</h4>
+                      <div className="safety-box">
+                        {detailItem.data.SafetyNotes.split('\n').map((line, idx) => (
+                          <p key={idx} className="safety-line">{line}</p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Muscles */}
+                  {(detailItem.data.PrimaryMuscles || detailItem.data.SecondaryMuscles) && (
+                    <div className="detail-section">
+                      <h4 className="section-title">🎯 Nhóm Cơ</h4>
+                      <div className="info-grid">
+                        {detailItem.data.PrimaryMuscles && (
+                          <div className="info-item full-width">
+                            <span className="info-label">Cơ chính:</span>
+                            <span className="info-value muscle-primary">{detailItem.data.PrimaryMuscles}</span>
+                          </div>
+                        )}
+                        {detailItem.data.SecondaryMuscles && (
+                          <div className="info-item full-width">
+                            <span className="info-label">Cơ phụ:</span>
+                            <span className="info-value muscle-secondary">{detailItem.data.SecondaryMuscles}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Progression/Regression */}
+                  {(detailItem.data.ProgressionNotes || detailItem.data.RegressionNotes) && (
+                    <div className="detail-section">
+                      <h4 className="section-title">📈 Điều Chỉnh Cường Độ</h4>
+                      {detailItem.data.ProgressionNotes && (
+                        <div className="progression-box">
+                          <strong>⬆️ Tăng cường độ:</strong>
+                          <p>{detailItem.data.ProgressionNotes}</p>
+                        </div>
+                      )}
+                      {detailItem.data.RegressionNotes && (
+                        <div className="regression-box">
+                          <strong>⬇️ Giảm cường độ:</strong>
+                          <p>{detailItem.data.RegressionNotes}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Prerequisites */}
+                  {detailItem.data.Prerequisites && (
+                    <div className="detail-section">
+                      <h4 className="section-title">✅ Yêu Cầu Trước Khi Tập</h4>
+                      <p className="detail-text prerequisites">{detailItem.data.Prerequisites}</p>
+                    </div>
+                  )}
+
+                  {/* Video */}
+                  {detailItem.data.VideoUrl && (
+                    <div className="detail-section">
+                      <h4 className="section-title">🎥 Video Hướng Dẫn</h4>
+                      <a href={detailItem.data.VideoUrl} target="_blank" rel="noopener noreferrer" className="video-link">
+                        ▶️ Xem video hướng dẫn
+                      </a>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                // Meal Detail
+                <div className="meal-detail">
+                  <div className="detail-section">
+                    <h4 className="section-title">🍽️ Thông Tin Dinh Dưỡng</h4>
+                    <div className="info-grid">
+                      <div className="info-item">
+                        <span className="info-label">Calo:</span>
+                        <span className="info-value">🔥 {detailItem.data.Kcal || 0} kcal</span>
+                      </div>
+                      <div className="info-item">
+                        <span className="info-label">Protein:</span>
+                        <span className="info-value">💪 {detailItem.data.Protein || 0}g</span>
+                      </div>
+                      <div className="info-item">
+                        <span className="info-label">Carb:</span>
+                        <span className="info-value">🍚 {detailItem.data.Carb || 0}g</span>
+                      </div>
+                      <div className="info-item">
+                        <span className="info-label">Fat:</span>
+                        <span className="info-value">🥑 {detailItem.data.Fat || 0}g</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {detailItem.data.Ingredients && (
+                    <div className="detail-section">
+                      <h4 className="section-title">🥗 Nguyên Liệu</h4>
+                      <p className="detail-text">{detailItem.data.Ingredients}</p>
+                    </div>
+                  )}
+
+                  {detailItem.data.Recipe && (
+                    <div className="detail-section">
+                      <h4 className="section-title">👨‍🍳 Công Thức</h4>
+                      <div className="recipe-box">
+                        {detailItem.data.Recipe.split('\n').map((line, idx) => (
+                          <p key={idx} className="recipe-line">{line}</p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
+
             <div className="modal-footer">
               <button className="btn-close" onClick={() => setShowDetail(false)}>
                 Đóng

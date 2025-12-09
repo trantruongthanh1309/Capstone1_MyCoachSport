@@ -30,6 +30,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [userGrowth, setUserGrowth] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [timeRange, setTimeRange] = useState(30);
 
   useEffect(() => {
@@ -39,42 +40,62 @@ export default function AdminDashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      
+      setError(null);
+
       const statsRes = await fetch('/api/admin/dashboard/stats', {
         credentials: 'include'
       });
       const statsData = await statsRes.json();
-      
+
       if (statsData.success) {
         setStats(statsData.data);
+      } else {
+        throw new Error(statsData.error || "Failed to fetch stats");
       }
-      
+
       const growthRes = await fetch(`/api/admin/dashboard/user-growth?days=${timeRange}`, {
         credentials: 'include'
       });
       const growthData = await growthRes.json();
-      
+
       if (growthData.success) {
         setUserGrowth(growthData.data);
       }
-      
-      setLoading(false);
+
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
+      setError(error.message);
+    } finally {
       setLoading(false);
     }
   };
 
-  if (loading || !stats) {
+  if (loading) {
     return (
       <div className="admin-dashboard">
         <div className="loading-spinner">
-          <div className="spinner"></div>
+          <div className="admin-spinner"></div>
           <p>Đang tải dữ liệu...</p>
         </div>
       </div>
     );
   }
+
+  if (error) {
+    return (
+      <div className="admin-dashboard">
+        <div className="error-container" style={{ textAlign: 'center', padding: '50px' }}>
+          <h3>⚠️ Đã xảy ra lỗi</h3>
+          <p style={{ color: 'red', margin: '20px 0' }}>{error}</p>
+          <button className="action-btn btn-primary" onClick={fetchDashboardData}>
+            Thử lại
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!stats) return null;
 
   const userGrowthChartData = {
     labels: userGrowth.map(item => {
@@ -151,7 +172,7 @@ export default function AdminDashboard() {
         <p className="dashboard-subtitle">Tổng quan hệ thống MySportCoach</p>
       </div>
 
-      {}
+      { }
       <div className="stats-grid">
         <div className="stat-card gradient-blue">
           <div className="stat-icon">👥</div>
@@ -203,7 +224,7 @@ export default function AdminDashboard() {
           <div className="stat-content">
             <h3>Tỷ Lệ Hoạt Động</h3>
             <p className="stat-number">
-              {stats.total_users > 0 
+              {stats.total_users > 0
                 ? Math.round((stats.active_users_today / stats.total_users) * 100)
                 : 0}%
             </p>
@@ -212,26 +233,26 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {}
+      { }
       <div className="charts-section">
-        {}
+        { }
         <div className="chart-card full-width">
           <div className="chart-header">
             <h2>📈 Tăng Trưởng Người Dùng</h2>
             <div className="time-range-selector">
-              <button 
+              <button
                 className={timeRange === 7 ? 'active' : ''}
                 onClick={() => setTimeRange(7)}
               >
                 7 ngày
               </button>
-              <button 
+              <button
                 className={timeRange === 30 ? 'active' : ''}
                 onClick={() => setTimeRange(30)}
               >
                 30 ngày
               </button>
-              <button 
+              <button
                 className={timeRange === 90 ? 'active' : ''}
                 onClick={() => setTimeRange(90)}
               >
@@ -244,23 +265,23 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {}
+        { }
         <div className="chart-card">
           <div className="chart-header">
             <h2>🏃 Phân Bố Môn Thể Thao</h2>
           </div>
           <div className="chart-container">
-            <Bar 
-              data={sportChartData} 
+            <Bar
+              data={sportChartData}
               options={{
                 ...chartOptions,
                 indexAxis: 'y',
-              }} 
+              }}
             />
           </div>
         </div>
 
-        {}
+        { }
         <div className="chart-card">
           <div className="chart-header">
             <h2>🎯 Mục Tiêu Người Dùng</h2>
@@ -271,7 +292,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {}
+      { }
       <div className="quick-actions">
         <h2>⚡ Thao Tác Nhanh</h2>
         <div className="action-buttons">

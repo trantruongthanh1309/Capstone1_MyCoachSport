@@ -6,13 +6,13 @@ export default function AdminMeals() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({ page: 1, per_page: 20, total: 0, pages: 0 });
-  const [filters, setFilters] = useState({ search: '', sport: '', meal_type: '' });
+  const [filters, setFilters] = useState({ search: '', sport: '', meal_time: '' });
   const [sports, setSports] = useState([]);
-  const [mealTypes, setMealTypes] = useState([]);
   const [selectedMeal, setSelectedMeal] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [mealTypes, setMealTypes] = useState([]);
 
   useEffect(() => {
     fetchMeals();
@@ -94,9 +94,14 @@ export default function AdminMeals() {
       protein: '',
       carb: '',
       fat: '',
-      meal_type: '',
-      sport_tags: '',
-      ingredient_tags: ''
+      serving_size: '',
+      meal_time: '',
+      suitable_sports: '',
+      ingredients: '',
+      recipe: '',
+      cooking_time_min: '',
+      difficulty: 'Medium',
+      image: ''
     });
     setIsEditing(false);
     setShowModal(true);
@@ -137,7 +142,7 @@ export default function AdminMeals() {
   const saveMeal = async () => {
     try {
       if (!selectedMeal.name || !selectedMeal.kcal) {
-        alert('Vui lòng điền đầy đủ thông tin!');
+        alert('Vui lòng điền đầy đủ thông tin bắt buộc (Tên, Kcal, Protein...)!');
         return;
       }
 
@@ -168,27 +173,6 @@ export default function AdminMeals() {
     }
   };
 
-  const getMealTypeLabel = (type) => {
-    const labels = {
-      breakfast: '🍳 Sáng',
-      lunch: '🍱 Trưa',
-      dinner: '🍽️ Tối',
-      snack: '🍿 Snack'
-    };
-    return labels[type] || type;
-  };
-
-  if (loading && meals.length === 0) {
-    return (
-      <div className="admin-meals">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-          <p>Đang tải dữ liệu...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="admin-meals">
       <div className="meals-header">
@@ -201,7 +185,7 @@ export default function AdminMeals() {
         </button>
       </div>
 
-      {}
+      {/* Stats */}
       {stats && (
         <div className="meals-stats">
           <div className="stat-card">
@@ -249,7 +233,7 @@ export default function AdminMeals() {
         </div>
       )}
 
-      {}
+      {/* Filter Bar */}
       <div className="filters-bar">
         <div className="search-box">
           <input
@@ -271,12 +255,12 @@ export default function AdminMeals() {
         </select>
 
         <select
-          value={filters.meal_type}
-          onChange={(e) => handleFilterChange('meal_type', e.target.value)}
+          value={filters.meal_time}
+          onChange={(e) => handleFilterChange('meal_time', e.target.value)}
         >
           <option value="">Tất cả bữa ăn</option>
           {mealTypes.map(type => (
-            <option key={type} value={type}>{getMealTypeLabel(type)}</option>
+            <option key={type} value={type}>{type}</option>
           ))}
         </select>
 
@@ -285,16 +269,20 @@ export default function AdminMeals() {
         </button>
       </div>
 
-      {}
+      {/* Meals Grid */}
       <div className="meals-grid">
         {meals.map(meal => (
           <div key={meal.id} className="meal-card">
             <div className="meal-header">
               <h3>{meal.name}</h3>
-              {meal.meal_type && (
-                <span className="meal-type-badge">{getMealTypeLabel(meal.meal_type)}</span>
+              {meal.difficulty && (
+                <span className={`meal-type-badge ${meal.difficulty.toLowerCase()}`}>{meal.difficulty}</span>
               )}
             </div>
+
+            <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '10px' }}>
+              <strong>{meal.serving_size}</strong>
+            </p>
 
             <div className="meal-nutrition">
               <div className="nutrition-item">
@@ -305,25 +293,17 @@ export default function AdminMeals() {
                 <span className="nutrition-label">💪 Protein</span>
                 <span className="nutrition-value">{meal.protein}g</span>
               </div>
-              <div className="nutrition-item">
-                <span className="nutrition-label">🍚 Carb</span>
-                <span className="nutrition-value">{meal.carb}g</span>
-              </div>
-              <div className="nutrition-item">
-                <span className="nutrition-label">🥑 Fat</span>
-                <span className="nutrition-value">{meal.fat}g</span>
-              </div>
             </div>
 
-            {meal.sport_tags && (
+            {meal.meal_time && (
               <div className="meal-tags">
-                <strong>Môn:</strong> {meal.sport_tags}
+                <strong>🕒 Bữa:</strong> {meal.meal_time}
               </div>
             )}
 
-            {meal.ingredient_tags && (
+            {meal.suitable_sports && (
               <div className="meal-tags">
-                <strong>Nguyên liệu:</strong> {meal.ingredient_tags}
+                <strong>🏅 Môn:</strong> {meal.suitable_sports}
               </div>
             )}
 
@@ -347,7 +327,7 @@ export default function AdminMeals() {
         </div>
       )}
 
-      {}
+      {/* Pagination */}
       {meals.length > 0 && (
         <div className="pagination">
           <button
@@ -366,7 +346,7 @@ export default function AdminMeals() {
         </div>
       )}
 
-      {}
+      {/* Modal Add/Edit */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -376,7 +356,7 @@ export default function AdminMeals() {
             </div>
             <div className="modal-body">
               <div className="form-grid">
-                <div className="form-group">
+                <div className="form-group full-width">
                   <label>Tên món *</label>
                   <input
                     type="text"
@@ -385,105 +365,93 @@ export default function AdminMeals() {
                     placeholder="Ví dụ: Ức gà luộc"
                   />
                 </div>
-                <div className="form-group">
-                  <label>Loại bữa</label>
-                  <select
-                    value={selectedMeal.meal_type}
-                    onChange={(e) => setSelectedMeal({ ...selectedMeal, meal_type: e.target.value })}
-                  >
-                    <option value="">Chọn</option>
-                    <option value="breakfast">Sáng</option>
-                    <option value="lunch">Trưa</option>
-                    <option value="dinner">Tối</option>
-                    <option value="snack">Snack</option>
-                  </select>
-                </div>
+
                 <div className="form-group">
                   <label>Kcal *</label>
-                  <input
-                    type="number"
-                    value={selectedMeal.kcal}
-                    onChange={(e) => setSelectedMeal({ ...selectedMeal, kcal: parseFloat(e.target.value) })}
-                    placeholder="300"
-                  />
+                  <input type="number" value={selectedMeal.kcal} onChange={(e) => setSelectedMeal({ ...selectedMeal, kcal: e.target.value })} placeholder="300" />
                 </div>
                 <div className="form-group">
                   <label>Protein (g) *</label>
-                  <input
-                    type="number"
-                    value={selectedMeal.protein}
-                    onChange={(e) => setSelectedMeal({ ...selectedMeal, protein: parseFloat(e.target.value) })}
-                    placeholder="30"
-                  />
+                  <input type="number" value={selectedMeal.protein} onChange={(e) => setSelectedMeal({ ...selectedMeal, protein: e.target.value })} placeholder="30" />
                 </div>
                 <div className="form-group">
                   <label>Carb (g) *</label>
-                  <input
-                    type="number"
-                    value={selectedMeal.carb}
-                    onChange={(e) => setSelectedMeal({ ...selectedMeal, carb: parseFloat(e.target.value) })}
-                    placeholder="40"
-                  />
+                  <input type="number" value={selectedMeal.carb} onChange={(e) => setSelectedMeal({ ...selectedMeal, carb: e.target.value })} placeholder="40" />
                 </div>
                 <div className="form-group">
                   <label>Fat (g) *</label>
-                  <input
-                    type="number"
-                    value={selectedMeal.fat}
-                    onChange={(e) => setSelectedMeal({ ...selectedMeal, fat: parseFloat(e.target.value) })}
-                    placeholder="10"
+                  <input type="number" value={selectedMeal.fat} onChange={(e) => setSelectedMeal({ ...selectedMeal, fat: e.target.value })} placeholder="10" />
+                </div>
+
+                <div className="form-group">
+                  <label>Khẩu phần (Serving Size)</label>
+                  <input type="text" value={selectedMeal.serving_size} onChange={(e) => setSelectedMeal({ ...selectedMeal, serving_size: e.target.value })} placeholder="Ví dụ: 100g, 1 bát" />
+                </div>
+
+                <div className="form-group">
+                  <label>Độ khó</label>
+                  <select value={selectedMeal.difficulty} onChange={(e) => setSelectedMeal({ ...selectedMeal, difficulty: e.target.value })}>
+                    <option value="Dễ">Dễ</option>
+                    <option value="Trung bình">Trung bình</option>
+                    <option value="Khó">Khó</option>
+                  </select>
+                </div>
+
+                <div className="form-group full-width">
+                  <label>Bữa ăn phù hợp (VD: Bữa Sáng, Bữa Trưa)</label>
+                  <input type="text" value={selectedMeal.meal_time} onChange={(e) => setSelectedMeal({ ...selectedMeal, meal_time: e.target.value })} placeholder="Bữa Sáng, Bữa Trưa, Bữa Tối" />
+                </div>
+
+                <div className="form-group full-width">
+                  <label>Môn thể thao phù hợp</label>
+                  <input type="text" value={selectedMeal.suitable_sports} onChange={(e) => setSelectedMeal({ ...selectedMeal, suitable_sports: e.target.value })} placeholder="Gym, Yoga, Chạy bộ..." />
+                </div>
+
+                <div className="form-group full-width">
+                  <label>Nguyên liệu (Ingredients)</label>
+                  <textarea
+                    rows="3"
+                    value={selectedMeal.ingredients}
+                    onChange={(e) => setSelectedMeal({ ...selectedMeal, ingredients: e.target.value })}
+                    placeholder="Danh sách nguyên liệu..."
                   />
                 </div>
+
                 <div className="form-group full-width">
-                  <label>Môn thể thao</label>
-                  <input
-                    type="text"
-                    value={selectedMeal.sport_tags}
-                    onChange={(e) => setSelectedMeal({ ...selectedMeal, sport_tags: e.target.value })}
-                    placeholder="football, gym (phân cách bằng dấu phẩy)"
+                  <label>Công thức / Cách làm (Recipe)</label>
+                  <textarea
+                    rows="4"
+                    value={selectedMeal.recipe}
+                    onChange={(e) => setSelectedMeal({ ...selectedMeal, recipe: e.target.value })}
+                    placeholder="Hướng dẫn chi tiết cách làm..."
                   />
                 </div>
+
                 <div className="form-group full-width">
-                  <label>Nguyên liệu</label>
-                  <input
-                    type="text"
-                    value={selectedMeal.ingredient_tags}
-                    onChange={(e) => setSelectedMeal({ ...selectedMeal, ingredient_tags: e.target.value })}
-                    placeholder="chicken, rice, broccoli (phân cách bằng dấu phẩy)"
-                  />
+                  <label>Link Ảnh (URL)</label>
+                  <input type="text" value={selectedMeal.image} onChange={(e) => setSelectedMeal({ ...selectedMeal, image: e.target.value })} placeholder="https://..." />
                 </div>
               </div>
             </div>
             <div className="modal-footer">
-              <button className="btn-cancel" onClick={() => setShowModal(false)}>
-                Hủy
-              </button>
-              <button className="btn-save" onClick={saveMeal}>
-                💾 {isEditing ? 'Cập nhật' : 'Thêm'}
-              </button>
+              <button className="btn-cancel" onClick={() => setShowModal(false)}>Hủy</button>
+              <button className="btn-save" onClick={saveMeal}>💾 Lưu</button>
             </div>
           </div>
         </div>
       )}
 
-      {}
+      {/* Delete Modal */}
       {showDeleteModal && (
         <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
           <div className="modal-content modal-small" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>⚠️ Xác Nhận Xóa</h2>
-            </div>
+            <div className="modal-header"><h2>⚠️ Xác Nhận Xóa</h2></div>
             <div className="modal-body">
-              <p>Bạn có chắc muốn xóa món <strong>{selectedMeal?.name}</strong>?</p>
-              <p className="warning-text">⚠️ Hành động này không thể hoàn tác!</p>
+              <p>Bạn có chắc muốn xóa <strong>{selectedMeal?.name}</strong>?</p>
             </div>
             <div className="modal-footer">
-              <button className="btn-cancel" onClick={() => setShowDeleteModal(false)}>
-                Hủy
-              </button>
-              <button className="btn-delete-confirm" onClick={confirmDelete}>
-                🗑️ Xóa
-              </button>
+              <button className="btn-cancel" onClick={() => setShowDeleteModal(false)}>Hủy</button>
+              <button className="btn-delete-confirm" onClick={confirmDelete}>🗑️ Xóa</button>
             </div>
           </div>
         </div>

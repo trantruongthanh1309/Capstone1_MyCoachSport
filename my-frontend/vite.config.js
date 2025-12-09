@@ -7,7 +7,7 @@ export default defineConfig({
     host: true, // Cho phép truy cập từ mạng
     proxy: {
       '/api': {
-        target: 'http://192.168.1.111:5000', // Dùng IP thật thay vì localhost
+        target: 'http://localhost:5000', // Dùng localhost để ổn định hơn
         changeOrigin: true,
         secure: false,
         configure: (proxy, options) => {

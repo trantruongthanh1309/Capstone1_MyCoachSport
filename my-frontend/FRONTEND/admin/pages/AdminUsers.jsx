@@ -136,7 +136,7 @@ export default function AdminUsers() {
     return (
       <div className="admin-users">
         <div className="loading-spinner">
-          <div className="spinner"></div>
+          <div className="admin-spinner"></div>
           <p>Đang tải dữ liệu...</p>
         </div>
       </div>
@@ -150,7 +150,7 @@ export default function AdminUsers() {
         <p className="subtitle">Tổng {pagination.total} người dùng</p>
       </div>
 
-      {}
+      { }
       <div className="filters-bar">
         <div className="search-box">
           <input
@@ -161,8 +161,8 @@ export default function AdminUsers() {
           />
         </div>
 
-        <select 
-          value={filters.sport} 
+        <select
+          value={filters.sport}
           onChange={(e) => handleFilterChange('sport', e.target.value)}
         >
           <option value="">Tất cả môn thể thao</option>
@@ -171,8 +171,8 @@ export default function AdminUsers() {
           ))}
         </select>
 
-        <select 
-          value={filters.goal} 
+        <select
+          value={filters.goal}
           onChange={(e) => handleFilterChange('goal', e.target.value)}
         >
           <option value="">Tất cả mục tiêu</option>
@@ -186,7 +186,7 @@ export default function AdminUsers() {
         </button>
       </div>
 
-      {}
+      { }
       <div className="users-table-container">
         <table className="users-table">
           <thead>
@@ -230,14 +230,14 @@ export default function AdminUsers() {
                 </td>
                 <td>
                   <div className="action-buttons">
-                    <button 
+                    <button
                       className="btn-edit"
                       onClick={() => handleEdit(user)}
                       title="Chỉnh sửa"
                     >
                       ✏️
                     </button>
-                    <button 
+                    <button
                       className="btn-delete"
                       onClick={() => handleDelete(user)}
                       title="Xóa"
@@ -252,16 +252,16 @@ export default function AdminUsers() {
         </table>
       </div>
 
-      {}
+      { }
       <div className="pagination">
-        <button 
+        <button
           disabled={pagination.page === 1}
           onClick={() => setPagination({ ...pagination, page: pagination.page - 1 })}
         >
           ← Trước
         </button>
         <span>Trang {pagination.page} / {pagination.pages}</span>
-        <button 
+        <button
           disabled={pagination.page === pagination.pages}
           onClick={() => setPagination({ ...pagination, page: pagination.page + 1 })}
         >
@@ -269,7 +269,7 @@ export default function AdminUsers() {
         </button>
       </div>
 
-      {}
+      { }
       {showEditModal && (
         <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -381,7 +381,7 @@ export default function AdminUsers() {
         </div>
       )}
 
-      {}
+      { }
       {showDeleteModal && (
         <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
           <div className="modal-content modal-small" onClick={(e) => e.stopPropagation()}>

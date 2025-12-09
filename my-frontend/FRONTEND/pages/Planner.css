@@ -441,3 +441,228 @@ body {
     transform: rotate(360deg);
   }
 }
+
+/* Detail Modal Styles */
+.detail-modal {
+  max-width: 900px;
+  width: 95%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-modal .modal-content {
+  overflow-y: auto;
+  max-height: calc(90vh - 140px);
+}
+
+.workout-detail,
+.meal-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.detail-section {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.detail-section.safety-section {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.section-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.info-label {
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.info-value {
+  font-size: 0.95rem;
+  color: #0f172a;
+  font-weight: 500;
+}
+
+.info-value.intensity-badge,
+.info-value.difficulty-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  width: fit-content;
+}
+
+.info-value.intensity-badge {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.info-value.difficulty-badge {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.info-value.muscle-primary {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.info-value.muscle-secondary {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.detail-text {
+  margin: 0;
+  color: #475569;
+  line-height: 1.7;
+  font-size: 0.95rem;
+}
+
+.detail-text.prerequisites {
+  background: #eff6ff;
+  padding: 12px;
+  border-radius: 8px;
+  border-left: 4px solid #3b82f6;
+}
+
+.instructions-box,
+.recipe-box {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.instruction-line,
+.recipe-line {
+  margin: 8px 0;
+  color: #475569;
+  line-height: 1.6;
+  padding-left: 20px;
+  position: relative;
+}
+
+.instruction-line::before {
+  content: "▸";
+  position: absolute;
+  left: 0;
+  color: #3b82f6;
+  font-weight: bold;
+}
+
+.recipe-line::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: #10b981;
+  font-weight: bold;
+}
+
+.safety-box {
+  background: white;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.safety-line {
+  margin: 8px 0;
+  color: #991b1b;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+.progression-box,
+.regression-box {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.progression-box:last-child,
+.regression-box:last-child {
+  margin-bottom: 0;
+}
+
+.progression-box strong {
+  color: #059669;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.regression-box strong {
+  color: #dc2626;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.progression-box p,
+.regression-box p {
+  margin: 0;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.video-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #3b82f6;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.video-link:hover {
+  background: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-modal {
+    max-width: 95%;
+  }
+}

@@ -7,15 +7,6 @@ from models.user_model import User
 from models.log import Log
 from models.meal import Meal
 from models.workout import Workout
-"""
-Dashboard Admin API
-"""
-from flask import Blueprint, request, jsonify
-from .admin_middleware import require_admin
-from models.user_model import User
-from models.log import Log
-from models.meal import Meal
-from models.workout import Workout
 from db import db
 from sqlalchemy import func, desc
 from datetime import datetime, timedelta
@@ -37,7 +28,7 @@ def get_dashboard_stats():
         
         today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         active_users_today = db.session.query(func.count(func.distinct(Log.User_id)))\
-            .filter(Log.Date >= today_start).scalar() or 0
+            .filter(Log.CreatedAt >= today_start).scalar() or 0
         
         total_meals = Meal.query.count()
         total_workouts = Workout.query.count()
@@ -46,7 +37,7 @@ def get_dashboard_stats():
         avg_workout_rating = db.session.query(func.avg(Log.Rating)).filter(Log.Workout_id.isnot(None)).scalar() or 0
         
         total_logs = Log.query.count()
-        logs_today = Log.query.filter(Log.Date >= today_start).count()
+        logs_today = Log.query.filter(Log.CreatedAt >= today_start).count()
         
         sport_stats = db.session.query(
             User.Sport, 

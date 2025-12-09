@@ -1,5 +1,6 @@
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -33,15 +34,15 @@ export default function App() {
     <ToastProvider>
       <div className="app-container">
         {!hideNavbar && <Navbar />}
-        <div className={`main-content ${isAdminPage ? "admin-mode" : ""}`}>
+        <div className={`main-content ${isAdminPage ? "admin-mode" : ""} ${!hideNavbar ? "has-navbar" : "hide-navbar-padding"}`}>
           <Routes>
-            { }
+            {/* Auth Pages */}
             <Route path="/" element={<Login />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
 
-            { }
+            {/* User Pages */}
             <Route path="/home" element={<Home />} />
             <Route path="/planner" element={<Planner />} />
             <Route path="/schedule-manager" element={<WorkScheduleManager />} />
@@ -53,7 +54,7 @@ export default function App() {
             <Route path="/videos" element={<Videos />} />
             <Route path="/settings" element={<Settings />} />
 
-            { }
+            {/* Admin Pages */}
             <Route
               path="/admin/*"
               element={
@@ -64,6 +65,7 @@ export default function App() {
             />
           </Routes>
         </div>
+        {!hideNavbar && <Footer />}
       </div>
     </ToastProvider>
   );

@@ -294,12 +294,18 @@ def login():
         session['role'] = acc.Role
         session.permanent = True
 
+        # Fetch user details to return
+        user_info = User.query.get(acc.User_id)
+
         return jsonify({
             "success": True,
             "message": "Đăng nhập thành công",
             "user_id": acc.User_id,
             "account_id": acc.Id,
-            "role": acc.Role
+            "role": acc.Role,
+            "name": user_info.Name if user_info else "",
+            "email": user_info.Email if user_info else "",
+            "avatar": user_info.Avatar if user_info else ""
         }), 200
         
     except Exception as e:
@@ -312,21 +318,29 @@ def logout():
 
 @auth_bp.route('/me', methods=['GET'])
 def get_current_user():
-    user_id = session.get('user_id')
-    role = session.get('role')
-    
-    if not user_id:
-        return jsonify({"error": "Chưa đăng nhập"}), 401
-    
-    user = User.query.get(user_id)
-    if not user:
-        return jsonify({"error": "User không tồn tại"}), 404
-    
-    return jsonify({
-        "success": True,
-        "user_id": user_id,
-        "name": user.Name,
-        "email": user.Email,
-        "avatar": user.Avatar,
-        "role": role
-    }), 200
+    try:
+        user_id = session.get('user_id')
+        role = session.get('role')
+        
+        if not user_id:
+            return jsonify({"error": "Chưa đăng nhập"}), 401
+        
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({"error": "User không tồn tại"}), 404
+        
+        return jsonify({
+            "success": True,
+            "user_id": user_id,
+            "name": user.Name,
+            "email": user.Email,
+            "avatar": user.Avatar,
+            "role": role
+        }), 200
+    except Exception as e:
+        import traceback
+        with open("debug_auth_error.log", "a", encoding="utf-8") as f:
+            f.write(f"Error in /me: {str(e)}\n")
+            f.write(traceback.format_exc())
+            f.write("\n" + "="*50 + "\n")
+        return jsonify({"error": "Internal Server Error", "details": str(e)}), 500

@@ -18,7 +18,7 @@ export default function Login() {
     setMessage("");
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/login", {
+      const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -31,6 +31,9 @@ export default function Login() {
       if (response.ok && result.success) {
         localStorage.setItem('user_id', result.user_id);
         localStorage.setItem('role', result.role);
+        if (result.name) localStorage.setItem('user_name', result.name);
+        if (result.email) localStorage.setItem('user_email', result.email);
+        if (result.avatar) localStorage.setItem('user_avatar', result.avatar);
         localStorage.setItem('isLoggedIn', 'true');
 
         console.log('✅ Login success - Role:', result.role);
@@ -47,6 +50,10 @@ export default function Login() {
       setLoading(false);
       setMessage("Lỗi kết nối server");
     }
+  };
+
+  const handleSocialLogin = (provider) => {
+    setMessage(`Tính năng đăng nhập ${provider} đang được phát triển (Cần cấu hình API).`);
   };
 
   return (
@@ -497,12 +504,6 @@ export default function Login() {
           box-shadow: 0 4px 15px rgba(24, 119, 242, 0.4);
         }
         
-        .git { 
-          background: linear-gradient(135deg, #333, #000);
-          color: #fff;
-          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-        }
-
         .social:hover {
           transform: translateY(-3px);
           box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
@@ -563,13 +564,13 @@ export default function Login() {
       `}</style>
 
       <div className="bg">
-        {}
+        { }
         {[...Array(9)].map((_, i) => (
           <div key={i} className="particle"></div>
         ))}
 
         <div className="card">
-          {}
+          { }
           <div className="logo">
             MySportCoach<span>AI</span>
           </div>
@@ -579,11 +580,11 @@ export default function Login() {
             Chào mừng trở lại! Hãy đăng nhập để tiếp tục
           </p>
 
-          {}
+          { }
           {message && <p className="message">{message}</p>}
 
           <div className="form">
-            {}
+            { }
             <div className="inputGroup">
               <input
                 type="email"
@@ -596,7 +597,7 @@ export default function Login() {
               <span className="icon">📧</span>
             </div>
 
-            {}
+            { }
             <div className="inputGroup">
               <input
                 type={showPw ? "text" : "password"}
@@ -612,7 +613,7 @@ export default function Login() {
               </span>
             </div>
 
-            {}
+            { }
             <div className="row">
               <label className="remember">
                 <input type="checkbox" /> Ghi nhớ đăng nhập
@@ -632,17 +633,16 @@ export default function Login() {
             </button>
           </div>
 
-          {}
+          { }
           <div className="socialWrap">
             <p className="or">Hoặc đăng nhập với</p>
             <div className="socials">
-              <button className="social gg">Google</button>
-              <button className="social fb">Facebook</button>
-              <button className="social git">Github</button>
+              <button className="social gg" onClick={() => handleSocialLogin('Google')}>Google</button>
+              <button className="social fb" onClick={() => handleSocialLogin('Facebook')}>Facebook</button>
             </div>
           </div>
 
-          {}
+          { }
           <p className="extra">
             Chưa có tài khoản? <a href="/register">Đăng ký ngay</a>
           </p>

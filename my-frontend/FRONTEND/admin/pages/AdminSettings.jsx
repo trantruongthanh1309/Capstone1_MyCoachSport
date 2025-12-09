@@ -30,9 +30,9 @@ const AdminSettings = () => {
   const fetchStats = async () => {
     try {
       const [usersRes, mealsRes, workoutsRes] = await Promise.all([
-        fetch('http://localhost:5000/api/admin/users/stats', { credentials: 'include' }),
-        fetch('http://localhost:5000/api/admin/meals/stats', { credentials: 'include' }),
-        fetch('http://localhost:5000/api/admin/workouts/stats', { credentials: 'include' })
+        fetch('/api/admin/users/stats', { credentials: 'include' }),
+        fetch('/api/admin/meals/stats', { credentials: 'include' }),
+        fetch('/api/admin/workouts/stats', { credentials: 'include' })
       ]);
 
       if (usersRes.ok && mealsRes.ok && workoutsRes.ok) {
@@ -107,7 +107,7 @@ const AdminSettings = () => {
       )}
 
       <div className="settings-container">
-        {}
+        { }
         <section className="settings-section">
           <h2>📊 Thống Kê Hệ Thống</h2>
           <div className="stats-grid">
@@ -142,7 +142,7 @@ const AdminSettings = () => {
           </div>
         </section>
 
-        {}
+        { }
         <section className="settings-section">
           <h2>🌐 Cài Đặt Chung</h2>
           <div className="settings-form">
@@ -193,7 +193,7 @@ const AdminSettings = () => {
           </div>
         </section>
 
-        {}
+        { }
         <section className="settings-section">
           <h2>🔒 Bảo Mật</h2>
           <div className="settings-form">
@@ -233,7 +233,7 @@ const AdminSettings = () => {
           </div>
         </section>
 
-        {}
+        { }
         <section className="settings-section">
           <h2>🔔 Thông Báo</h2>
           <div className="settings-form">
@@ -263,7 +263,7 @@ const AdminSettings = () => {
           </div>
         </section>
 
-        {}
+        { }
         <section className="settings-section">
           <h2>🛠️ Hành Động Hệ Thống</h2>
           <div className="action-buttons">
@@ -279,7 +279,7 @@ const AdminSettings = () => {
           </div>
         </section>
 
-        {}
+        { }
         <div className="settings-footer">
           <button onClick={handleReset} className="btn-secondary">
             Hủy thay đổi

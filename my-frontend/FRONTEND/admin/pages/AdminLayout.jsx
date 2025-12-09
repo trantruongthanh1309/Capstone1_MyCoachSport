@@ -72,14 +72,21 @@ export default function AdminLayout() {
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
+      // Clear both session and local storage
       sessionStorage.clear();
+      localStorage.removeItem("user_id");
+      localStorage.removeItem("role");
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("user_name");
+      localStorage.removeItem("user_email");
+      localStorage.removeItem("user_avatar");
       window.location.href = "/";
     }
   };
 
   return (
     <div className="admin-layout">
-      {}
+      { }
       <aside className={`admin-sidebar ${sidebarOpen ? "open" : "closed"}`}>
         <div className="sidebar-header">
           <div className="logo">
@@ -123,7 +130,7 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      {}
+      { }
       <main className={`admin-main ${sidebarOpen ? "" : "expanded"}`}>
         <CurrentComponent />
       </main>

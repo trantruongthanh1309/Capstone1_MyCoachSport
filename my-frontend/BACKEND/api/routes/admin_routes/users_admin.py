@@ -2,8 +2,17 @@ from flask import Blueprint, request, jsonify, session
 from .admin_middleware import require_admin
 from models.user_model import User
 from models.account_model import Account
+from models.leaderboard_models import UserStats, WorkoutLog, UserAchievement
+from models.user_plan import UserPlan
+from models.user_schedule import UserSchedule
+from models.post import Post
+from models.social_models import Comment, Like, Share, Conversation, Message
+from models.chat_history import ChatHistory
+from models.feedback import Feedback
+from models.log import Log
+from models.notification_log import NotificationLog
 from db import db
-from sqlalchemy import or_
+from sqlalchemy import or_, text
 
 users_admin_bp = Blueprint('users_admin', __name__)
 
@@ -60,6 +69,17 @@ def get_users():
                 'pages': pagination.pages
             }
         }), 200
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@users_admin_bp.route('/api/admin/users/stats', methods=['GET'])
+def get_user_stats():
+    auth_error = require_admin()
+    if auth_error:
+        return auth_error
+    try:
+        total = User.query.count()
+        return jsonify({'success': True, 'total': total}), 200
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
@@ -126,12 +146,75 @@ def delete_user(user_id):
 
     try:
         user = User.query.get_or_404(user_id)
+        
+        # Xóa tất cả các record liên quan trước (theo thứ tự để tránh lỗi FK)
+        
+        # 1. Xóa Account
         account = Account.query.filter_by(User_id=user_id).first()
         if account:
             db.session.delete(account)
+        
+        # 2. Xóa Leaderboard (dùng raw SQL vì có thể không có model)
+        try:
+            db.session.execute(text("DELETE FROM Leaderboard WHERE User_id = :user_id"), {"user_id": user_id})
+        except Exception as e:
+            print(f"Warning: Could not delete Leaderboard: {e}")
+        
+        # 3. Xóa UserStats
+        UserStats.query.filter_by(User_id=user_id).delete()
+        
+        # 4. Xóa WorkoutLogs
+        WorkoutLog.query.filter_by(User_id=user_id).delete()
+        
+        # 5. Xóa UserAchievements
+        UserAchievement.query.filter_by(User_id=user_id).delete()
+        
+        # 6. Xóa UserPlans
+        UserPlan.query.filter_by(UserId=user_id).delete()
+        
+        # 7. Xóa UserSchedules
+        UserSchedule.query.filter_by(User_id=user_id).delete()
+        
+        # 8. Xóa Posts (sẽ tự động xóa Comments, Likes, Shares nhờ CASCADE)
+        Post.query.filter_by(User_id=user_id).delete()
+        
+        # 9. Xóa Comments (nếu có còn lại)
+        Comment.query.filter_by(User_id=user_id).delete()
+        
+        # 10. Xóa Likes
+        Like.query.filter_by(User_id=user_id).delete()
+        
+        # 11. Xóa Shares
+        Share.query.filter_by(User_id=user_id).delete()
+        
+        # 12. Xóa Conversations (cần xóa cả User1_id và User2_id)
+        Conversation.query.filter(
+            or_(Conversation.User1_id == user_id, Conversation.User2_id == user_id)
+        ).delete()
+        
+        # 13. Xóa Messages (nếu có model)
+        try:
+            Message.query.filter_by(User_id=user_id).delete()
+        except:
+            pass  # Nếu không có model hoặc column khác
+        
+        # 14. Xóa ChatHistory
+        ChatHistory.query.filter_by(User_id=user_id).delete()
+        
+        # 15. Xóa Feedback
+        Feedback.query.filter_by(User_id=user_id).delete()
+        
+        # 16. Xóa Logs
+        Log.query.filter_by(User_id=user_id).delete()
+        
+        # 17. Xóa NotificationLogs
+        NotificationLog.query.filter_by(User_id=user_id).delete()
+        
+        # Cuối cùng mới xóa User
         db.session.delete(user)
         db.session.commit()
-        return jsonify({'success': True, 'message': 'User deleted successfully'}), 200
+        
+        return jsonify({'success': True, 'message': 'User and all related data deleted successfully'}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
