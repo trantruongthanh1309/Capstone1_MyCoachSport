@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, session
+from flask import Flask, jsonify, session, Response
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine
@@ -25,6 +25,7 @@ from api.notifications import notifications_bp
 from api.upload import upload_bp
 from api.diary import diary_bp
 from api.leaderboard_new import leaderboard_bp as leaderboard_new_bp
+from api.user_feedback import user_feedback_bp
 
 from api.routes.admin_routes.users_admin import users_admin_bp
 from api.routes.admin_routes.dashboard_admin import dashboard_bp
@@ -102,7 +103,15 @@ CORS(app,
 
 def check_connection(db_url, db_name):
     try:
-        engine = create_engine(db_url)
+        # Configure engine with proper encoding
+        engine = create_engine(
+            db_url,
+            connect_args={
+                'timeout': 10,
+                'encoding': 'utf-8'
+            },
+            pool_pre_ping=True
+        )
         with engine.connect() as conn:
             print(f"Connection successful to {db_name}!")
         return True
@@ -111,6 +120,14 @@ def check_connection(db_url, db_name):
         return False
 
 check_connection(app.config['SQLALCHEMY_DATABASE_URI'], "SQL Server")
+
+# Ensure all JSON responses have UTF-8 charset
+@app.after_request
+def after_request(response):
+    """Set charset=utf-8 for all JSON responses"""
+    if response.content_type and 'application/json' in response.content_type:
+        response.headers['Content-Type'] = 'application/json; charset=utf-8'
+    return response
 
 app.register_blueprint(logs_bp, url_prefix='/api/logs')
 app.register_blueprint(videos_bp, url_prefix='/api/videos')
@@ -137,6 +154,7 @@ app.register_blueprint(notifications_bp, url_prefix='/api/notifications')
 app.register_blueprint(upload_bp, url_prefix='/api')
 app.register_blueprint(leaderboard_new_bp)
 app.register_blueprint(diary_bp, url_prefix='/api/diary')
+app.register_blueprint(user_feedback_bp)
 
 if __name__ == "__main__":
     from services.scheduler import start_scheduler

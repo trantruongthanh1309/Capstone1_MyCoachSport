@@ -161,3 +161,12 @@ print(f'   - Training epochs: {num_epochs}')
 print(f'\nChatbot gio day THONG MINH CUC KY!')
 
 
+
+
+
+
+
+
+
+
+

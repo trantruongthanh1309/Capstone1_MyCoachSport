@@ -11,6 +11,20 @@ export default function AdminUsers() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newUser, setNewUser] = useState({
+    name: '',
+    email: '',
+    password: '',
+    age: '',
+    sex: '',
+    height_cm: '',
+    weight_kg: '',
+    sport: '',
+    goal: '',
+    sessions_per_week: '',
+    role: 'user'
+  });
 
   useEffect(() => {
     fetchUsers();
@@ -121,6 +135,76 @@ export default function AdminUsers() {
     }
   };
 
+  const handleAdd = () => {
+    setNewUser({
+      name: '',
+      email: '',
+      password: '',
+      age: '',
+      sex: '',
+      height_cm: '',
+      weight_kg: '',
+      sport: '',
+      goal: '',
+      sessions_per_week: '',
+      role: 'user'
+    });
+    setShowAddModal(true);
+  };
+
+  const createUser = async () => {
+    try {
+      // Validate required fields
+      if (!newUser.name || !newUser.email || !newUser.password) {
+        alert('❌ Vui lòng điền đầy đủ thông tin bắt buộc (Tên, Email, Mật khẩu)');
+        return;
+      }
+
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: newUser.name,
+          email: newUser.email,
+          password: newUser.password,
+          age: newUser.age ? parseInt(newUser.age) : null,
+          sex: newUser.sex || null,
+          height_cm: newUser.height_cm ? parseInt(newUser.height_cm) : null,
+          weight_kg: newUser.weight_kg ? parseFloat(newUser.weight_kg) : null,
+          sport: newUser.sport || null,
+          goal: newUser.goal || null,
+          sessions_per_week: newUser.sessions_per_week ? parseInt(newUser.sessions_per_week) : null,
+          role: newUser.role || 'user'
+        })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        alert('✅ Tạo user thành công!');
+        fetchUsers();
+        setShowAddModal(false);
+        setNewUser({
+          name: '',
+          email: '',
+          password: '',
+          age: '',
+          sex: '',
+          height_cm: '',
+          weight_kg: '',
+          sport: '',
+          goal: '',
+          sessions_per_week: '',
+          role: 'user'
+        });
+      } else {
+        alert('❌ Lỗi: ' + data.error);
+      }
+    } catch (error) {
+      alert('❌ Lỗi: ' + error.message);
+    }
+  };
+
   const getRoleBadge = (role) => {
     const badges = {
       admin: { color: '#ef4444', label: 'Admin' },
@@ -146,8 +230,13 @@ export default function AdminUsers() {
   return (
     <div className="admin-users">
       <div className="users-header">
-        <h1>👥 Quản Lý Người Dùng</h1>
-        <p className="subtitle">Tổng {pagination.total} người dùng</p>
+        <div>
+          <h1>👥 Quản Lý Người Dùng</h1>
+          <p className="subtitle">Tổng {pagination.total} người dùng</p>
+        </div>
+        <button className="btn-add" onClick={handleAdd}>
+          ➕ Thêm User
+        </button>
       </div>
 
       { }
@@ -375,6 +464,135 @@ export default function AdminUsers() {
               </button>
               <button className="btn-save" onClick={saveUser}>
                 💾 Lưu
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      { }
+      {showAddModal && (
+        <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>➕ Thêm Người Dùng Mới</h2>
+              <button className="modal-close" onClick={() => setShowAddModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="form-grid">
+                <div className="form-group">
+                  <label>Tên <span style={{color: 'red'}}>*</span></label>
+                  <input
+                    type="text"
+                    value={newUser.name}
+                    onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                    placeholder="Nhập tên"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Email <span style={{color: 'red'}}>*</span></label>
+                  <input
+                    type="email"
+                    value={newUser.email}
+                    onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                    placeholder="example@email.com"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Mật khẩu <span style={{color: 'red'}}>*</span></label>
+                  <input
+                    type="password"
+                    value={newUser.password}
+                    onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                    placeholder="Nhập mật khẩu"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Tuổi</label>
+                  <input
+                    type="number"
+                    value={newUser.age}
+                    onChange={(e) => setNewUser({ ...newUser, age: e.target.value })}
+                    placeholder="Nhập tuổi"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Giới tính</label>
+                  <select
+                    value={newUser.sex}
+                    onChange={(e) => setNewUser({ ...newUser, sex: e.target.value })}
+                  >
+                    <option value="">Chọn</option>
+                    <option value="Nam">Nam</option>
+                    <option value="Nữ">Nữ</option>
+                    <option value="Khác">Khác</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Chiều cao (cm)</label>
+                  <input
+                    type="number"
+                    value={newUser.height_cm}
+                    onChange={(e) => setNewUser({ ...newUser, height_cm: e.target.value })}
+                    placeholder="Nhập chiều cao"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Cân nặng (kg)</label>
+                  <input
+                    type="number"
+                    value={newUser.weight_kg}
+                    onChange={(e) => setNewUser({ ...newUser, weight_kg: e.target.value })}
+                    placeholder="Nhập cân nặng"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Môn thể thao</label>
+                  <input
+                    type="text"
+                    value={newUser.sport}
+                    onChange={(e) => setNewUser({ ...newUser, sport: e.target.value })}
+                    placeholder="Nhập môn thể thao"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Mục tiêu</label>
+                  <input
+                    type="text"
+                    value={newUser.goal}
+                    onChange={(e) => setNewUser({ ...newUser, goal: e.target.value })}
+                    placeholder="Nhập mục tiêu"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Role</label>
+                  <select
+                    value={newUser.role}
+                    onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+                  >
+                    <option value="user">User</option>
+                    <option value="trainer">Trainer</option>
+                    <option value="manager">Manager</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Số buổi/tuần</label>
+                  <input
+                    type="number"
+                    value={newUser.sessions_per_week}
+                    onChange={(e) => setNewUser({ ...newUser, sessions_per_week: e.target.value })}
+                    placeholder="Nhập số buổi"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={() => setShowAddModal(false)}>
+                Hủy
+              </button>
+              <button className="btn-save" onClick={createUser}>
+                ➕ Tạo User
               </button>
             </div>
           </div>

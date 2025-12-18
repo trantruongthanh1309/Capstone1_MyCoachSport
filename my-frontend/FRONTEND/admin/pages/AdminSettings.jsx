@@ -25,7 +25,28 @@ const AdminSettings = () => {
 
   useEffect(() => {
     fetchStats();
+    loadSettings();
   }, []);
+
+  const loadSettings = async () => {
+    try {
+      const response = await fetch('/api/admin/settings', {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          setSettings(prev => ({
+            ...prev,
+            ...data.data
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Error loading settings:', error);
+    }
+  };
 
   const fetchStats = async () => {
     try {
@@ -60,15 +81,37 @@ const AdminSettings = () => {
     }));
   };
 
-  const handleSave = () => {
-    console.log('Saving settings:', settings);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  const handleSave = async () => {
+    try {
+      const response = await fetch('/api/admin/settings', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(settings),
+      });
+
+      if (!response.ok) {
+        throw new Error('Không thể lưu settings');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+      } else {
+        alert('Lỗi: ' + (data.error || 'Không thể lưu settings'));
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      alert('Không thể lưu settings. Vui lòng thử lại.');
+    }
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
     if (confirm('Bạn có chắc muốn reset về mặc định?')) {
-      setSettings({
+      const defaultSettings = {
         siteName: 'MySportCoach',
         siteDescription: 'Ứng dụng huấn luyện thể thao AI',
         maintenanceMode: false,
@@ -78,19 +121,70 @@ const AdminSettings = () => {
         emailNotifications: true,
         smsNotifications: false,
         apiRateLimit: 1000,
-      });
+      };
+      
+      try {
+        const response = await fetch('/api/admin/settings', {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(defaultSettings),
+        });
+
+        if (response.ok) {
+          setSettings(defaultSettings);
+          alert('✅ Đã reset về mặc định!');
+        }
+      } catch (error) {
+        console.error('Error resetting settings:', error);
+        alert('Không thể reset settings');
+      }
     }
   };
 
-  const handleClearCache = () => {
+  const handleClearCache = async () => {
     if (confirm('Xóa cache hệ thống?')) {
-      alert('✅ Cache đã được xóa!');
+      try {
+        const response = await fetch('/api/admin/settings/clear-cache', {
+          method: 'POST',
+          credentials: 'include',
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            alert('✅ Cache đã được xóa!');
+          }
+        }
+      } catch (error) {
+        console.error('Error clearing cache:', error);
+        alert('Không thể xóa cache');
+      }
     }
   };
 
-  const handleBackup = () => {
-    alert('💾 Đang tạo backup database...');
-    setTimeout(() => alert('✅ Backup hoàn tất!'), 1500);
+  const handleBackup = async () => {
+    if (confirm('Bắt đầu backup database?')) {
+      try {
+        alert('💾 Đang tạo backup database...');
+        const response = await fetch('/api/admin/settings/backup', {
+          method: 'POST',
+          credentials: 'include',
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            alert('✅ Backup đã được khởi động! Kiểm tra server logs để xem tiến trình.');
+          }
+        }
+      } catch (error) {
+        console.error('Error backing up:', error);
+        alert('Không thể tạo backup');
+      }
+    }
   };
 
   return (

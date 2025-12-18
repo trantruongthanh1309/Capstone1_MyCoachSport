@@ -13,8 +13,13 @@ from models.log import Log
 from models.notification_log import NotificationLog
 from db import db
 from sqlalchemy import or_, text
+import re
 
 users_admin_bp = Blueprint('users_admin', __name__)
+
+def validate_email(email):
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return re.match(pattern, email) is not None
 
 @users_admin_bp.route('/api/admin/users', methods=['GET'])
 def get_users():
@@ -105,6 +110,76 @@ def get_goals_filter():
         goals = db.session.query(User.Goal).distinct().filter(User.Goal.isnot(None)).all()
         return jsonify({'success': True, 'data': [g[0] for g in goals if g[0]]}), 200
     except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@users_admin_bp.route('/api/admin/users', methods=['POST'])
+def create_user():
+    auth_error = require_admin()
+    if auth_error:
+        return auth_error
+
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        email = data.get('email', '').strip().lower()
+        password = data.get('password', '')
+        name = data.get('name', '').strip()
+        
+        if not email or not password or not name:
+            return jsonify({'success': False, 'error': 'Email, mật khẩu và tên là bắt buộc'}), 400
+        
+        # Validate email format
+        if not validate_email(email):
+            return jsonify({'success': False, 'error': 'Email không hợp lệ'}), 400
+        
+        # Check if email already exists
+        existing_account = Account.query.filter_by(Email=email).first()
+        if existing_account:
+            return jsonify({'success': False, 'error': 'Email đã được sử dụng'}), 400
+        
+        existing_user = User.query.filter_by(Email=email).first()
+        if existing_user:
+            return jsonify({'success': False, 'error': 'Email đã được sử dụng'}), 400
+        
+        # Create User
+        user = User(
+            Name=name,
+            Email=email,
+            Age=data.get('age'),
+            Sex=data.get('sex'),
+            Height_cm=data.get('height_cm'),
+            Weight_kg=data.get('weight_kg'),
+            Sport=data.get('sport'),
+            Goal=data.get('goal'),
+            Sessions_per_week=data.get('sessions_per_week')
+        )
+        db.session.add(user)
+        db.session.flush()  # Get user.Id
+        
+        # Create Account
+        account = Account(
+            Email=email,
+            Password=password,
+            Role=data.get('role', 'user'),
+            User_id=user.Id
+        )
+        db.session.add(account)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Tạo user thành công',
+            'data': {
+                'id': user.Id,
+                'name': user.Name,
+                'email': user.Email,
+                'role': account.Role
+            }
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @users_admin_bp.route('/api/admin/users/<int:user_id>', methods=['PUT'])

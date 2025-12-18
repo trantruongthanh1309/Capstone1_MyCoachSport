@@ -13,6 +13,8 @@ export default function Home() {
   const [msg, setMsg] = useState("");
   const [log, setLog] = useState([]);
   const [openChat, setOpenChat] = useState(false);
+  const [stats, setStats] = useState(null);
+  const [loadingStats, setLoadingStats] = useState(true);
 
   const getWeather = (latitude, longitude) => {
     fetch(
@@ -42,13 +44,24 @@ export default function Home() {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        console.log("Latitude:", latitude, "Longitude:", longitude); // In ra tọa độ chính xác
+        console.log("Latitude:", latitude, "Longitude:", longitude);
         getWeather(latitude, longitude);
       },
       (error) => {
         console.log("Không thể lấy vị trí của bạn:", error);
       }
     );
+    
+    // Load user stats
+    fetch('/api/leaderboard-new/my-stats', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setStats(data.stats);
+        }
+      })
+      .catch(err => console.error('Error loading stats:', err))
+      .finally(() => setLoadingStats(false));
   }, []);
 
   const send = async () => {
@@ -57,8 +70,9 @@ export default function Home() {
     setLog((l) => [...l, { who: "you", text: content }]);
     setMsg("");
     try {
-      const r = await fetch(`${API_BASE}/api/bot/chat`, {
+      const r = await fetch(`/api/bot/chat`, {
         method: "POST",
+        credentials: 'include',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: content }),
       });

@@ -183,3 +183,12 @@ print(f"📝 Patterns: {total:,}")
 print(f"\n🎯 Bước tiếp theo: Chạy python train_mega_expert.py")
 
 
+
+
+
+
+
+
+
+
+
