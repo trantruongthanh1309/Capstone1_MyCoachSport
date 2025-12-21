@@ -22,5 +22,6 @@ class Meal(db.Model):
     Recipe = db.Column(db.Text) # Cooking instructions
     CookingTimeMin = db.Column(db.Integer)
     Difficulty = db.Column(db.String(50)) # Easy, Medium, Hard
+    VideoUrl = db.Column(db.String(500)) # YouTube video URL for cooking guide
     
     Image = db.Column(db.String(500))

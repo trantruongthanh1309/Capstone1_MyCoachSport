@@ -2,10 +2,8 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import "../pages/NewsFeed.css";
 import ImageUploader from "./ImageUploader";
+import { validatePostContent, validateTitle } from "../utils/validation";
 
-import config from "../config";
-
-const API_BASE = config.API_BASE;
 
 const TOPICS = [
     { id: "Workout", label: "💪 Tập luyện", color: "#ef4444" },
@@ -46,14 +44,30 @@ export default function CreatePost({ onPostCreated, userAvatar }) {
     };
 
     const handleSubmit = async () => {
+        // Validate content
         if (!content.trim()) {
             showToast("Vui lòng nhập nội dung bài viết trước khi đăng.", "error");
             return;
         }
+        
+        const contentValidation = validatePostContent(content);
+        if (!contentValidation.valid) {
+            showToast(contentValidation.message, "error");
+            return;
+        }
+        
+        // Validate title if provided
+        if (title && title.trim()) {
+            const titleValidation = validateTitle(title);
+            if (!titleValidation.valid) {
+                showToast(titleValidation.message, "error");
+                return;
+            }
+        }
 
         setLoading(true);
         try {
-            const res = await fetch(`${API_BASE}/api/social/posts`, {
+            const res = await fetch(`/api/social/posts`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
@@ -104,7 +118,7 @@ export default function CreatePost({ onPostCreated, userAvatar }) {
         formData.append("file", file);
 
         try {
-            const res = await fetch(`${API_BASE}/api/upload`, {
+            const res = await fetch(`/api/upload`, {
                 method: "POST",
                 body: formData
             });

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './AdminWorkouts.css';
+import Toast from '../../components/Toast';
 
 const AdminWorkouts = () => {
   const [workouts, setWorkouts] = useState([]);
@@ -17,7 +18,13 @@ const AdminWorkouts = () => {
   const [selectedDifficulty, setSelectedDifficulty] = useState('');
 
   const [showModal, setShowModal] = useState(false);
+  const [showVideoSearchModal, setShowVideoSearchModal] = useState(false);
   const [editingWorkout, setEditingWorkout] = useState(null);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
+  const [videoSearchQuery, setVideoSearchQuery] = useState('');
+  const [videoSearchResults, setVideoSearchResults] = useState([]);
+  const [videoSearchLoading, setVideoSearchLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     name: '',
     sport: '',
@@ -45,6 +52,10 @@ const AdminWorkouts = () => {
     is_active: true
   });
 
+  const showToast = (message, type = 'info') => {
+    setToast({ show: true, message, type });
+  };
+
   const fetchWorkouts = async () => {
     try {
       setLoading(true);
@@ -68,9 +79,11 @@ const AdminWorkouts = () => {
         }
       } else {
         console.error('Failed to fetch workouts');
+        showToast('Không thể tải danh sách bài tập', 'error');
       }
     } catch (error) {
       console.error('Error:', error);
+      showToast('Lỗi kết nối server', 'error');
     } finally {
       setLoading(false);
     }
@@ -143,17 +156,17 @@ const AdminWorkouts = () => {
       });
 
       if (response.ok) {
-        alert(editingWorkout ? 'Cập nhật thành công!' : 'Tạo mới thành công!');
+        showToast(editingWorkout ? 'Cập nhật thành công!' : 'Tạo mới thành công!', 'success');
         setShowModal(false);
         resetForm();
         fetchWorkouts();
         fetchStats();
       } else {
-        alert('Có lỗi xảy ra');
+        showToast('Có lỗi xảy ra khi lưu bài tập', 'error');
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Có lỗi xảy ra');
+      showToast('Có lỗi xảy ra', 'error');
     }
   };
 
@@ -198,15 +211,15 @@ const AdminWorkouts = () => {
       });
 
       if (response.ok) {
-        alert('Xóa thành công!');
+        showToast('Xóa thành công!', 'success');
         fetchWorkouts();
         fetchStats();
       } else {
-        alert('Có lỗi xảy ra');
+        showToast('Có lỗi xảy ra', 'error');
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Có lỗi xảy ra');
+      showToast('Có lỗi xảy ra', 'error');
     }
   };
 
@@ -247,6 +260,13 @@ const AdminWorkouts = () => {
 
   return (
     <div className="admin-workouts">
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
+      )}
       <div className="workouts-header">
         <div className="header-icon">💪</div>
         <h1>Quản Lý Bài Tập</h1>
@@ -325,7 +345,7 @@ const AdminWorkouts = () => {
                     const kcal = workout.CalorieBurn || workout.calorie_burn || workout.kcal;
                     const difficulty = workout.Difficulty || workout.difficulty;
                     const equipment = workout.Equipment || workout.equipment;
-                    
+
                     return (
                       <tr key={id}>
                         <td>{id}</td>
@@ -591,13 +611,36 @@ const AdminWorkouts = () => {
                 </div>
 
                 <div className="form-group">
-                  <label>Video URL</label>
+                  <label>
+                    🎥 Video URL (Hướng dẫn tập luyện)
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        setVideoSearchQuery(formData.name || '');
+                        setVideoSearchResults([]);
+                        setShowVideoSearchModal(true);
+                      }}
+                      style={{
+                        marginLeft: '10px',
+                        padding: '6px 12px',
+                        fontSize: '0.85rem',
+                        background: '#3b82f6',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontWeight: '600'
+                      }}
+                    >
+                      🔍 Tìm Video
+                    </button>
+                  </label>
                   <input
                     type="text"
                     name="video_url"
                     value={formData.video_url}
                     onChange={handleInputChange}
-                    placeholder="https://..."
+                    placeholder="https://www.youtube.com/watch?v=..."
                   />
                 </div>
               </div>
@@ -667,7 +710,7 @@ const AdminWorkouts = () => {
                     type="checkbox"
                     name="is_active"
                     checked={formData.is_active}
-                    onChange={(e) => setFormData({...formData, is_active: e.target.checked})}
+                    onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
                   />
                   {' '}Hoạt động
                 </label>
@@ -682,6 +725,151 @@ const AdminWorkouts = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* YouTube Video Search Modal */}
+      {showVideoSearchModal && (
+        <div className="modal-overlay" onClick={() => setShowVideoSearchModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '900px', maxHeight: '90vh' }}>
+            <div className="modal-header">
+              <h2>🔍 Tìm Video YouTube</h2>
+              <button className="btn-close" onClick={() => setShowVideoSearchModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                  <input
+                    type="text"
+                    value={videoSearchQuery}
+                    onChange={(e) => setVideoSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && searchVideos()}
+                    placeholder="Nhập từ khóa tìm kiếm (ví dụ: bài tập bóng đá)..."
+                    style={{
+                      flex: 1,
+                      padding: '12px',
+                      fontSize: '1rem',
+                      border: '2px solid #e2e8f0',
+                      borderRadius: '8px',
+                      outline: 'none'
+                    }}
+                  />
+                  <button
+                    onClick={searchVideos}
+                    disabled={videoSearchLoading}
+                    style={{
+                      padding: '12px 24px',
+                      background: '#3b82f6',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      fontWeight: '600',
+                      cursor: videoSearchLoading ? 'not-allowed' : 'pointer',
+                      opacity: videoSearchLoading ? 0.7 : 1
+                    }}
+                  >
+                    {videoSearchLoading ? '⏳ Đang tìm...' : '🔍 Tìm kiếm'}
+                  </button>
+                </div>
+                <p style={{ fontSize: '0.9rem', color: '#64748b', margin: 0 }}>
+                  💡 Tìm video hướng dẫn tập luyện trên YouTube. Click vào video để chọn.
+                </p>
+              </div>
+
+              {videoSearchResults.length > 0 && (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                  gap: '15px',
+                  maxHeight: '60vh',
+                  overflowY: 'auto',
+                  padding: '10px'
+                }}>
+                  {videoSearchResults.map((video) => (
+                    <div
+                      key={video.id}
+                      onClick={() => selectVideo(video)}
+                      style={{
+                        border: '2px solid #e2e8f0',
+                        borderRadius: '12px',
+                        overflow: 'hidden',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        background: 'white'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = '#3b82f6';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.15)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = '#e2e8f0';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = 'none';
+                      }}
+                    >
+                      <img
+                        src={video.thumb}
+                        alt={video.title}
+                        style={{
+                          width: '100%',
+                          height: '158px',
+                          objectFit: 'cover',
+                          background: '#f1f5f9'
+                        }}
+                      />
+                      <div style={{ padding: '12px' }}>
+                        <h4 style={{
+                          margin: '0 0 8px 0',
+                          fontSize: '0.95rem',
+                          fontWeight: '600',
+                          color: '#1e293b',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                          lineHeight: '1.4',
+                          height: '2.8em'
+                        }}>
+                          {video.title}
+                        </h4>
+                        <p style={{
+                          margin: '4px 0',
+                          fontSize: '0.85rem',
+                          color: '#64748b'
+                        }}>
+                          📺 {video.channel}
+                        </p>
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          marginTop: '8px',
+                          fontSize: '0.8rem',
+                          color: '#94a3b8'
+                        }}>
+                          <span>⏱️ {video.duration}</span>
+                          {video.views && (
+                            <span>👁️ {video.views.toLocaleString('vi-VN')}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {videoSearchResults.length === 0 && !videoSearchLoading && videoSearchQuery && (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+                  <p>🔍 Chưa có kết quả tìm kiếm. Hãy nhập từ khóa và nhấn "Tìm kiếm".</p>
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={() => setShowVideoSearchModal(false)}>Đóng</button>
+            </div>
           </div>
         </div>
       )}

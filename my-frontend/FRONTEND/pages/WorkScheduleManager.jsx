@@ -18,14 +18,13 @@ export default function WorkScheduleManager() {
   const [isSaving, setIsSaving] = useState(false);
 
   const dayNames = {
-    sun: "Thứ 2",
-    mon: "Thứ 3",
-    tue: "Thứ 4",
-    wed: "Thứ 5",
-    thu: "Thứ 6",
-    fri: "Thứ 7",
-    sat: "Chủ nhật",
-
+    mon: "Thứ 2",    // Monday
+    tue: "Thứ 3",    // Tuesday
+    wed: "Thứ 4",    // Wednesday
+    thu: "Thứ 5",    // Thursday
+    fri: "Thứ 6",    // Friday
+    sat: "Thứ 7",    // Saturday
+    sun: "Chủ nhật", // Sunday
   };
 
   const dayIcons = {
@@ -53,7 +52,7 @@ export default function WorkScheduleManager() {
 
   useEffect(() => {
     setIsLoading(true);
-    fetch("http://localhost:5000/api/schedule/busy", {
+    fetch("/api/schedule/busy", {
       method: "GET",
       credentials: "include",
       headers: { Accept: "application/json; charset=utf-8" },
@@ -88,7 +87,7 @@ export default function WorkScheduleManager() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const res = await fetch("http://localhost:5000/api/schedule/busy", {
+      const res = await fetch("/api/schedule/busy", {
         method: "POST",
         headers: { "Content-Type": "application/json; charset=utf-8" },
         credentials: "include",

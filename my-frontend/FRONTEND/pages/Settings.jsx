@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import "./Settings.css";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+import { useToast } from "../contexts/ToastContext";
 
 export default function Settings() {
   const [profile, setProfile] = useState({
@@ -41,7 +40,7 @@ export default function Settings() {
     waterGoal: 8,
   });
 
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState("preferences");
   const [showSaveAlert, setShowSaveAlert] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -57,10 +56,144 @@ export default function Settings() {
   const [myFeedbacks, setMyFeedbacks] = useState([]);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [feedbackStatusFilter, setFeedbackStatusFilter] = useState('all');
+  const toast = useToast();
+  const autoSaveTimerRef = useRef(null);
+  const isInitialLoadRef = useRef(true);
 
   useEffect(() => {
     loadSettings();
   }, []);
+
+  // Apply theme when preferences change
+  useEffect(() => {
+    applyTheme(preferences.theme);
+  }, [preferences.theme]);
+
+  // Apply language when preferences change
+  useEffect(() => {
+    applyLanguage(preferences.language);
+  }, [preferences.language]);
+
+  // Auto-save preferences with debounce (skip on initial load)
+  useEffect(() => {
+    if (isInitialLoadRef.current) {
+      isInitialLoadRef.current = false;
+      return;
+    }
+
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+
+    autoSaveTimerRef.current = setTimeout(() => {
+      if (!loading) {
+        autoSavePreferences(false); // Silent save
+      }
+    }, 2000); // Debounce 2 seconds
+
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, [preferences, privacy]);
+
+  const applyTheme = (theme) => {
+    const root = document.documentElement;
+    const body = document.body;
+    
+    // Remove existing theme classes
+    body.classList.remove('theme-light', 'theme-dark', 'theme-auto');
+    
+    const applyDarkTheme = () => {
+      body.classList.add('theme-dark');
+      root.style.setProperty('--bg-primary', '#1a1a2e');
+      root.style.setProperty('--bg-secondary', '#16213e');
+      root.style.setProperty('--text-primary', '#ffffff');
+      root.style.setProperty('--text-secondary', '#a0aec0');
+    };
+    
+    const applyLightTheme = () => {
+      body.classList.add('theme-light');
+      root.style.setProperty('--bg-primary', '#ffffff');
+      root.style.setProperty('--bg-secondary', '#f8f9fa');
+      root.style.setProperty('--text-primary', '#1f2937');
+      root.style.setProperty('--text-secondary', '#6b7280');
+    };
+    
+    if (theme === 'dark') {
+      applyDarkTheme();
+    } else if (theme === 'auto') {
+      body.classList.add('theme-auto');
+      // Use system preference
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+      const applySystemTheme = () => {
+        if (prefersDark.matches) {
+          applyDarkTheme();
+        } else {
+          applyLightTheme();
+        }
+      };
+      
+      applySystemTheme();
+      
+      // Listen for system theme changes
+      prefersDark.addEventListener('change', applySystemTheme);
+      
+      // Store listener for cleanup
+      if (!window.themeListener) {
+        window.themeListener = applySystemTheme;
+      }
+    } else {
+      applyLightTheme();
+    }
+    
+    // Save to localStorage for persistence
+    localStorage.setItem('user_theme', theme);
+  };
+
+  const applyLanguage = (language) => {
+    // Set language attribute
+    document.documentElement.lang = language;
+    
+    // Save to localStorage
+    localStorage.setItem('user_language', language);
+    
+    // Dispatch event for other components to listen
+    window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language } }));
+  };
+
+  const autoSavePreferences = async (showToast = false) => {
+    try {
+      const response = await fetch(`/api/settings`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          preferences,
+          privacy,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log('✅ Auto-saved preferences');
+        if (showToast) {
+          toast.success('Đã tự động lưu cài đặt');
+        }
+      } else {
+        throw new Error(data.error || 'Lỗi khi lưu');
+      }
+    } catch (err) {
+      console.error('❌ Error auto-saving preferences:', err);
+      if (showToast) {
+        toast.error('Không thể tự động lưu cài đặt');
+      }
+    }
+  };
 
   const loadSettings = async () => {
     try {
@@ -86,7 +219,15 @@ export default function Settings() {
         setProfile(prev => ({ ...prev, ...data.profile }));
       }
       if (data.preferences) {
-        setPreferences(prev => ({ ...prev, ...data.preferences }));
+        const newPreferences = { ...preferences, ...data.preferences };
+        setPreferences(newPreferences);
+        // Apply theme and language immediately
+        if (newPreferences.theme) {
+          applyTheme(newPreferences.theme);
+        }
+        if (newPreferences.language) {
+          applyLanguage(newPreferences.language);
+        }
       }
       if (data.privacy) {
         setPrivacy(prev => ({ ...prev, ...data.privacy }));
@@ -127,6 +268,7 @@ export default function Settings() {
   const handleSaveAll = async () => {
     try {
       setShowSaveAlert(false);
+      setError(null);
       
       const response = await fetch(`/api/settings`, {
         method: 'POST',
@@ -135,11 +277,8 @@ export default function Settings() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          profile,
           preferences,
           privacy,
-          workoutSettings,
-          nutritionSettings,
         }),
       });
 
@@ -150,13 +289,15 @@ export default function Settings() {
       }
 
       setShowSaveAlert(true);
+      toast.success('✅ Đã lưu tất cả cài đặt thành công!');
       setTimeout(() => setShowSaveAlert(false), 3000);
 
       console.log('✅ Settings saved:', data);
     } catch (err) {
       console.error('Error saving settings:', err);
-      alert(`Không thể lưu cài đặt: ${err.message || err}`);
-      setError(`Lỗi: ${err.message || err}`);
+      const errorMsg = err.message || 'Không thể lưu cài đặt';
+      toast.error(`❌ ${errorMsg}`);
+      setError(errorMsg);
     }
   };
 
@@ -177,12 +318,12 @@ export default function Settings() {
           throw new Error(data.error || 'Không thể reset settings');
         }
 
+        isInitialLoadRef.current = true; // Prevent auto-save after reset
         await loadSettings();
-
-        alert('Đã đặt lại cài đặt về mặc định!');
+        toast.success('✅ Đã đặt lại cài đặt về mặc định!');
       } catch (err) {
         console.error('Error resetting settings:', err);
-        alert('Không thể đặt lại cài đặt. Vui lòng thử lại.');
+        toast.error('❌ Không thể đặt lại cài đặt. Vui lòng thử lại.');
       }
     }
   };
@@ -215,9 +356,10 @@ export default function Settings() {
       URL.revokeObjectURL(url);
       
       console.log('✅ Data exported successfully');
+      toast.success('✅ Đã xuất dữ liệu thành công!');
     } catch (err) {
       console.error('Error exporting data:', err);
-      alert('Không thể xuất dữ liệu. Vui lòng thử lại.');
+      toast.error('❌ Không thể xuất dữ liệu. Vui lòng thử lại.');
     }
   };
 
@@ -248,8 +390,17 @@ export default function Settings() {
   };
 
   const handleSubmitFeedback = async () => {
-    if (!feedbackForm.title || !feedbackForm.message) {
-      alert('Vui lòng điền đầy đủ thông tin');
+    // Validate title
+    const titleValidation = validateTitle(feedbackForm.title);
+    if (!titleValidation.valid) {
+      toast.error(`❌ ${titleValidation.message}`);
+      return;
+    }
+    
+    // Validate message
+    const messageValidation = validateMessage(feedbackForm.message);
+    if (!messageValidation.valid) {
+      toast.error(`❌ ${messageValidation.message}`);
       return;
     }
 
@@ -265,7 +416,7 @@ export default function Settings() {
       const data = await res.json();
       
       if (data.success) {
-        alert('✅ Gửi feedback thành công! Cảm ơn bạn đã đóng góp.');
+        toast.success('✅ Gửi feedback thành công! Cảm ơn bạn đã đóng góp.');
         setFeedbackForm({
           type: 'other',
           title: '',
@@ -274,10 +425,10 @@ export default function Settings() {
         });
         fetchMyFeedbacks();
       } else {
-        alert('❌ Lỗi: ' + data.error);
+        toast.error(`❌ Lỗi: ${data.error}`);
       }
     } catch (error) {
-      alert('❌ Lỗi: ' + error.message);
+      toast.error(`❌ Lỗi: ${error.message}`);
     } finally {
       setFeedbackLoading(false);
     }
@@ -384,13 +535,6 @@ export default function Settings() {
         { }
         <div className="settings-sidebar">
           <button
-            className={`tab-btn ${activeTab === "profile" ? "active" : ""}`}
-            onClick={() => setActiveTab("profile")}
-          >
-            <span className="tab-icon">👤</span>
-            Hồ Sơ
-          </button>
-          <button
             className={`tab-btn ${activeTab === "preferences" ? "active" : ""}`}
             onClick={() => setActiveTab("preferences")}
           >
@@ -403,20 +547,6 @@ export default function Settings() {
           >
             <span className="tab-icon">🔒</span>
             Riêng Tư
-          </button>
-          <button
-            className={`tab-btn ${activeTab === "workout" ? "active" : ""}`}
-            onClick={() => setActiveTab("workout")}
-          >
-            <span className="tab-icon">💪</span>
-            Tập Luyện
-          </button>
-          <button
-            className={`tab-btn ${activeTab === "nutrition" ? "active" : ""}`}
-            onClick={() => setActiveTab("nutrition")}
-          >
-            <span className="tab-icon">🥗</span>
-            Dinh Dưỡng
           </button>
           <button
             className={`tab-btn ${activeTab === "data" ? "active" : ""}`}
@@ -433,78 +563,12 @@ export default function Settings() {
             }}
           >
             <span className="tab-icon">💬</span>
-            Feedback
+            Phản Hồi
           </button>
         </div>
 
         { }
         <div className="settings-content">
-          { }
-          {activeTab === "profile" && (
-            <div className="settings-section">
-              <h2 className="section-title">Thông Tin Cá Nhân</h2>
-
-              <div className="avatar-section">
-                <div className="avatar-preview">
-                  {avatarPreview || profile.avatar ? (
-                    <img src={avatarPreview || profile.avatar} alt="Avatar" className="avatar-img" />
-                  ) : (
-                    <div className="avatar-placeholder">
-                      {profile.name?.charAt(0).toUpperCase() || "U"}
-                    </div>
-                  )}
-                </div>
-                <div className="avatar-actions">
-                  <label className="btn-upload">
-                    <input type="file" accept="image/*" onChange={handleAvatarChange} />
-                    Thay đổi
-                  </label>
-                  {profile.avatar && (
-                    <button
-                      className="btn-delete"
-                      onClick={() => setProfile({ ...profile, avatar: "" })}
-                    >
-                      Xóa
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Họ và Tên</label>
-                <input
-                  type="text"
-                  value={profile.name}
-                  onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                  placeholder="Nhập tên của bạn"
-                  className="form-input"
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Email</label>
-                <input
-                  type="email"
-                  value={profile.email || ""}
-                  disabled
-                  className="form-input disabled"
-                  readOnly
-                />
-                <small style={{ color: '#666', fontSize: '0.875rem' }}>Email không thể thay đổi</small>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Giới thiệu bản thân</label>
-                <textarea
-                  value={profile.bio}
-                  onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-                  placeholder="Viết đôi dòng về bạn..."
-                  className="form-textarea"
-                />
-              </div>
-            </div>
-          )}
-
           {activeTab === "preferences" && (
             <div className="settings-section">
               <h2 className="section-title">Tùy Chỉnh Giao Diện</h2>
@@ -514,30 +578,64 @@ export default function Settings() {
                 <div className="theme-selector">
                   <button
                     className={`theme-option ${preferences.theme === "light" ? "active" : ""}`}
-                    onClick={() => setPreferences({ ...preferences, theme: "light" })}
+                    onClick={() => {
+                      const newPrefs = { ...preferences, theme: "light" };
+                      setPreferences(newPrefs);
+                      applyTheme("light");
+                      toast.success('✅ Đã chuyển sang giao diện sáng');
+                    }}
                   >
                     ☀️ Sáng
                   </button>
                   <button
                     className={`theme-option ${preferences.theme === "dark" ? "active" : ""}`}
-                    onClick={() => setPreferences({ ...preferences, theme: "dark" })}
+                    onClick={() => {
+                      const newPrefs = { ...preferences, theme: "dark" };
+                      setPreferences(newPrefs);
+                      applyTheme("dark");
+                      toast.success('✅ Đã chuyển sang giao diện tối');
+                    }}
                   >
                     🌙 Tối
                   </button>
                   <button
                     className={`theme-option ${preferences.theme === "auto" ? "active" : ""}`}
-                    onClick={() => setPreferences({ ...preferences, theme: "auto" })}
+                    onClick={() => {
+                      const newPrefs = { ...preferences, theme: "auto" };
+                      setPreferences(newPrefs);
+                      applyTheme("auto");
+                      toast.success('✅ Đã bật chế độ tự động');
+                    }}
                   >
                     🔄 Tự động
                   </button>
                 </div>
+                <small style={{ color: '#666', fontSize: '0.875rem', marginTop: '8px', display: 'block' }}>
+                  {preferences.theme === 'auto' 
+                    ? 'Tự động theo cài đặt hệ thống' 
+                    : preferences.theme === 'dark' 
+                    ? 'Giao diện tối đã được áp dụng' 
+                    : 'Giao diện sáng đã được áp dụng'}
+                </small>
               </div>
 
               <div className="form-group">
                 <label className="form-label">Ngôn ngữ</label>
                 <select
                   value={preferences.language}
-                  onChange={(e) => setPreferences({ ...preferences, language: e.target.value })}
+                  onChange={(e) => {
+                    const newLang = e.target.value;
+                    const newPrefs = { ...preferences, language: newLang };
+                    setPreferences(newPrefs);
+                    applyLanguage(newLang);
+                    const langNames = {
+                      vi: 'Tiếng Việt',
+                      en: 'English',
+                      ja: '日本語',
+                      ko: '한국어'
+                    };
+                    toast.success(`✅ Đã chuyển sang ${langNames[newLang]}`);
+                  }}
                   className="form-select"
                 >
                   <option value="vi">🇻🇳 Tiếng Việt</option>
@@ -545,6 +643,9 @@ export default function Settings() {
                   <option value="ja">🇯🇵 日本語</option>
                   <option value="ko">🇰🇷 한국어</option>
                 </select>
+                <small style={{ color: '#666', fontSize: '0.875rem', marginTop: '8px', display: 'block' }}>
+                  Ngôn ngữ đã được cập nhật
+                </small>
               </div>
 
               <div className="toggle-group">
@@ -557,7 +658,11 @@ export default function Settings() {
                     <input
                       type="checkbox"
                       checked={preferences.notifications}
-                      onChange={(e) => setPreferences({ ...preferences, notifications: e.target.checked })}
+                      onChange={(e) => {
+                        const newValue = e.target.checked;
+                        setPreferences({ ...preferences, notifications: newValue });
+                        toast.info(newValue ? '🔔 Đã bật thông báo trong app' : '🔕 Đã tắt thông báo trong app');
+                      }}
                     />
                     <span className="toggle-slider"></span>
                   </label>
@@ -572,7 +677,11 @@ export default function Settings() {
                     <input
                       type="checkbox"
                       checked={preferences.emailNotifications}
-                      onChange={(e) => setPreferences({ ...preferences, emailNotifications: e.target.checked })}
+                      onChange={(e) => {
+                        const newValue = e.target.checked;
+                        setPreferences({ ...preferences, emailNotifications: newValue });
+                        toast.info(newValue ? '📧 Đã bật thông báo email' : '📧 Đã tắt thông báo email');
+                      }}
                     />
                     <span className="toggle-slider"></span>
                   </label>
@@ -587,7 +696,11 @@ export default function Settings() {
                     <input
                       type="checkbox"
                       checked={preferences.pushNotifications}
-                      onChange={(e) => setPreferences({ ...preferences, pushNotifications: e.target.checked })}
+                      onChange={(e) => {
+                        const newValue = e.target.checked;
+                        setPreferences({ ...preferences, pushNotifications: newValue });
+                        toast.info(newValue ? '📱 Đã bật thông báo đẩy' : '📱 Đã tắt thông báo đẩy');
+                      }}
                     />
                     <span className="toggle-slider"></span>
                   </label>
@@ -611,7 +724,11 @@ export default function Settings() {
                     <input
                       type="checkbox"
                       checked={privacy.profilePublic}
-                      onChange={(e) => setPrivacy({ ...privacy, profilePublic: e.target.checked })}
+                      onChange={(e) => {
+                        const newValue = e.target.checked;
+                        setPrivacy({ ...privacy, profilePublic: newValue });
+                        toast.info(newValue ? '🌐 Đã công khai hồ sơ' : '🔒 Đã ẩn hồ sơ');
+                      }}
                     />
                     <span className="toggle-slider"></span>
                   </label>
@@ -626,7 +743,11 @@ export default function Settings() {
                     <input
                       type="checkbox"
                       checked={privacy.showEmail}
-                      onChange={(e) => setPrivacy({ ...privacy, showEmail: e.target.checked })}
+                      onChange={(e) => {
+                        const newValue = e.target.checked;
+                        setPrivacy({ ...privacy, showEmail: newValue });
+                        toast.info(newValue ? '📧 Đã hiển thị email' : '🔒 Đã ẩn email');
+                      }}
                     />
                     <span className="toggle-slider"></span>
                   </label>
@@ -641,7 +762,11 @@ export default function Settings() {
                     <input
                       type="checkbox"
                       checked={privacy.showProgress}
-                      onChange={(e) => setPrivacy({ ...privacy, showProgress: e.target.checked })}
+                      onChange={(e) => {
+                        const newValue = e.target.checked;
+                        setPrivacy({ ...privacy, showProgress: newValue });
+                        toast.info(newValue ? '📊 Đã hiển thị tiến độ' : '🔒 Đã ẩn tiến độ');
+                      }}
                     />
                     <span className="toggle-slider"></span>
                   </label>
@@ -656,345 +781,15 @@ export default function Settings() {
                     <input
                       type="checkbox"
                       checked={privacy.allowMessages}
-                      onChange={(e) => setPrivacy({ ...privacy, allowMessages: e.target.checked })}
+                      onChange={(e) => {
+                        const newValue = e.target.checked;
+                        setPrivacy({ ...privacy, allowMessages: newValue });
+                        toast.info(newValue ? '💬 Đã cho phép nhắn tin' : '🔒 Đã chặn nhắn tin');
+                      }}
                     />
                     <span className="toggle-slider"></span>
                   </label>
                 </div>
-              </div>
-            </div>
-          )}
-
-          { }
-          {activeTab === "workout" && (
-            <div className="settings-section">
-              <h2 className="section-title">Cài Đặt Tập Luyện</h2>
-
-              <div className="form-group">
-                <label className="form-label">⏱️ Thời gian tập mặc định (phút)</label>
-                <input
-                  type="number"
-                  value={workoutSettings.defaultDuration}
-                  onChange={(e) =>
-                    setWorkoutSettings({ ...workoutSettings, defaultDuration: parseInt(e.target.value) })
-                  }
-                  className="form-input"
-                  min="15"
-                  max="180"
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">⏰ Thời gian nhắc tập</label>
-                <input
-                  type="time"
-                  value={workoutSettings.reminderTime}
-                  onChange={(e) => setWorkoutSettings({ ...workoutSettings, reminderTime: e.target.value })}
-                  className="form-input"
-                />
-              </div>
-
-              <div className="toggle-group">
-                <div className="toggle-item">
-                  <div className="toggle-info">
-                    <div className="toggle-label">📝 Tự động ghi log</div>
-                    <div className="toggle-desc">Tự động lưu buổi tập khi hoàn thành</div>
-                  </div>
-                  <label className="toggle-switch">
-                    <input
-                      type="checkbox"
-                      checked={workoutSettings.autoLog}
-                      onChange={(e) => setWorkoutSettings({ ...workoutSettings, autoLog: e.target.checked })}
-                    />
-                    <span className="toggle-slider"></span>
-                  </label>
-                </div>
-
-                <div className="toggle-item">
-                  <div className="toggle-info">
-                    <div className="toggle-label">🛌 Nhắc ngày nghỉ</div>
-                    <div className="toggle-desc">Nhắc nhở khi đã tập liên tục nhiều ngày</div>
-                  </div>
-                  <label className="toggle-switch">
-                    <input
-                      type="checkbox"
-                      checked={workoutSettings.restDayReminder}
-                      onChange={(e) =>
-                        setWorkoutSettings({ ...workoutSettings, restDayReminder: e.target.checked })
-                      }
-                    />
-                    <span className="toggle-slider"></span>
-                  </label>
-                </div>
-              </div>
-            </div>
-          )}
-
-          { }
-          {activeTab === "nutrition" && (
-            <div className="settings-section">
-              <h2 className="section-title">Mục Tiêu Dinh Dưỡng</h2>
-
-              <div className="nutrition-grid">
-                <div className="nutrition-card">
-                  <div className="nutrition-icon">🔥</div>
-                  <div className="nutrition-info">
-                    <label className="nutrition-label">Calories</label>
-                    <div className="nutrition-input-group">
-                      <input
-                        type="number"
-                        value={nutritionSettings.calorieGoal}
-                        onChange={(e) =>
-                          setNutritionSettings({ ...nutritionSettings, calorieGoal: parseInt(e.target.value) })
-                        }
-                        className="nutrition-input"
-                      />
-                      <span className="nutrition-unit">kcal/ngày</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="nutrition-card">
-                  <div className="nutrition-icon">🥩</div>
-                  <div className="nutrition-info">
-                    <label className="nutrition-label">Protein</label>
-                    <div className="nutrition-input-group">
-                      <input
-                        type="number"
-                        value={nutritionSettings.proteinGoal}
-                        onChange={(e) =>
-                          setNutritionSettings({ ...nutritionSettings, proteinGoal: parseInt(e.target.value) })
-                        }
-                        className="nutrition-input"
-                      />
-                      <span className="nutrition-unit">g/ngày</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="nutrition-card">
-                  <div className="nutrition-icon">🍞</div>
-                  <div className="nutrition-info">
-                    <label className="nutrition-label">Carbs</label>
-                    <div className="nutrition-input-group">
-                      <input
-                        type="number"
-                        value={nutritionSettings.carbGoal}
-                        onChange={(e) =>
-                          setNutritionSettings({ ...nutritionSettings, carbGoal: parseInt(e.target.value) })
-                        }
-                        className="nutrition-input"
-                      />
-                      <span className="nutrition-unit">g/ngày</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="nutrition-card">
-                  <div className="nutrition-icon">🥑</div>
-                  <div className="nutrition-info">
-                    <label className="nutrition-label">Fat</label>
-                    <div className="nutrition-input-group">
-                      <input
-                        type="number"
-                        value={nutritionSettings.fatGoal}
-                        onChange={(e) =>
-                          setNutritionSettings({ ...nutritionSettings, fatGoal: parseInt(e.target.value) })
-                        }
-                        className="nutrition-input"
-                      />
-                      <span className="nutrition-unit">g/ngày</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="nutrition-card">
-                  <div className="nutrition-icon">💧</div>
-                  <div className="nutrition-info">
-                    <label className="nutrition-label">Nước</label>
-                    <div className="nutrition-input-group">
-                      <input
-                        type="number"
-                        value={nutritionSettings.waterGoal}
-                        onChange={(e) =>
-                          setNutritionSettings({ ...nutritionSettings, waterGoal: parseInt(e.target.value) })
-                        }
-                        className="nutrition-input"
-                      />
-                      <span className="nutrition-unit">ly/ngày</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          { }
-          {activeTab === "feedback" && (
-            <div className="settings-section">
-              <h2 className="section-title">💬 Gửi Feedback</h2>
-              <p style={{ color: '#666', marginBottom: '20px' }}>
-                Chia sẻ ý kiến, báo lỗi hoặc đề xuất tính năng mới cho chúng tôi
-              </p>
-
-              <div className="form-group">
-                <label className="form-label">Loại feedback</label>
-                <select
-                  value={feedbackForm.type}
-                  onChange={(e) => setFeedbackForm({ ...feedbackForm, type: e.target.value })}
-                  className="form-input"
-                >
-                  <option value="bug">🐛 Báo lỗi</option>
-                  <option value="feature">✨ Đề xuất tính năng</option>
-                  <option value="improvement">🔧 Cải thiện</option>
-                  <option value="question">❓ Câu hỏi</option>
-                  <option value="other">💭 Khác</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Tiêu đề <span style={{color: 'red'}}>*</span></label>
-                <input
-                  type="text"
-                  value={feedbackForm.title}
-                  onChange={(e) => setFeedbackForm({ ...feedbackForm, title: e.target.value })}
-                  placeholder="Ví dụ: Ứng dụng bị lỗi khi đăng nhập"
-                  className="form-input"
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Nội dung <span style={{color: 'red'}}>*</span></label>
-                <textarea
-                  value={feedbackForm.message}
-                  onChange={(e) => setFeedbackForm({ ...feedbackForm, message: e.target.value })}
-                  placeholder="Mô tả chi tiết feedback của bạn..."
-                  className="form-textarea"
-                  rows="5"
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Mức độ ưu tiên</label>
-                <select
-                  value={feedbackForm.priority}
-                  onChange={(e) => setFeedbackForm({ ...feedbackForm, priority: e.target.value })}
-                  className="form-input"
-                >
-                  <option value="low">🟢 Thấp</option>
-                  <option value="medium">🟡 Trung bình</option>
-                  <option value="high">🔴 Cao</option>
-                </select>
-              </div>
-
-              <button
-                className="btn-save"
-                onClick={handleSubmitFeedback}
-                disabled={feedbackLoading || !feedbackForm.title || !feedbackForm.message}
-                style={{ marginTop: '10px' }}
-              >
-                {feedbackLoading ? '⏳ Đang gửi...' : '📤 Gửi Feedback'}
-              </button>
-
-              <div style={{ marginTop: '40px', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
-                <h3 className="section-title" style={{ fontSize: '1.2rem', marginBottom: '15px' }}>
-                  📋 Lịch sử Feedback của tôi
-                </h3>
-
-                <div style={{ marginBottom: '15px', display: 'flex', gap: '10px' }}>
-                  <button
-                    className={`tab-btn ${feedbackStatusFilter === 'all' ? 'active' : ''}`}
-                    onClick={() => {
-                      setFeedbackStatusFilter('all');
-                      fetchMyFeedbacks('all');
-                    }}
-                    style={{ padding: '8px 16px', fontSize: '0.9rem' }}
-                  >
-                    Tất cả
-                  </button>
-                  <button
-                    className={`tab-btn ${feedbackStatusFilter === 'pending' ? 'active' : ''}`}
-                    onClick={() => {
-                      setFeedbackStatusFilter('pending');
-                      fetchMyFeedbacks('pending');
-                    }}
-                    style={{ padding: '8px 16px', fontSize: '0.9rem' }}
-                  >
-                    Chờ xử lý
-                  </button>
-                  <button
-                    className={`tab-btn ${feedbackStatusFilter === 'resolved' ? 'active' : ''}`}
-                    onClick={() => {
-                      setFeedbackStatusFilter('resolved');
-                      fetchMyFeedbacks('resolved');
-                    }}
-                    style={{ padding: '8px 16px', fontSize: '0.9rem' }}
-                  >
-                    Đã xử lý
-                  </button>
-                </div>
-
-                {feedbackLoading ? (
-                  <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-                    ⏳ Đang tải...
-                  </div>
-                ) : myFeedbacks.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '40px', color: '#999', fontStyle: 'italic' }}>
-                    Chưa có feedback nào
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                    {myFeedbacks.map((fb) => (
-                      <div
-                        key={fb.id}
-                        style={{
-                          border: '1px solid #e2e8f0',
-                          borderRadius: '12px',
-                          padding: '20px',
-                          background: '#fff'
-                        }}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '10px' }}>
-                          <div>
-                            <h4 style={{ margin: '0 0 5px 0', fontSize: '1.1rem' }}>{fb.title}</h4>
-                            <div style={{ display: 'flex', gap: '10px', fontSize: '0.85rem', color: '#666' }}>
-                              <span>📌 {fb.type === 'bug' ? 'Báo lỗi' : fb.type === 'feature' ? 'Đề xuất' : fb.type === 'improvement' ? 'Cải thiện' : fb.type === 'question' ? 'Câu hỏi' : 'Khác'}</span>
-                              <span>•</span>
-                              <span>{new Date(fb.created_at).toLocaleDateString('vi-VN')}</span>
-                            </div>
-                          </div>
-                          <span
-                            style={{
-                              padding: '4px 12px',
-                              borderRadius: '12px',
-                              fontSize: '0.85rem',
-                              fontWeight: '600',
-                              background: fb.status === 'resolved' ? '#d1fae5' : '#fef3c7',
-                              color: fb.status === 'resolved' ? '#065f46' : '#92400e'
-                            }}
-                          >
-                            {fb.status === 'resolved' ? '✅ Đã xử lý' : '⏳ Chờ xử lý'}
-                          </span>
-                        </div>
-                        <p style={{ margin: '10px 0', color: '#475569', lineHeight: '1.6' }}>{fb.message}</p>
-                        {fb.response && (
-                          <div style={{
-                            marginTop: '15px',
-                            padding: '15px',
-                            background: '#f0f9ff',
-                            borderRadius: '8px',
-                            borderLeft: '3px solid #3b82f6'
-                          }}>
-                            <div style={{ fontWeight: '600', marginBottom: '5px', color: '#1e40af' }}>
-                              💬 Phản hồi từ admin:
-                            </div>
-                            <div style={{ color: '#1e3a8a' }}>{fb.response}</div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
           )}
@@ -1040,6 +835,194 @@ export default function Settings() {
                     </button>
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          { }
+          {activeTab === "feedback" && (
+            <div className="settings-section">
+              <h2 className="section-title">Gửi Phản Hồi</h2>
+              <p style={{ color: '#666', marginBottom: '24px', fontSize: '0.95rem' }}>
+                Chia sẻ ý kiến, báo lỗi hoặc đề xuất tính năng mới. Chúng tôi rất trân trọng phản hồi của bạn!
+              </p>
+
+              <div className="feedback-form">
+                <div className="form-group">
+                  <label className="form-label">
+                    <span className="label-icon">📝</span>
+                    Loại phản hồi
+                  </label>
+                  <select
+                    value={feedbackForm.type}
+                    onChange={(e) => setFeedbackForm({ ...feedbackForm, type: e.target.value })}
+                    className="form-select"
+                  >
+                    <option value="bug">🐛 Báo lỗi</option>
+                    <option value="feature">✨ Đề xuất tính năng</option>
+                    <option value="improvement">🔧 Cải thiện</option>
+                    <option value="question">❓ Câu hỏi</option>
+                    <option value="other">💭 Khác</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">
+                    <span className="label-icon">🏷️</span>
+                    Tiêu đề
+                  </label>
+                  <input
+                    type="text"
+                    value={feedbackForm.title}
+                    onChange={(e) => setFeedbackForm({ ...feedbackForm, title: e.target.value })}
+                    placeholder="Nhập tiêu đề phản hồi"
+                    className="form-input"
+                    maxLength={200}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">
+                    <span className="label-icon">📄</span>
+                    Nội dung
+                  </label>
+                  <textarea
+                    value={feedbackForm.message}
+                    onChange={(e) => setFeedbackForm({ ...feedbackForm, message: e.target.value })}
+                    placeholder="Mô tả chi tiết phản hồi của bạn..."
+                    className="form-input"
+                    rows={6}
+                    style={{ resize: 'vertical' }}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">
+                    <span className="label-icon">⚡</span>
+                    Mức độ ưu tiên
+                  </label>
+                  <select
+                    value={feedbackForm.priority}
+                    onChange={(e) => setFeedbackForm({ ...feedbackForm, priority: e.target.value })}
+                    className="form-select"
+                  >
+                    <option value="low">🟢 Thấp</option>
+                    <option value="medium">🟡 Trung bình</option>
+                    <option value="high">🔴 Cao</option>
+                  </select>
+                </div>
+
+                <button
+                  className="btn btn-save"
+                  onClick={handleSubmitFeedback}
+                  disabled={feedbackLoading || !feedbackForm.title || !feedbackForm.message}
+                  style={{ width: '100%', marginTop: '8px' }}
+                >
+                  {feedbackLoading ? (
+                    <>
+                      <span className="btn-icon">⏳</span>
+                      Đang gửi...
+                    </>
+                  ) : (
+                    <>
+                      <span className="btn-icon">📤</span>
+                      Gửi Phản Hồi
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <div style={{ marginTop: '40px', borderTop: '2px solid #e5e7eb', paddingTop: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                  <h3 className="section-title" style={{ margin: 0, fontSize: '1.3rem' }}>Lịch Sử Phản Hồi</h3>
+                  <select
+                    value={feedbackStatusFilter}
+                    onChange={(e) => {
+                      setFeedbackStatusFilter(e.target.value);
+                      fetchMyFeedbacks(e.target.value);
+                    }}
+                    className="form-select"
+                    style={{ width: 'auto', minWidth: '150px' }}
+                  >
+                    <option value="all">Tất cả</option>
+                    <option value="pending">⏳ Đang xử lý</option>
+                    <option value="resolved">✅ Đã xử lý</option>
+                  </select>
+                </div>
+
+                {feedbackLoading ? (
+                  <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+                    <div className="spinner" style={{
+                      width: '40px',
+                      height: '40px',
+                      border: '4px solid #f3f3f3',
+                      borderTop: '4px solid #6366f1',
+                      borderRadius: '50%',
+                      animation: 'spin 1s linear infinite',
+                      margin: '0 auto 16px'
+                    }}></div>
+                    Đang tải...
+                  </div>
+                ) : myFeedbacks.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
+                    <p style={{ fontSize: '1.1rem', marginBottom: '8px' }}>📭</p>
+                    <p>Chưa có phản hồi nào</p>
+                  </div>
+                ) : (
+                  <div className="feedback-list">
+                    {myFeedbacks.map((fb) => (
+                      <div key={fb.id} className="feedback-item">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                          <div>
+                            <h4 style={{ margin: '0 0 4px 0', fontSize: '1.1rem', color: '#1f2937' }}>
+                              {fb.title}
+                            </h4>
+                            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', fontSize: '0.85rem', color: '#6b7280' }}>
+                              <span>
+                                {fb.type === 'bug' && '🐛 Báo lỗi'}
+                                {fb.type === 'feature' && '✨ Đề xuất'}
+                                {fb.type === 'improvement' && '🔧 Cải thiện'}
+                                {fb.type === 'question' && '❓ Câu hỏi'}
+                                {fb.type === 'other' && '💭 Khác'}
+                              </span>
+                              <span>
+                                {fb.priority === 'low' && '🟢 Thấp'}
+                                {fb.priority === 'medium' && '🟡 Trung bình'}
+                                {fb.priority === 'high' && '🔴 Cao'}
+                              </span>
+                              <span>
+                                {fb.status === 'pending' && '⏳ Đang xử lý'}
+                                {fb.status === 'resolved' && '✅ Đã xử lý'}
+                              </span>
+                            </div>
+                          </div>
+                          <span style={{ fontSize: '0.85rem', color: '#9ca3af' }}>
+                            {new Date(fb.created_at).toLocaleDateString('vi-VN')}
+                          </span>
+                        </div>
+                        <p style={{ margin: '0 0 12px 0', color: '#4b5563', lineHeight: '1.6' }}>
+                          {fb.message}
+                        </p>
+                        {fb.response && (
+                          <div style={{
+                            background: '#f0f9ff',
+                            border: '1px solid #bae6fd',
+                            borderRadius: '8px',
+                            padding: '12px',
+                            marginTop: '12px'
+                          }}>
+                            <div style={{ fontWeight: '600', color: '#0369a1', marginBottom: '4px' }}>
+                              💬 Phản hồi từ admin:
+                            </div>
+                            <div style={{ color: '#0c4a6e', lineHeight: '1.6' }}>
+                              {fb.response}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}

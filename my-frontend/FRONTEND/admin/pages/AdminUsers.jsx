@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './AdminUsers.css';
+import Toast from '../../components/Toast';
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
@@ -12,6 +13,8 @@ export default function AdminUsers() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
+
   const [newUser, setNewUser] = useState({
     name: '',
     email: '',
@@ -25,6 +28,10 @@ export default function AdminUsers() {
     sessions_per_week: '',
     role: 'user'
   });
+
+  const showToast = (message, type = 'info') => {
+    setToast({ show: true, message, type });
+  };
 
   useEffect(() => {
     fetchUsers();
@@ -102,14 +109,14 @@ export default function AdminUsers() {
       const data = await res.json();
 
       if (data.success) {
-        alert('✅ Xóa user thành công!');
+        showToast('✅ Xóa user thành công!', 'success');
         fetchUsers();
         setShowDeleteModal(false);
       } else {
-        alert('❌ Lỗi: ' + data.error);
+        showToast('❌ Lỗi: ' + data.error, 'error');
       }
     } catch (error) {
-      alert('❌ Lỗi: ' + error.message);
+      showToast('❌ Lỗi: ' + error.message, 'error');
     }
   };
 
@@ -124,14 +131,14 @@ export default function AdminUsers() {
       const data = await res.json();
 
       if (data.success) {
-        alert('✅ Cập nhật thành công!');
+        showToast('✅ Cập nhật thành công!', 'success');
         fetchUsers();
         setShowEditModal(false);
       } else {
-        alert('❌ Lỗi: ' + data.error);
+        showToast('❌ Lỗi: ' + data.error, 'error');
       }
     } catch (error) {
-      alert('❌ Lỗi: ' + error.message);
+      showToast('❌ Lỗi: ' + error.message, 'error');
     }
   };
 
@@ -156,7 +163,7 @@ export default function AdminUsers() {
     try {
       // Validate required fields
       if (!newUser.name || !newUser.email || !newUser.password) {
-        alert('❌ Vui lòng điền đầy đủ thông tin bắt buộc (Tên, Email, Mật khẩu)');
+        showToast('❌ Vui lòng điền đầy đủ thông tin bắt buộc (Tên, Email, Mật khẩu)', 'error');
         return;
       }
 
@@ -181,7 +188,7 @@ export default function AdminUsers() {
       const data = await res.json();
 
       if (data.success) {
-        alert('✅ Tạo user thành công!');
+        showToast('✅ Tạo user thành công!', 'success');
         fetchUsers();
         setShowAddModal(false);
         setNewUser({
@@ -198,10 +205,10 @@ export default function AdminUsers() {
           role: 'user'
         });
       } else {
-        alert('❌ Lỗi: ' + data.error);
+        showToast('❌ Lỗi: ' + data.error, 'error');
       }
     } catch (error) {
-      alert('❌ Lỗi: ' + error.message);
+      showToast('❌ Lỗi: ' + error.message, 'error');
     }
   };
 
@@ -229,6 +236,13 @@ export default function AdminUsers() {
 
   return (
     <div className="admin-users">
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
+      )}
       <div className="users-header">
         <div>
           <h1>👥 Quản Lý Người Dùng</h1>
@@ -481,7 +495,7 @@ export default function AdminUsers() {
             <div className="modal-body">
               <div className="form-grid">
                 <div className="form-group">
-                  <label>Tên <span style={{color: 'red'}}>*</span></label>
+                  <label>Tên <span style={{ color: 'red' }}>*</span></label>
                   <input
                     type="text"
                     value={newUser.name}
@@ -490,7 +504,7 @@ export default function AdminUsers() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Email <span style={{color: 'red'}}>*</span></label>
+                  <label>Email <span style={{ color: 'red' }}>*</span></label>
                   <input
                     type="email"
                     value={newUser.email}
@@ -499,7 +513,7 @@ export default function AdminUsers() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Mật khẩu <span style={{color: 'red'}}>*</span></label>
+                  <label>Mật khẩu <span style={{ color: 'red' }}>*</span></label>
                   <input
                     type="password"
                     value={newUser.password}

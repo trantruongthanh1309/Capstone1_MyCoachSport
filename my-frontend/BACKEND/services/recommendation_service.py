@@ -194,16 +194,32 @@ class SmartRecommendationEngine:
         existing_items = UserPlan.query.filter_by(
             UserId=self.user_id,
             Date=self.date_obj
-        ).first()
+        ).all()
         
         if not existing_items:
             return False
+        
+        # Kiểm tra xem có tất cả items đã completed không
+        completed_items = [item for item in existing_items if hasattr(item, 'IsCompleted') and item.IsCompleted]
+        all_completed = len(completed_items) > 0 and len(completed_items) == len(existing_items)
+        
+        # Nếu tất cả items đã completed, không regenerate dù profile hash thay đổi
+        if all_completed:
+            print(f"✅ [ALL COMPLETED] All {len(existing_items)} items completed for {self.date_str}, keeping existing schedule")
+            return False
             
         current_hash = self._get_user_profile_hash()
-        saved_hash = existing_items.ProfileHash if hasattr(existing_items, 'ProfileHash') else None
+        saved_hash = existing_items[0].ProfileHash if hasattr(existing_items[0], 'ProfileHash') else None
         
+        # Nếu hash thay đổi, chỉ regenerate nếu có items chưa completed
+        # Nếu tất cả items đã completed, giữ nguyên lịch
         if saved_hash and saved_hash != current_hash:
-            print(f"🔄 [PROFILE CHANGED] User {self.user_id} profile changed, regenerating schedule...")
+            # Kiểm tra lại xem có items nào chưa completed không
+            incomplete_items = [item for item in existing_items if not (hasattr(item, 'IsCompleted') and item.IsCompleted)]
+            if len(incomplete_items) == 0:
+                print(f"✅ [PROFILE CHANGED BUT ALL COMPLETED] Profile changed but all items completed, keeping schedule")
+                return False
+            print(f"🔄 [PROFILE CHANGED] User {self.user_id} profile changed, regenerating schedule (has {len(incomplete_items)} incomplete items)...")
             return True
         return False
     
@@ -228,11 +244,32 @@ class SmartRecommendationEngine:
             "evening": "19:00 - 20:00"
         }
         
-        filtered_count = 0
-        
+        # Không filter out items nếu đã completed - giữ nguyên lịch đã hoàn thành
         for item in items:
+            # Nếu item đã completed, luôn hiển thị dù có busy hay không
+            if item.IsCompleted:
+                if item.Type == "meal" and item.MealId:
+                    meal = Meal.query.get(item.MealId)
+                    if meal:
+                        meal_data = self._serialize_meal(meal)
+                        meal_data["MealType"] = item.Slot
+                        schedule.append({
+                            "time": time_map.get(item.Slot, item.Slot),
+                            "type": "meal",
+                            "data": meal_data
+                        })
+                elif item.Type == "workout" and item.WorkoutId:
+                    workout = Workout.query.get(item.WorkoutId)
+                    if workout:
+                        schedule.append({
+                            "time": f"{item.Slot}_slot",
+                            "type": "workout",
+                            "data": self._serialize_workout(workout)
+                        })
+                continue
+            
+            # Chỉ filter out items chưa completed nếu slot bận
             if item.Slot and item.Slot.lower() in busy_slots:
-                filtered_count += 1
                 print(f"   🚫 Filtered out {item.Type} at {item.Slot} (busy)")
                 continue
             
@@ -255,10 +292,6 @@ class SmartRecommendationEngine:
                         "data": self._serialize_workout(workout)
                     })
         
-        if filtered_count > 0:
-            print(f"   🔄 {filtered_count} items conflict with busy slots, regenerating schedule...")
-            return None
-        
         if not schedule:
             return None
         
@@ -269,6 +302,20 @@ class SmartRecommendationEngine:
         }
 
     def _save_schedule(self, schedule_items):
+        # Lấy các UserPlan cũ để preserve IsCompleted
+        existing_plans = UserPlan.query.filter_by(
+            UserId=self.user_id,
+            Date=self.date_obj
+        ).all()
+        
+        # Tạo map để lưu IsCompleted theo (Type, Slot, MealId/WorkoutId)
+        completed_map = {}
+        for plan in existing_plans:
+            key = (plan.Type, plan.Slot, plan.MealId if plan.Type == "meal" else plan.WorkoutId)
+            if plan.IsCompleted:
+                completed_map[key] = True
+        
+        # Xóa các plan cũ
         UserPlan.query.filter_by(
             UserId=self.user_id,
             Date=self.date_obj
@@ -284,25 +331,35 @@ class SmartRecommendationEngine:
                 elif "19:00" in item["time"]: time_slot = "evening"
                     
                 if time_slot:
+                    meal_id = item["data"]["Id"]
+                    key = ("meal", time_slot, meal_id)
+                    is_completed = completed_map.get(key, False)
+                    
                     new_item = UserPlan(
                         UserId=self.user_id,
                         Date=self.date_obj,
                         Slot=time_slot,
                         Type="meal",
-                        MealId=item["data"]["Id"],
-                        ProfileHash=profile_hash
+                        MealId=meal_id,
+                        ProfileHash=profile_hash,
+                        IsCompleted=is_completed
                     )
                     db.session.add(new_item)
                     
             elif item["type"] == "workout":
                 time_slot = item["time"].replace("_slot", "")
+                workout_id = item["data"]["Id"]
+                key = ("workout", time_slot, workout_id)
+                is_completed = completed_map.get(key, False)
+                
                 new_item = UserPlan(
                     UserId=self.user_id,
                     Date=self.date_obj,
                     Slot=time_slot,
                     Type="workout",
-                    WorkoutId=item["data"]["Id"],
-                    ProfileHash=profile_hash
+                    WorkoutId=workout_id,
+                    ProfileHash=profile_hash,
+                    IsCompleted=is_completed
                 )
                 db.session.add(new_item)
         
@@ -489,6 +546,7 @@ class SmartRecommendationEngine:
             "Recipe": getattr(m, 'Recipe', ''),
             "Difficulty": getattr(m, 'Difficulty', ''),
             "CookingTimeMin": getattr(m, 'CookingTimeMin', 0),
+            "VideoUrl": getattr(m, 'VideoUrl', None),
             "Image": getattr(m, 'Image', None)
         }
 

@@ -3,7 +3,6 @@ import styles from "./Home.module.css";
 import ChatBox from "../components/ChatBox";
 import DailyBriefingModal from "../components/DailyBriefingModal";
 
-const API_BASE = "http://localhost:5000";
 const WEATHER_API_KEY = "40dfa2d8e73afabb299edc21486cb2c3";
 const WEATHER_API_URL = "https://api.openweathermap.org/data/2.5/weather";
 

@@ -8,7 +8,7 @@ export default function NotificationBell() {
 
     const fetchNotifs = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/notifications/', { credentials: 'include' });
+            const res = await fetch('/api/notifications/', { credentials: 'include' });
             const data = await res.json();
             setNotifs(data);
         } catch (err) {

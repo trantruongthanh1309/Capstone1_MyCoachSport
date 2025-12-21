@@ -413,7 +413,7 @@ function Composer({ onPost, user }) {
   );
 }
 
-function Post({ post, onLike, onComment, onDelete, currentUser }) {
+function Post({ post, onLike, onComment, onDelete, currentUser, onShare }) {
   const time = useMemo(
     () => new Date(post.created_at).toLocaleString("vi-VN"),
     [post.created_at]
@@ -464,7 +464,7 @@ function Post({ post, onLike, onComment, onDelete, currentUser }) {
         <button className="post-action-btn" onClick={() => setShowCmt((v) => !v)}>
           <span>💬 Bình luận</span>
         </button>
-        <button className="post-action-btn" onClick={() => alert("Chia sẻ (demo)")}>
+        <button className="post-action-btn" onClick={() => onShare && onShare(post)}>
           <span>↗ Chia sẻ</span>
         </button>
       </div>
@@ -532,15 +532,267 @@ function RightSidebar() {
   );
 }
 
+function ShareModal({ post, onClose, onShare }) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [conversations, setConversations] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const toast = useToast();
+
+  useEffect(() => {
+    // Load conversations
+    fetch(`/api/social/conversations`, { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) setConversations(data.conversations);
+      });
+  }, []);
+
+  const handleSearch = async (query) => {
+    setSearchQuery(query);
+    if (query.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    try {
+      const res = await fetch(`/api/social/users/search?q=${query}`, { credentials: 'include' });
+      const data = await res.json();
+      if (data.success) {
+        setSearchResults(data.users);
+      }
+    } catch (err) {
+      console.error("Search error:", err);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!selectedUser) {
+      toast.error('Vui lòng chọn người nhận');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Get or create conversation
+      const convRes = await fetch(`/api/social/conversations/${selectedUser.id}`, {
+        credentials: 'include'
+      });
+      const convData = await convRes.json();
+      
+      if (!convData.success) {
+        throw new Error('Không thể tạo cuộc trò chuyện');
+      }
+
+      const conversationId = convData.conversation.id;
+
+      // Send message with shared post
+      const msgRes = await fetch(`/api/social/conversations/${conversationId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          content: message || '📎 Đã chia sẻ một bài đăng',
+          shared_post_id: post.id
+        })
+      });
+
+      const msgData = await msgRes.json();
+      if (msgData.success) {
+        toast.success(`✅ Đã chia sẻ bài đăng đến ${selectedUser.name}`);
+        onShare && onShare();
+        onClose();
+      } else {
+        throw new Error(msgData.error || 'Không thể chia sẻ');
+      }
+    } catch (err) {
+      toast.error(`❌ Lỗi: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const allUsers = [
+    ...conversations.map(c => c.other_user),
+    ...searchResults
+  ].filter((user, index, self) => 
+    index === self.findIndex(u => u.id === user.id)
+  );
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 10000
+    }} onClick={onClose}>
+      <div style={{
+        background: 'white',
+        borderRadius: '12px',
+        width: '90%',
+        maxWidth: '500px',
+        maxHeight: '80vh',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column'
+      }} onClick={(e) => e.stopPropagation()}>
+        <div style={{
+          padding: '20px',
+          borderBottom: '1px solid #e4e6eb',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '600' }}>Chia sẻ bài đăng</h3>
+          <button onClick={onClose} style={{
+            background: 'none',
+            border: 'none',
+            fontSize: '24px',
+            cursor: 'pointer',
+            color: '#65676b'
+          }}>✕</button>
+        </div>
+
+        <div style={{ padding: '20px', flex: 1, overflowY: 'auto' }}>
+          <div style={{ marginBottom: '16px' }}>
+            <input
+              type="text"
+              placeholder="Tìm người dùng..."
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '12px',
+                border: '1px solid #e4e6eb',
+                borderRadius: '8px',
+                fontSize: '14px'
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '14px' }}>
+              Chọn người nhận:
+            </label>
+            <div style={{
+              maxHeight: '200px',
+              overflowY: 'auto',
+              border: '1px solid #e4e6eb',
+              borderRadius: '8px'
+            }}>
+              {allUsers.length === 0 ? (
+                <div style={{ padding: '20px', textAlign: 'center', color: '#65676b' }}>
+                  {searchQuery ? 'Không tìm thấy người dùng' : 'Tìm kiếm để chọn người nhận'}
+                </div>
+              ) : (
+                allUsers.map(user => (
+                  <div
+                    key={user.id}
+                    onClick={() => setSelectedUser(user)}
+                    style={{
+                      padding: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      cursor: 'pointer',
+                      background: selectedUser?.id === user.id ? '#e7f3ff' : 'transparent',
+                      borderBottom: '1px solid #f0f2f5'
+                    }}
+                  >
+                    <img
+                      src={user.avatar || avatar(user.name)}
+                      alt=""
+                      style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
+                    />
+                    <span style={{ fontWeight: selectedUser?.id === user.id ? '600' : '400' }}>
+                      {user.name}
+                    </span>
+                    {selectedUser?.id === user.id && <span>✓</span>}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '14px' }}>
+              Tin nhắn kèm theo (tùy chọn):
+            </label>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Viết tin nhắn..."
+              rows={3}
+              style={{
+                width: '100%',
+                padding: '12px',
+                border: '1px solid #e4e6eb',
+                borderRadius: '8px',
+                fontSize: '14px',
+                resize: 'vertical'
+              }}
+            />
+          </div>
+        </div>
+
+        <div style={{
+          padding: '16px 20px',
+          borderTop: '1px solid #e4e6eb',
+          display: 'flex',
+          gap: '12px',
+          justifyContent: 'flex-end'
+        }}>
+          <button
+            onClick={onClose}
+            style={{
+              padding: '10px 20px',
+              border: '1px solid #e4e6eb',
+              borderRadius: '8px',
+              background: 'white',
+              cursor: 'pointer',
+              fontWeight: '600'
+            }}
+          >
+            Hủy
+          </button>
+          <button
+            onClick={handleShare}
+            disabled={!selectedUser || loading}
+            style={{
+              padding: '10px 20px',
+              border: 'none',
+              borderRadius: '8px',
+              background: selectedUser && !loading ? '#1877f2' : '#e4e6eb',
+              color: selectedUser && !loading ? 'white' : '#65676b',
+              cursor: selectedUser && !loading ? 'pointer' : 'not-allowed',
+              fontWeight: '600'
+            }}
+          >
+            {loading ? 'Đang gửi...' : 'Gửi'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Social() {
   const [posts, setPosts] = useState([]);
   const [user, setUser] = useState(null);
+  const [shareModal, setShareModal] = useState(null);
   const toast = useToast();
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/profile", { credentials: "include" });
+        const res = await fetch("/api/profile", { credentials: "include" });
         const data = await res.json();
         if (!data.error) {
           setUser({
@@ -558,7 +810,7 @@ export default function Social() {
 
   const fetchPosts = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/social/posts?page=1&per_page=20", { credentials: "include" });
+      const res = await fetch("/api/social/posts?page=1&per_page=20", { credentials: "include" });
       const data = await res.json();
       if (data.success) {
         setPosts(data.posts);
@@ -574,7 +826,7 @@ export default function Social() {
 
   const addPost = async (postData) => {
     try {
-      const res = await fetch("http://localhost:5000/api/social/posts", {
+      const res = await fetch("/api/social/posts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -594,7 +846,7 @@ export default function Social() {
 
   const likePost = async (id) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/social/posts/${id}/like`, {
+      const res = await fetch(`/api/social/posts/${id}/like`, {
         method: "POST",
         credentials: "include"
       });
@@ -617,8 +869,18 @@ export default function Social() {
   };
 
   const addComment = async (id, text) => {
+    // Import validation
+    const { validateComment } = await import('../utils/validation');
+    
+    // Validate comment
+    const commentValidation = validateComment(text);
+    if (!commentValidation.valid) {
+      toast.error(commentValidation.message);
+      return;
+    }
+    
     try {
-      const res = await fetch(`http://localhost:5000/api/social/posts/${id}/comments`, {
+      const res = await fetch(`/api/social/posts/${id}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -637,7 +899,7 @@ export default function Social() {
   const delPost = async (id) => {
     if (!window.confirm("Bạn có chắc muốn xóa bài viết này?")) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/social/posts/${id}`, {
+      const res = await fetch(`/api/social/posts/${id}`, {
         method: "DELETE",
         credentials: "include"
       });
@@ -669,12 +931,23 @@ export default function Social() {
                 onComment={addComment}
                 onDelete={delPost}
                 currentUser={user}
+                onShare={(post) => setShareModal(post)}
               />
             ))}
           </section>
           <RightSidebar />
         </div>
       </main>
+      {shareModal && (
+        <ShareModal
+          post={shareModal}
+          onClose={() => setShareModal(null)}
+          onShare={() => {
+            toast.success('✅ Đã chia sẻ bài đăng thành công!');
+            setShareModal(null);
+          }}
+        />
+      )}
     </>
   );
 }

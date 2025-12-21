@@ -44,6 +44,7 @@ def get_meals():
             'recipe': m.Recipe,
             'cooking_time_min': m.CookingTimeMin,
             'difficulty': m.Difficulty,
+            'video_url': getattr(m, 'VideoUrl', None),
             'image': m.Image
         } for m in pagination.items]
         
@@ -82,6 +83,7 @@ def create_meal():
             Recipe=data.get('recipe', ''),
             CookingTimeMin=data.get('cooking_time_min', 0),
             Difficulty=data.get('difficulty', 'Medium'),
+            VideoUrl=data.get('video_url'),
             Image=data.get('image', '')
         )
         
@@ -115,7 +117,10 @@ def update_meal(meal_id):
         meal.Recipe = data.get('recipe', meal.Recipe)
         meal.CookingTimeMin = data.get('cooking_time_min', meal.CookingTimeMin)
         meal.Difficulty = data.get('difficulty', meal.Difficulty)
-        meal.Image = data.get('image', meal.Image)
+        if 'video_url' in data:
+            meal.VideoUrl = data.get('video_url')
+        if 'image' in data:
+            meal.Image = data.get('image')
         
         db.session.commit()
         
@@ -147,12 +152,28 @@ def get_meals_stats():
         return auth_error
     
     try:
-        from sqlalchemy import func
+        from sqlalchemy import func, or_
         
         total_meals = Meal.query.count()
-        breakfast = Meal.query.filter(Meal.MealTime.contains('Bữa Sáng')).count()
-        lunch = Meal.query.filter(Meal.MealTime.contains('Bữa Trưa')).count()
-        dinner = Meal.query.filter(Meal.MealTime.contains('Bữa Tối')).count()
+        
+        # Helper function to build filter
+        def build_filter(keywords):
+            conditions = []
+            for kw in keywords:
+                conditions.append(Meal.MealTime.ilike(f'%{kw}%'))
+            return or_(*conditions)
+
+        # 1. Breakfast Keywords
+        breakfast_kw = ['Breakfast', 'Bữa Sáng', 'morning', 'sáng', 'Pre-Workout']
+        breakfast = Meal.query.filter(build_filter(breakfast_kw)).count()
+        
+        # 2. Lunch Keywords
+        lunch_kw = ['Lunch', 'Bữa Trưa', 'afternoon', 'trưa']
+        lunch = Meal.query.filter(build_filter(lunch_kw)).count()
+        
+        # 3. Dinner Keywords
+        dinner_kw = ['Dinner', 'Bữa Tối', 'evening', 'tối', 'Post-Workout']
+        dinner = Meal.query.filter(build_filter(dinner_kw)).count()
         
         avg_kcal = db.session.query(func.avg(Meal.Kcal)).scalar() or 0
         avg_protein = db.session.query(func.avg(Meal.Protein)).scalar() or 0
@@ -169,6 +190,7 @@ def get_meals_stats():
             }
         }), 200
     except Exception as e:
+        print(f"Error stats: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @meals_admin_bp.route('/api/admin/meals/filters/sports', methods=['GET'])

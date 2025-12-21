@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "../pages/NewsFeed.css";
+import { validateComment } from "../utils/validation";
 
-const API_BASE = "http://localhost:5000";
 
 const SPORT_ICONS = {
     "Gym": "🏋️",
@@ -28,7 +28,7 @@ const TOPIC_LABELS = {
     "Motivation": "Động lực"
 };
 
-export default function PostCard({ post, currentUserId, onStartChat }) {
+export default function PostCard({ post, currentUserId, onStartChat, onShare }) {
     const [isLiked, setIsLiked] = useState(post.is_liked);
     const [likesCount, setLikesCount] = useState(post.likes_count);
     const [showComments, setShowComments] = useState(false);
@@ -46,7 +46,7 @@ export default function PostCard({ post, currentUserId, onStartChat }) {
         setLikesCount(prev => newLiked ? prev + 1 : prev - 1);
 
         try {
-            await fetch(`${API_BASE}/api/social/posts/${post.id}/like`, {
+            await fetch(`/api/social/posts/${post.id}/like`, {
                 method: "POST",
                 credentials: "include"
             });
@@ -65,7 +65,7 @@ export default function PostCard({ post, currentUserId, onStartChat }) {
         setLoadingComments(true);
         setShowComments(true);
         try {
-            const res = await fetch(`${API_BASE}/api/social/posts/${post.id}/comments`, {
+            const res = await fetch(`/api/social/posts/${post.id}/comments`, {
                 credentials: "include"
             });
             const data = await res.json();
@@ -82,8 +82,15 @@ export default function PostCard({ post, currentUserId, onStartChat }) {
     const submitComment = async () => {
         if (!commentContent.trim()) return;
 
+        // Validate comment
+        const commentValidation = validateComment(commentContent);
+        if (!commentValidation.valid) {
+            alert(commentValidation.message);
+            return;
+        }
+
         try {
-            const res = await fetch(`${API_BASE}/api/social/posts/${post.id}/comments`, {
+            const res = await fetch(`/api/social/posts/${post.id}/comments`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
@@ -180,7 +187,7 @@ export default function PostCard({ post, currentUserId, onStartChat }) {
                 <button className="comment-btn" onClick={loadComments}>
                     💬 Bình luận
                 </button>
-                <button className="share-btn">
+                <button className="share-btn" onClick={() => onShare && onShare(post)}>
                     🔗 Chia sẻ
                 </button>
             </div>

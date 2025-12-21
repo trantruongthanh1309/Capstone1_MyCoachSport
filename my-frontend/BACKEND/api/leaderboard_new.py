@@ -122,18 +122,52 @@ def complete_schedule_item():
         """)
         item = db.session.execute(item_query, {'schedule_id': schedule_id}).first()
         
+        if not item:
+            return jsonify({'error': 'Không tìm thấy schedule item'}), 404
+        
+        # Kiểm tra thời gian - chỉ cho phép đánh dấu hoàn thành khi đã đến/quá giờ
+        from datetime import time as dt_time
+        now = datetime.now()
+        # item là Row object từ SQL query: (Type[0], MealId[1], WorkoutId[2], Date[3], Slot[4])
+        item_date = item[3]  # Date ở index 3
+        slot = item[4]  # Slot ở index 4
+        
+        # Xác định giờ bắt đầu của slot
+        slot_times = {
+            'morning': dt_time(7, 0),    # 07:00
+            'afternoon': dt_time(12, 0),  # 12:00
+            'evening': dt_time(19, 0)     # 19:00
+        }
+        
+        slot_time = slot_times.get(slot.lower() if slot else '')
+        
+        if slot_time:
+            # So sánh với ngày và giờ của item
+            item_datetime = datetime.combine(item_date, slot_time)
+            
+            # Cho phép đánh dấu hoàn thành nếu:
+            # 1. Ngày đã qua (quá khứ)
+            # 2. Hoặc cùng ngày và giờ hiện tại >= giờ của slot
+            if now.date() < item_date:
+                return jsonify({'error': 'Chưa đến ngày, không thể đánh dấu hoàn thành'}), 400
+            elif now.date() == item_date and now.time() < slot_time:
+                return jsonify({'error': 'Chưa đến giờ, không thể đánh dấu hoàn thành'}), 400
+        
         points = 0
         
-        if item.Type == 'meal':
+        # Access item fields by index: Type[0], MealId[1], WorkoutId[2], Date[3], Slot[4]
+        item_type = item[0]
+        
+        if item_type == 'meal':
             meal_query = text("""
                 SELECT Kcal, Protein FROM Meals WHERE Id = :meal_id
             """)
-            meal = db.session.execute(meal_query, {'meal_id': item.MealId}).first()
+            meal = db.session.execute(meal_query, {'meal_id': item[1]}).first()
             
             if meal:
-                calories = meal.Kcal or 0
-                protein = meal.Protein or 0
-                time_slot = item.Slot
+                calories = meal[0] or 0  # Kcal ở index 0
+                protein = meal[1] or 0   # Protein ở index 1
+                time_slot = slot
                 
                 time_multiplier = 1.2 if time_slot == 'morning' else (1.0 if time_slot == 'afternoon' else 0.9)
                 
@@ -143,15 +177,15 @@ def complete_schedule_item():
                 if points > 100:
                     points = 100
         
-        elif item.Type == 'workout':
+        elif item_type == 'workout':
             workout_query = text("""
                 SELECT Duration_min, Sport FROM Workouts WHERE Id = :workout_id
             """)
-            workout = db.session.execute(workout_query, {'workout_id': item.WorkoutId}).first()
+            workout = db.session.execute(workout_query, {'workout_id': item[2]}).first()
             
             if workout:
-                duration = workout.Duration_min or 0
-                sport = workout.Sport or ''
+                duration = workout[0] or 0  # Duration_min ở index 0
+                sport = workout[1] or ''    # Sport ở index 1
                 
                 sport_multiplier = {
                     'Yoga': 0.8,
@@ -167,7 +201,7 @@ def complete_schedule_item():
                 
                 points = int(duration * difficulty_multiplier * sport_multiplier)
         
-        if item.Type == 'workout':
+        if item_type == 'workout':
             workout_log_query = text("""
                 INSERT INTO WorkoutLogs (User_id, Workout_name, Sport, Duration_minutes, Difficulty, Points_earned, Completed_at)
                 SELECT :user_id, w.Name, w.Sport, w.Duration_min, 'Medium', :points, GETDATE()
@@ -177,7 +211,7 @@ def complete_schedule_item():
             db.session.execute(workout_log_query, {
                 'user_id': user_id,
                 'points': points,
-                'workout_id': item.WorkoutId
+                'workout_id': item[2]  # WorkoutId ở index 2
             })
             db.session.commit()
         

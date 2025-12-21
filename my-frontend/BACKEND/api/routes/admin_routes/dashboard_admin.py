@@ -7,6 +7,7 @@ from models.user_model import User
 from models.log import Log
 from models.meal import Meal
 from models.workout import Workout
+from models.feedback import Feedback
 from db import db
 from sqlalchemy import func, desc
 from datetime import datetime, timedelta
@@ -36,8 +37,9 @@ def get_dashboard_stats():
         avg_meal_rating = db.session.query(func.avg(Log.Rating)).filter(Log.Meal_id.isnot(None)).scalar() or 0
         avg_workout_rating = db.session.query(func.avg(Log.Rating)).filter(Log.Workout_id.isnot(None)).scalar() or 0
         
-        total_logs = Log.query.count()
-        logs_today = Log.query.filter(Log.CreatedAt >= today_start).count()
+        # Use Feedback model instead of Logs for feedback count
+        total_feedback = Feedback.query.count()
+        feedback_today = Feedback.query.filter(Feedback.CreatedAt >= today_start).count()
         
         sport_stats = db.session.query(
             User.Sport, 
@@ -66,10 +68,10 @@ def get_dashboard_stats():
                 "active_users_today": active_users_today,
                 "total_meals": total_meals,
                 "total_workouts": total_workouts,
-                "avg_meal_rating": round(avg_meal_rating, 1),
-                "avg_workout_rating": round(avg_workout_rating, 1),
-                "total_logs": total_logs,
-                "logs_today": logs_today,
+                "avg_meal_rating": round(avg_meal_rating, 1) if avg_meal_rating else 0,
+                "avg_workout_rating": round(avg_workout_rating, 1) if avg_workout_rating else 0,
+                "total_feedback": total_feedback,
+                "feedback_today": feedback_today,
                 "sport_distribution": sport_distribution,
                 "goal_distribution": goal_distribution
             }

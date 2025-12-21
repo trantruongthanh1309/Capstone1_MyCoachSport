@@ -72,6 +72,42 @@ textarea,
 select {
   font-family: inherit;
   outline: none;
+  cursor: text;
+}
+
+/* Allow text selection in inputs and textareas */
+input,
+textarea,
+[contenteditable="true"] {
+  user-select: text;
+  cursor: text;
+}
+
+/* Prevent text selection on buttons and links */
+button,
+a,
+[role="button"] {
+  user-select: none;
+  cursor: pointer;
+}
+
+/* Prevent text cursor on non-input elements - be more specific */
+h1, h2, h3, h4, h5, h6,
+p, span, div, td, th, li, label,
+section, article, header, footer, nav, aside,
+.planner-title, .planner-subtitle, .section-header,
+.item-title, .item-card, .cell-content, .meta-badge,
+.clock, .date, .weatherBox {
+  cursor: default !important;
+  user-select: none !important;
+}
+
+/* Allow text selection only in inputs and textareas */
+input,
+textarea,
+[contenteditable="true"] {
+  user-select: text !important;
+  cursor: text !important;
 }
 
 input::placeholder,

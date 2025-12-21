@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './AdminSettings.css';
+import Toast from '../../components/Toast';
 
 const AdminSettings = () => {
   const [settings, setSettings] = useState({
@@ -14,26 +15,24 @@ const AdminSettings = () => {
     apiRateLimit: 1000,
   });
 
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalMeals: 0,
-    totalWorkouts: 0,
-    storageUsed: 0
-  });
-
-  const [saved, setSaved] = useState(false);
+  // State for Toast notifications
+  const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
 
   useEffect(() => {
     fetchStats();
     loadSettings();
   }, []);
 
+  const showToast = (message, type = 'info') => {
+    setToast({ show: true, message, type });
+  };
+
   const loadSettings = async () => {
     try {
       const response = await fetch('/api/admin/settings', {
         credentials: 'include'
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.data) {
@@ -45,28 +44,26 @@ const AdminSettings = () => {
       }
     } catch (error) {
       console.error('Error loading settings:', error);
+      showToast('Không thể tải cài đặt', 'error');
     }
   };
 
   const fetchStats = async () => {
     try {
-      const [usersRes, mealsRes, workoutsRes] = await Promise.all([
-        fetch('/api/admin/users/stats', { credentials: 'include' }),
-        fetch('/api/admin/meals/stats', { credentials: 'include' }),
-        fetch('/api/admin/workouts/stats', { credentials: 'include' })
-      ]);
+      const response = await fetch('/api/admin/dashboard/stats', {
+        credentials: 'include'
+      });
 
-      if (usersRes.ok && mealsRes.ok && workoutsRes.ok) {
-        const users = await usersRes.json();
-        const meals = await mealsRes.json();
-        const workouts = await workoutsRes.json();
-
-        setStats({
-          totalUsers: users.total || 0,
-          totalMeals: meals.total || 0,
-          totalWorkouts: workouts.total || 0,
-          storageUsed: Math.random() * 100 // Mock data
-        });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          setStats({
+            totalUsers: data.data.total_users || 0,
+            totalMeals: data.data.total_meals || 0,
+            totalWorkouts: data.data.total_workouts || 0,
+            storageUsed: 67.5 // Mock data
+          });
+        }
       }
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -98,14 +95,13 @@ const AdminSettings = () => {
 
       const data = await response.json();
       if (data.success) {
-        setSaved(true);
-        setTimeout(() => setSaved(false), 3000);
+        showToast('✅ Đã lưu cài đặt thành công!', 'success');
       } else {
-        alert('Lỗi: ' + (data.error || 'Không thể lưu settings'));
+        showToast('Lỗi: ' + (data.error || 'Không thể lưu settings'), 'error');
       }
     } catch (error) {
       console.error('Error saving settings:', error);
-      alert('Không thể lưu settings. Vui lòng thử lại.');
+      showToast('Không thể lưu settings. Vui lòng thử lại.', 'error');
     }
   };
 
@@ -122,7 +118,7 @@ const AdminSettings = () => {
         smsNotifications: false,
         apiRateLimit: 1000,
       };
-      
+
       try {
         const response = await fetch('/api/admin/settings', {
           method: 'POST',
@@ -135,11 +131,11 @@ const AdminSettings = () => {
 
         if (response.ok) {
           setSettings(defaultSettings);
-          alert('✅ Đã reset về mặc định!');
+          showToast('✅ Đã reset về mặc định!', 'success');
         }
       } catch (error) {
         console.error('Error resetting settings:', error);
-        alert('Không thể reset settings');
+        showToast('Không thể reset settings', 'error');
       }
     }
   };
@@ -155,12 +151,12 @@ const AdminSettings = () => {
         if (response.ok) {
           const data = await response.json();
           if (data.success) {
-            alert('✅ Cache đã được xóa!');
+            showToast('✅ Cache đã được xóa!', 'success');
           }
         }
       } catch (error) {
         console.error('Error clearing cache:', error);
-        alert('Không thể xóa cache');
+        showToast('Không thể xóa cache', 'error');
       }
     }
   };
@@ -168,7 +164,7 @@ const AdminSettings = () => {
   const handleBackup = async () => {
     if (confirm('Bắt đầu backup database?')) {
       try {
-        alert('💾 Đang tạo backup database...');
+        showToast('💾 Đang tạo backup database...', 'info');
         const response = await fetch('/api/admin/settings/backup', {
           method: 'POST',
           credentials: 'include',
@@ -177,13 +173,20 @@ const AdminSettings = () => {
         if (response.ok) {
           const data = await response.json();
           if (data.success) {
-            alert('✅ Backup đã được khởi động! Kiểm tra server logs để xem tiến trình.');
+            showToast('✅ Backup đã được khởi động! Kiểm tra server logs.', 'success');
           }
         }
       } catch (error) {
         console.error('Error backing up:', error);
-        alert('Không thể tạo backup');
+        showToast('Không thể tạo backup', 'error');
       }
+    }
+  };
+
+  const handleCancel = () => {
+    if (confirm('Bạn có chắc muốn hủy các thay đổi chưa lưu?')) {
+      loadSettings();
+      showToast('Đã hủy thay đổi', 'info');
     }
   };
 
@@ -194,188 +197,194 @@ const AdminSettings = () => {
         <h1>Cài Đặt Hệ Thống</h1>
       </div>
 
-      {saved && (
-        <div className="save-notification">
-          ✅ Đã lưu cài đặt thành công!
-        </div>
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
       )}
 
       <div className="settings-container">
-        { }
-        <section className="settings-section">
-          <h2>📊 Thống Kê Hệ Thống</h2>
-          <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-icon">👥</div>
-              <div className="stat-info">
-                <div className="stat-value">{stats.totalUsers}</div>
-                <div className="stat-label">Người dùng</div>
+        <div className="settings-layout">
+          { }
+          <div className="settings-left">
+            <section className="settings-section">
+              <h2>📊 Thống Kê Hệ Thống</h2>
+              <div className="stats-grid">
+                <div className="stat-card">
+                  <div className="stat-icon">👥</div>
+                  <div className="stat-info">
+                    <div className="stat-value">{stats.totalUsers}</div>
+                    <div className="stat-label">NGƯỜI DÙNG</div>
+                  </div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-icon">🍽️</div>
+                  <div className="stat-info">
+                    <div className="stat-value">{stats.totalMeals}</div>
+                    <div className="stat-label">BỮA ĂN</div>
+                  </div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-icon">💪</div>
+                  <div className="stat-info">
+                    <div className="stat-value">{stats.totalWorkouts}</div>
+                    <div className="stat-label">BÀI TẬP</div>
+                  </div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-icon">💾</div>
+                  <div className="stat-info">
+                    <div className="stat-value">{stats.storageUsed.toFixed(1)} MB</div>
+                    <div className="stat-label">DUNG LƯỢNG</div>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon">🍽️</div>
-              <div className="stat-info">
-                <div className="stat-value">{stats.totalMeals}</div>
-                <div className="stat-label">Bữa ăn</div>
+            </section>
+
+            <section className="settings-section">
+              <h2>🔒 Bảo Mật</h2>
+              <div className="settings-form">
+                <div className="form-group">
+                  <label>Số user đăng ký tối đa/ngày</label>
+                  <input
+                    type="number"
+                    name="maxUsersPerDay"
+                    value={settings.maxUsersPerDay}
+                    onChange={handleChange}
+                    min="0"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Thời gian session (phút)</label>
+                  <input
+                    type="number"
+                    name="sessionTimeout"
+                    value={settings.sessionTimeout}
+                    onChange={handleChange}
+                    min="5"
+                    max="1440"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>API Rate Limit (requests/hour)</label>
+                  <input
+                    type="number"
+                    name="apiRateLimit"
+                    value={settings.apiRateLimit}
+                    onChange={handleChange}
+                    min="100"
+                  />
+                </div>
               </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon">💪</div>
-              <div className="stat-info">
-                <div className="stat-value">{stats.totalWorkouts}</div>
-                <div className="stat-label">Bài tập</div>
+            </section>
+
+            <section className="settings-section">
+              <h2>🛠️ Hành Động Hệ Thống</h2>
+              <div className="action-buttons">
+                <button onClick={handleClearCache} className="btn-action btn-warning">
+                  🗑️ Xóa Cache
+                </button>
+                <button onClick={handleBackup} className="btn-action btn-info">
+                  💾 Backup Database
+                </button>
+                <button onClick={handleReset} className="btn-action btn-danger">
+                  ↺ Reset về mặc định
+                </button>
               </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon">💾</div>
-              <div className="stat-info">
-                <div className="stat-value">{stats.storageUsed.toFixed(1)} MB</div>
-                <div className="stat-label">Dung lượng</div>
+            </section>
+          </div>
+
+          { }
+          <div className="settings-right">
+            <section className="settings-section">
+              <h2>🌐 Cài Đặt Chung</h2>
+              <div className="settings-form">
+                <div className="form-group">
+                  <label>Tên Website</label>
+                  <input
+                    type="text"
+                    name="siteName"
+                    value={settings.siteName}
+                    onChange={handleChange}
+                    placeholder="Nhập tên website"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Mô tả</label>
+                  <textarea
+                    name="siteDescription"
+                    value={settings.siteDescription}
+                    onChange={handleChange}
+                    rows="4"
+                    placeholder="Nhập mô tả website"
+                  />
+                </div>
+
+                <div className="form-group checkbox-group">
+                  <label>
+                    <input
+                      type="checkbox"
+                      name="maintenanceMode"
+                      checked={settings.maintenanceMode}
+                      onChange={handleChange}
+                    />
+                    <span>Chế độ bảo trì website và tạm ngưng hoạt động với user thường</span>
+                  </label>
+                </div>
+
+                <div className="form-group checkbox-group">
+                  <label>
+                    <input
+                      type="checkbox"
+                      name="allowRegistration"
+                      checked={settings.allowRegistration}
+                      onChange={handleChange}
+                    />
+                    <span>Cho phép đăng ký mới</span>
+                  </label>
+                </div>
               </div>
-            </div>
+            </section>
+
+            <section className="settings-section">
+              <h2>🔔 Thông Báo</h2>
+              <div className="settings-form">
+                <div className="form-group checkbox-group">
+                  <label>
+                    <input
+                      type="checkbox"
+                      name="emailNotifications"
+                      checked={settings.emailNotifications}
+                      onChange={handleChange}
+                    />
+                    <span>Email notifications</span>
+                  </label>
+                </div>
+
+                <div className="form-group checkbox-group">
+                  <label>
+                    <input
+                      type="checkbox"
+                      name="smsNotifications"
+                      checked={settings.smsNotifications}
+                      onChange={handleChange}
+                    />
+                    <span>SMS notifications</span>
+                  </label>
+                </div>
+              </div>
+            </section>
           </div>
-        </section>
-
-        { }
-        <section className="settings-section">
-          <h2>🌐 Cài Đặt Chung</h2>
-          <div className="settings-form">
-            <div className="form-group">
-              <label>Tên Website</label>
-              <input
-                type="text"
-                name="siteName"
-                value={settings.siteName}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Mô tả</label>
-              <textarea
-                name="siteDescription"
-                value={settings.siteDescription}
-                onChange={handleChange}
-                rows="3"
-              />
-            </div>
-
-            <div className="form-group checkbox-group">
-              <label>
-                <input
-                  type="checkbox"
-                  name="maintenanceMode"
-                  checked={settings.maintenanceMode}
-                  onChange={handleChange}
-                />
-                <span>Chế độ bảo trì</span>
-              </label>
-              <small>Website sẽ tạm ngưng hoạt động với user thường</small>
-            </div>
-
-            <div className="form-group checkbox-group">
-              <label>
-                <input
-                  type="checkbox"
-                  name="allowRegistration"
-                  checked={settings.allowRegistration}
-                  onChange={handleChange}
-                />
-                <span>Cho phép đăng ký mới</span>
-              </label>
-            </div>
-          </div>
-        </section>
-
-        { }
-        <section className="settings-section">
-          <h2>🔒 Bảo Mật</h2>
-          <div className="settings-form">
-            <div className="form-group">
-              <label>Số user đăng ký tối đa/ngày</label>
-              <input
-                type="number"
-                name="maxUsersPerDay"
-                value={settings.maxUsersPerDay}
-                onChange={handleChange}
-                min="0"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Thời gian session (phút)</label>
-              <input
-                type="number"
-                name="sessionTimeout"
-                value={settings.sessionTimeout}
-                onChange={handleChange}
-                min="5"
-                max="1440"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>API Rate Limit (requests/hour)</label>
-              <input
-                type="number"
-                name="apiRateLimit"
-                value={settings.apiRateLimit}
-                onChange={handleChange}
-                min="100"
-              />
-            </div>
-          </div>
-        </section>
-
-        { }
-        <section className="settings-section">
-          <h2>🔔 Thông Báo</h2>
-          <div className="settings-form">
-            <div className="form-group checkbox-group">
-              <label>
-                <input
-                  type="checkbox"
-                  name="emailNotifications"
-                  checked={settings.emailNotifications}
-                  onChange={handleChange}
-                />
-                <span>Email notifications</span>
-              </label>
-            </div>
-
-            <div className="form-group checkbox-group">
-              <label>
-                <input
-                  type="checkbox"
-                  name="smsNotifications"
-                  checked={settings.smsNotifications}
-                  onChange={handleChange}
-                />
-                <span>SMS notifications</span>
-              </label>
-            </div>
-          </div>
-        </section>
-
-        { }
-        <section className="settings-section">
-          <h2>🛠️ Hành Động Hệ Thống</h2>
-          <div className="action-buttons">
-            <button onClick={handleClearCache} className="btn-action btn-warning">
-              🗑️ Xóa Cache
-            </button>
-            <button onClick={handleBackup} className="btn-action btn-info">
-              💾 Backup Database
-            </button>
-            <button onClick={handleReset} className="btn-action btn-danger">
-              ↺ Reset về mặc định
-            </button>
-          </div>
-        </section>
+        </div>
 
         { }
         <div className="settings-footer">
-          <button onClick={handleReset} className="btn-secondary">
+          <button onClick={handleCancel} className="btn-secondary">
             Hủy thay đổi
           </button>
           <button onClick={handleSave} className="btn-primary">

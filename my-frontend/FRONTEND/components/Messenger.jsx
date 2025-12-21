@@ -1,8 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import "../pages/NewsFeed.css";
-import config from "../config";
-
-const API_BASE = config.API_BASE;
 
 export default function Messenger({ currentUserId, startChatWithUser }) {
     const [conversations, setConversations] = useState([]);
@@ -22,7 +19,7 @@ export default function Messenger({ currentUserId, startChatWithUser }) {
 
     const loadConversations = () => {
         if (currentUserId) {
-            fetch(`${API_BASE}/api/social/conversations`, { credentials: 'include' })
+            fetch(`/api/social/conversations`, { credentials: 'include' })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) setConversations(data.conversations);
@@ -40,7 +37,7 @@ export default function Messenger({ currentUserId, startChatWithUser }) {
         if (activeChat) {
             const targetId = activeChat.other_user?.id || activeChat.id;
 
-            fetch(`${API_BASE}/api/social/conversations/${targetId}`, { credentials: 'include' })
+            fetch(`/api/social/conversations/${targetId}`, { credentials: 'include' })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
@@ -64,7 +61,7 @@ export default function Messenger({ currentUserId, startChatWithUser }) {
         if (!msgContent.trim() || !activeChat) return;
 
         try {
-            const res = await fetch(`${API_BASE}/api/social/conversations/${activeChat.id}/messages`, {
+            const res = await fetch(`/api/social/conversations/${activeChat.id}/messages`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
@@ -89,7 +86,7 @@ export default function Messenger({ currentUserId, startChatWithUser }) {
         }
 
         try {
-            const res = await fetch(`${API_BASE}/api/social/users/search?q=${query}`, { credentials: 'include' });
+            const res = await fetch(`/api/social/users/search?q=${query}`, { credentials: 'include' });
             const data = await res.json();
             if (data.success) {
                 setSearchResults(data.users);
@@ -208,7 +205,40 @@ export default function Messenger({ currentUserId, startChatWithUser }) {
                                 key={msg.id}
                                 className={`chat-msg ${msg.sender_id === currentUserId ? 'me' : 'other'}`}
                             >
-                                {msg.content}
+                                <div>{msg.content}</div>
+                                {msg.shared_post && (
+                                    <div style={{
+                                        marginTop: '8px',
+                                        border: '1px solid #e4e6eb',
+                                        borderRadius: '8px',
+                                        overflow: 'hidden',
+                                        background: 'white',
+                                        maxWidth: '300px'
+                                    }}>
+                                        <div style={{ padding: '12px', borderBottom: '1px solid #e4e6eb' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                                                <img
+                                                    src={msg.shared_post.user_avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.shared_post.user_name)}`}
+                                                    alt=""
+                                                    style={{ width: '24px', height: '24px', borderRadius: '50%' }}
+                                                />
+                                                <span style={{ fontSize: '13px', fontWeight: '600' }}>
+                                                    {msg.shared_post.user_name}
+                                                </span>
+                                            </div>
+                                            <div style={{ fontSize: '14px', color: '#1c1e21' }}>
+                                                {msg.shared_post.content}
+                                            </div>
+                                        </div>
+                                        {msg.shared_post.image_url && (
+                                            <img
+                                                src={msg.shared_post.image_url}
+                                                alt="Shared post"
+                                                style={{ width: '100%', maxHeight: '200px', objectFit: 'cover' }}
+                                            />
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>

@@ -4,21 +4,17 @@ import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  PointElement,
-  LineElement,
   BarElement,
   Title,
   Tooltip,
   Legend,
   ArcElement
 } from 'chart.js';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import { Bar, Doughnut } from 'react-chartjs-2';
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  PointElement,
-  LineElement,
   BarElement,
   Title,
   Tooltip,
@@ -26,16 +22,14 @@ ChartJS.register(
   ArcElement
 );
 
-export default function AdminDashboard() {
+export default function AdminDashboard({ setCurrentPage }) {
   const [stats, setStats] = useState(null);
-  const [userGrowth, setUserGrowth] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [timeRange, setTimeRange] = useState(30);
 
   useEffect(() => {
     fetchDashboardData();
-  }, [timeRange]);
+  }, []);
 
   const fetchDashboardData = async () => {
     try {
@@ -51,15 +45,6 @@ export default function AdminDashboard() {
         setStats(statsData.data);
       } else {
         throw new Error(statsData.error || "Failed to fetch stats");
-      }
-
-      const growthRes = await fetch(`/api/admin/dashboard/user-growth?days=${timeRange}`, {
-        credentials: 'include'
-      });
-      const growthData = await growthRes.json();
-
-      if (growthData.success) {
-        setUserGrowth(growthData.data);
       }
 
     } catch (error) {
@@ -97,54 +82,59 @@ export default function AdminDashboard() {
 
   if (!stats) return null;
 
-  const userGrowthChartData = {
-    labels: userGrowth.map(item => {
-      const date = new Date(item.date);
-      return `${date.getDate()}/${date.getMonth() + 1}`;
-    }),
-    datasets: [
-      {
-        label: 'Người dùng mới',
-        data: userGrowth.map(item => item.count),
-        borderColor: 'rgb(102, 126, 234)',
-        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-        tension: 0.4,
-        fill: true
-      }
-    ]
-  };
-
   const sportChartData = {
-    labels: stats.sport_distribution.map(item => item.sport),
+    labels: (stats.sport_distribution || []).length > 0 
+      ? stats.sport_distribution.map(item => item.sport) 
+      : ['Chưa có dữ liệu'],
     datasets: [
       {
         label: 'Số người dùng',
-        data: stats.sport_distribution.map(item => item.count),
+        data: (stats.sport_distribution || []).length > 0
+          ? stats.sport_distribution.map(item => item.count)
+          : [0],
         backgroundColor: [
-          'rgba(255, 99, 132, 0.8)',
-          'rgba(54, 162, 235, 0.8)',
-          'rgba(255, 206, 86, 0.8)',
-          'rgba(75, 192, 192, 0.8)',
-          'rgba(153, 102, 255, 0.8)',
-          'rgba(255, 159, 64, 0.8)',
+          'rgba(244, 114, 182, 0.9)',
+          'rgba(59, 130, 246, 0.9)',
+          'rgba(16, 185, 129, 0.9)',
+          'rgba(245, 158, 11, 0.9)',
+          'rgba(167, 139, 250, 0.9)',
+          'rgba(236, 72, 153, 0.9)',
         ],
-        borderWidth: 0
+        borderColor: [
+          'rgba(244, 114, 182, 1)',
+          'rgba(59, 130, 246, 1)',
+          'rgba(16, 185, 129, 1)',
+          'rgba(245, 158, 11, 1)',
+          'rgba(167, 139, 250, 1)',
+          'rgba(236, 72, 153, 1)',
+        ],
+        borderWidth: 2,
+        borderRadius: 8,
+        borderSkipped: false
       }
     ]
   };
 
   const goalChartData = {
-    labels: stats.goal_distribution.map(item => item.goal),
+    labels: (stats.goal_distribution || []).length > 0
+      ? stats.goal_distribution.map(item => item.goal)
+      : ['Chưa có dữ liệu'],
     datasets: [
       {
-        data: stats.goal_distribution.map(item => item.count),
+        data: (stats.goal_distribution || []).length > 0
+          ? stats.goal_distribution.map(item => item.count)
+          : [0],
         backgroundColor: [
-          'rgba(102, 126, 234, 0.8)',
-          'rgba(118, 75, 162, 0.8)',
-          'rgba(237, 100, 166, 0.8)',
-          'rgba(255, 154, 158, 0.8)',
+          'rgba(59, 130, 246, 0.9)',
+          'rgba(167, 139, 250, 0.9)',
+          'rgba(244, 114, 182, 0.9)',
+          'rgba(255, 154, 158, 0.9)',
+          'rgba(16, 185, 129, 0.9)',
+          'rgba(59, 130, 246, 0.7)',
         ],
-        borderWidth: 0
+        borderColor: '#fff',
+        borderWidth: 3,
+        hoverOffset: 8
       }
     ]
   };
@@ -158,9 +148,51 @@ export default function AdminDashboard() {
         labels: {
           padding: 20,
           font: {
-            size: 12
+            size: 12,
+            weight: '600'
+          },
+          usePointStyle: true,
+          pointStyle: 'circle'
+        }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        padding: 12,
+        titleFont: {
+          size: 14,
+          weight: '600'
+        },
+        bodyFont: {
+          size: 13
+        },
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderWidth: 1,
+        cornerRadius: 8,
+        displayColors: true
+      }
+    },
+    scales: {
+      x: {
+        grid: {
+          display: false
+        },
+        ticks: {
+          font: {
+            size: 11
           }
         }
+      },
+      y: {
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)',
+          drawBorder: false
+        },
+        ticks: {
+          font: {
+            size: 11
+          }
+        },
+        beginAtZero: true
       }
     }
   };
@@ -177,17 +209,17 @@ export default function AdminDashboard() {
         <div className="stat-card gradient-blue">
           <div className="stat-icon">👥</div>
           <div className="stat-content">
-            <h3>Tổng Người Dùng</h3>
-            <p className="stat-number">{stats.total_users.toLocaleString()}</p>
-            <span className="stat-badge">+{stats.new_users_week} tuần này</span>
+            <h3>TỔNG NGƯỜI DÙNG</h3>
+            <p className="stat-number">{(stats.total_users || 0).toLocaleString()}</p>
+            <span className="stat-badge">+{stats.new_users_week || 0} tuần này</span>
           </div>
         </div>
 
         <div className="stat-card gradient-green">
           <div className="stat-icon">✅</div>
           <div className="stat-content">
-            <h3>Hoạt Động Hôm Nay</h3>
-            <p className="stat-number">{stats.active_users_today}</p>
+            <h3>HOẠT ĐỘNG HÔM NAY</h3>
+            <p className="stat-number">{(stats.active_users_today || 0).toLocaleString()}</p>
             <span className="stat-badge">users online</span>
           </div>
         </div>
@@ -195,34 +227,34 @@ export default function AdminDashboard() {
         <div className="stat-card gradient-purple">
           <div className="stat-icon">🍽️</div>
           <div className="stat-content">
-            <h3>Tổng Món Ăn</h3>
-            <p className="stat-number">{stats.total_meals}</p>
-            <span className="stat-badge">⭐ {stats.avg_meal_rating}/5</span>
+            <h3>TỔNG MÓN ĂN</h3>
+            <p className="stat-number">{(stats.total_meals || 0).toLocaleString()}</p>
+            <span className="stat-badge">⭐ {stats.avg_meal_rating || 0}/5</span>
           </div>
         </div>
 
         <div className="stat-card gradient-orange">
           <div className="stat-icon">💪</div>
           <div className="stat-content">
-            <h3>Tổng Bài Tập</h3>
-            <p className="stat-number">{stats.total_workouts}</p>
-            <span className="stat-badge">⭐ {stats.avg_workout_rating}/5</span>
+            <h3>TỔNG BÀI TẬP</h3>
+            <p className="stat-number">{(stats.total_workouts || 0).toLocaleString()}</p>
+            <span className="stat-badge">⭐ {stats.avg_workout_rating || 0}/5</span>
           </div>
         </div>
 
         <div className="stat-card gradient-pink">
           <div className="stat-icon">📝</div>
           <div className="stat-content">
-            <h3>Feedback</h3>
-            <p className="stat-number">{stats.total_logs.toLocaleString()}</p>
-            <span className="stat-badge">{stats.logs_today} hôm nay</span>
+            <h3>FEEDBACK</h3>
+            <p className="stat-number">{(stats.total_feedback || 0).toLocaleString()}</p>
+            <span className="stat-badge">{stats.feedback_today || 0} hôm nay</span>
           </div>
         </div>
 
         <div className="stat-card gradient-teal">
           <div className="stat-icon">⚡</div>
           <div className="stat-content">
-            <h3>Tỷ Lệ Hoạt Động</h3>
+            <h3>TỶ LỆ HOẠT ĐỘNG</h3>
             <p className="stat-number">
               {stats.total_users > 0
                 ? Math.round((stats.active_users_today / stats.total_users) * 100)
@@ -234,84 +266,77 @@ export default function AdminDashboard() {
       </div>
 
       { }
-      <div className="charts-section">
-        { }
-        <div className="chart-card full-width">
-          <div className="chart-header">
-            <h2>📈 Tăng Trưởng Người Dùng</h2>
-            <div className="time-range-selector">
-              <button
-                className={timeRange === 7 ? 'active' : ''}
-                onClick={() => setTimeRange(7)}
-              >
-                7 ngày
-              </button>
-              <button
-                className={timeRange === 30 ? 'active' : ''}
-                onClick={() => setTimeRange(30)}
-              >
-                30 ngày
-              </button>
-              <button
-                className={timeRange === 90 ? 'active' : ''}
-                onClick={() => setTimeRange(90)}
-              >
-                90 ngày
-              </button>
+      <div className="bottom-section">
+        <div className="charts-section">
+          <div className="chart-card">
+            <div className="chart-header">
+              <h2>🏃 Phân Bố Môn Thể Thao</h2>
+            </div>
+            <div className="chart-container">
+              <Bar
+                data={sportChartData}
+                options={{
+                  ...chartOptions,
+                  indexAxis: 'y',
+                  scales: {
+                    ...chartOptions.scales,
+                    x: {
+                      ...chartOptions.scales.x,
+                      ticks: {
+                        stepSize: 0.5,
+                        font: {
+                          size: 11
+                        }
+                      }
+                    }
+                  }
+                }}
+              />
             </div>
           </div>
-          <div className="chart-container">
-            <Line data={userGrowthChartData} options={chartOptions} />
+
+          <div className="chart-card">
+            <div className="chart-header">
+              <h2>🎯 Mục Tiêu Người Dùng</h2>
+            </div>
+            <div className="chart-container">
+              <Doughnut data={goalChartData} options={chartOptions} />
+            </div>
           </div>
         </div>
 
-        { }
-        <div className="chart-card">
-          <div className="chart-header">
-            <h2>🏃 Phân Bố Môn Thể Thao</h2>
+        <div className="quick-actions">
+          <h2>⚡ Thao Tác Nhanh</h2>
+          <div className="action-buttons">
+            <button 
+              className="action-btn btn-primary"
+              onClick={() => setCurrentPage && setCurrentPage('users')}
+            >
+              <span className="btn-icon">👥</span>
+              <span>Quản Lý Users</span>
+            </button>
+            <button 
+              className="action-btn btn-success"
+              onClick={() => setCurrentPage && setCurrentPage('posts')}
+            >
+              <span className="btn-icon">📝</span>
+              <span>Duyệt Bài Đăng</span>
+            </button>
+            <button 
+              className="action-btn btn-info"
+              onClick={() => setCurrentPage && setCurrentPage('meals')}
+            >
+              <span className="btn-icon">🍽️</span>
+              <span>Quản Lý Meals</span>
+            </button>
+            <button 
+              className="action-btn btn-warning"
+              onClick={() => setCurrentPage && setCurrentPage('workouts')}
+            >
+              <span className="btn-icon">💪</span>
+              <span>Quản Lý Workouts</span>
+            </button>
           </div>
-          <div className="chart-container">
-            <Bar
-              data={sportChartData}
-              options={{
-                ...chartOptions,
-                indexAxis: 'y',
-              }}
-            />
-          </div>
-        </div>
-
-        { }
-        <div className="chart-card">
-          <div className="chart-header">
-            <h2>🎯 Mục Tiêu Người Dùng</h2>
-          </div>
-          <div className="chart-container">
-            <Doughnut data={goalChartData} options={chartOptions} />
-          </div>
-        </div>
-      </div>
-
-      { }
-      <div className="quick-actions">
-        <h2>⚡ Thao Tác Nhanh</h2>
-        <div className="action-buttons">
-          <button className="action-btn btn-primary">
-            <span className="btn-icon">👥</span>
-            <span>Quản Lý Users</span>
-          </button>
-          <button className="action-btn btn-success">
-            <span className="btn-icon">📝</span>
-            <span>Duyệt Bài Đăng</span>
-          </button>
-          <button className="action-btn btn-info">
-            <span className="btn-icon">🍽️</span>
-            <span>Quản Lý Meals</span>
-          </button>
-          <button className="action-btn btn-warning">
-            <span className="btn-icon">💪</span>
-            <span>Quản Lý Workouts</span>
-          </button>
         </div>
       </div>
     </div>

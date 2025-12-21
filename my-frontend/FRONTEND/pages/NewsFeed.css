@@ -2,11 +2,11 @@
     --bg-dark: #0a0e27;
     --bg-darker: #050816;
     --text-primary: #ffffff;
-    --text-secondary: #a0aec0;
+    --text-secondary: #d1d5db;
     --accent-blue: #3b82f6;
     --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --glass-bg: rgba(255, 255, 255, 0.05);
-    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-bg: rgba(255, 255, 255, 0.12);
+    --glass-border: rgba(255, 255, 255, 0.2);
     --shadow-glow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
 }
 
@@ -55,7 +55,8 @@
 .feed-hero-subtitle {
     margin: 0;
     font-size: 0.95rem;
-    color: #9ca3af;
+    color: #d1d5db;
+    font-weight: 500;
 }
 
 .feed-hero-right {
@@ -99,14 +100,14 @@
     padding: 20px;
     margin-bottom: 25px;
     background: var(--glass-bg);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(5px);
     border-radius: 20px;
     border: 1px solid var(--glass-border);
     box-shadow: var(--shadow-glow);
 }
 
 .filter-chip {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.12);
     padding: 12px 24px;
     border-radius: 25px;
     color: var(--text-secondary);
@@ -124,7 +125,7 @@
 
 .create-post-box {
     background: var(--glass-bg);
-    backdrop-filter: blur(20px);
+    backdrop-filter: blur(8px);
     border-radius: 24px;
     padding: 25px;
     margin-bottom: 30px;
@@ -156,12 +157,13 @@
 
 .post-input {
     flex: 1;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 30px;
     padding: 14px 24px;
     cursor: pointer;
     color: var(--text-secondary);
     transition: all 0.3s;
+    font-weight: 500;
 }
 
 .post-input:hover {
@@ -190,6 +192,7 @@
     transition: all 0.3s;
     border: none;
     background: transparent;
+    font-size: 0.95rem;
 }
 
 .action-btn:hover {
@@ -242,8 +245,9 @@
 }
 
 .post-time {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
+    font-size: 0.85rem;
+    color: #94a3b8;
+    font-weight: 500;
 }
 
 .post-topic {
@@ -257,7 +261,8 @@
     padding: 0 20px 15px;
     font-size: 1rem;
     line-height: 1.6;
-    color: #334155;
+    color: #1e293b;
+    font-weight: 400;
 }
 
 .post-content-wrapper h3 {
@@ -282,8 +287,9 @@
     justify-content: space-between;
     padding: 15px 25px;
     border-bottom: 1px solid #f1f5f9;
-    color: #64748b;
+    color: #475569;
     font-size: 0.95rem;
+    font-weight: 500;
 }
 
 .post-actions {
@@ -304,9 +310,10 @@
     border: none;
     background: transparent;
     cursor: pointer;
-    color: #64748b;
+    color: #475569;
     font-weight: 700;
     transition: all 0.3s;
+    font-size: 0.95rem;
 }
 
 .like-btn:hover,
@@ -335,7 +342,8 @@
 
 .comments-section {
     padding: 20px 25px;
-    background: rgba(0, 0, 0, 0.2);
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
 }
 
 .comment-input-box {
@@ -346,17 +354,19 @@
 
 .comment-input {
     flex: 1;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
     border-radius: 25px;
     padding: 12px 20px;
     outline: none;
-    color: white;
+    color: #1e293b;
+    font-weight: 400;
 }
 
 .comment-input:focus {
     border-color: var(--accent-blue);
-    background: rgba(255, 255, 255, 0.12);
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .comment-item {
@@ -366,22 +376,26 @@
 }
 
 .comment-bubble {
-    background: rgba(255, 255, 255, 0.1);
+    background: #ffffff;
     padding: 12px 18px;
     border-radius: 20px;
     border-top-left-radius: 4px;
     max-width: 85%;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .comment-user {
     font-weight: 700;
     font-size: 0.85rem;
     margin-bottom: 4px;
+    color: #1e293b;
 }
 
 .comment-text {
     font-size: 0.95rem;
-    color: #e2e8f0;
+    color: #334155;
+    font-weight: 400;
 }
 
 .messenger-column {
@@ -389,7 +403,7 @@
     top: 90px;
     height: calc(100vh - 110px);
     background: var(--glass-bg);
-    backdrop-filter: blur(20px);
+    backdrop-filter: blur(8px);
     border-radius: 24px;
     border: 1px solid var(--glass-border);
     display: flex;
@@ -467,6 +481,7 @@
     margin: 0;
     color: var(--text-primary);
     font-size: 0.95rem;
+    font-weight: 600;
 }
 
 .conv-last-msg {
@@ -476,6 +491,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 180px;
+    font-weight: 400;
 }
 
 .chat-window {

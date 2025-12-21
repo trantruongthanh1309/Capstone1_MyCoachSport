@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { validateEmail } from "../utils/validation";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -11,6 +12,13 @@ export default function Login() {
     e.preventDefault();
     if (!email || !pw) {
       setMessage("Vui lòng điền đầy đủ thông tin!");
+      return;
+    }
+
+    // Validate email format
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.valid) {
+      setMessage(emailValidation.message);
       return;
     }
 
@@ -433,6 +441,7 @@ export default function Login() {
           margin-top: 30px;
           text-align: center;
           animation: fadeInUp 1s ease 0.7s both;
+          display: none;
         }
 
         .or {

@@ -76,6 +76,7 @@ def get_chat_history():
             "history": [h.to_dict() for h in history]
         })
     except Exception as e:
+        print(f"Error fetching chat history: {e}")
         return jsonify({"error": str(e)}), 500
 
 @chatbot_bp.route('/chat/history/clear', methods=['DELETE'])

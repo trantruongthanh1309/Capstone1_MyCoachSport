@@ -1,25 +1,60 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState, useRef } from 'react';
+import { useToast } from '../contexts/ToastContext';
+import './ImageUploader.css';
 
 const ImageUploader = ({ onUploadSuccess }) => {
+    const toast = useToast();
     const [selectedFile, setSelectedFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
     const [uploading, setUploading] = useState(false);
-    const [uploadedImageUrl, setUploadedImageUrl] = useState(null);
-    const [error, setError] = useState(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const fileInputRef = useRef(null);
+    const dropZoneRef = useRef(null);
 
-    const handleFileChange = (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            setSelectedFile(file);
-            setPreviewUrl(URL.createObjectURL(file));
-            setError(null);
+    const handleFileChange = (file) => {
+        if (!file) return;
+        
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            toast.error('❌ Vui lòng chọn file ảnh!');
+            return;
         }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error('❌ File quá lớn! Vui lòng chọn file nhỏ hơn 5MB.');
+            return;
+        }
+
+        setSelectedFile(file);
+        setPreviewUrl(URL.createObjectURL(file));
+    };
+
+    const handleFileInputChange = (event) => {
+        const file = event.target.files[0];
+        handleFileChange(file);
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+        const file = e.dataTransfer.files[0];
+        handleFileChange(file);
     };
 
     const handleUpload = async () => {
         if (!selectedFile) {
-            setError("Vui lòng chọn một file ảnh.");
+            toast.error('❌ Vui lòng chọn một file ảnh.');
             return;
         }
 
@@ -27,74 +62,126 @@ const ImageUploader = ({ onUploadSuccess }) => {
         formData.append('file', selectedFile);
 
         setUploading(true);
-        setError(null);
 
         try {
-            const response = await axios.post('http://localhost:5000/api/upload', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                credentials: 'include',
+                body: formData,
             });
 
-            if (response.status === 200) {
-                const imageUrl = response.data.url;
-                setUploadedImageUrl(imageUrl);
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Upload thất bại');
+            }
+
+            if (data.url) {
                 if (onUploadSuccess) {
-                    onUploadSuccess(imageUrl);
+                    onUploadSuccess(data.url);
                 }
-                alert("Upload thành công!");
+                toast.success('✅ Upload ảnh thành công!');
+                // Reset after successful upload
+                setSelectedFile(null);
+                setPreviewUrl(null);
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                }
+            } else {
+                throw new Error('Không nhận được URL ảnh');
             }
         } catch (err) {
             console.error("Upload failed:", err);
-            setError("Có lỗi xảy ra khi upload ảnh. Vui lòng thử lại.");
+            toast.error(`❌ ${err.message || 'Có lỗi xảy ra khi upload ảnh. Vui lòng thử lại.'}`);
         } finally {
             setUploading(false);
         }
     };
 
-    return (
-        <div className="p-4 border rounded shadow-md bg-white max-w-md mx-auto">
-            <h3 className="text-lg font-semibold mb-4">Upload Ảnh</h3>
+    const handleRemovePreview = () => {
+        setSelectedFile(null);
+        if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+            setPreviewUrl(null);
+        }
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
 
-            <div className="mb-4">
+    return (
+        <div className="image-uploader-container">
+            <div
+                ref={dropZoneRef}
+                className={`upload-dropzone ${isDragging ? 'dragging' : ''} ${previewUrl ? 'has-preview' : ''}`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => !previewUrl && fileInputRef.current?.click()}
+            >
                 <input
+                    ref={fileInputRef}
                     type="file"
                     accept="image/*"
-                    onChange={handleFileChange}
-                    className="block w-full text-sm text-gray-500
-                        file:mr-4 file:py-2 file:px-4
-                        file:rounded-full file:border-0
-                        file:text-sm file:font-semibold
-                        file:bg-blue-50 file:text-blue-700
-                        hover:file:bg-blue-100"
+                    onChange={handleFileInputChange}
+                    style={{ display: 'none' }}
                 />
+
+                {!previewUrl ? (
+                    <>
+                        <div className="upload-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                        </div>
+                        <p className="upload-text">
+                            <span className="upload-text-main">Kéo thả ảnh vào đây</span>
+                            <span className="upload-text-sub">hoặc click để chọn file</span>
+                        </p>
+                        <p className="upload-hint">JPG, PNG hoặc GIF (tối đa 5MB)</p>
+                    </>
+                ) : (
+                    <div className="preview-container">
+                        <img src={previewUrl} alt="Preview" className="preview-image" />
+                        <button
+                            className="remove-preview-btn"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemovePreview();
+                            }}
+                            title="Xóa ảnh"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                )}
             </div>
 
             {previewUrl && (
-                <div className="mb-4">
-                    <p className="text-sm text-gray-600 mb-2">Preview:</p>
-                    <img src={previewUrl} alt="Preview" className="max-h-48 rounded border" />
-                </div>
-            )}
-
-            {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
-
-            <button
-                onClick={handleUpload}
-                disabled={uploading || !selectedFile}
-                className={`w-full py-2 px-4 rounded text-white font-bold transition-colors
-                    ${uploading || !selectedFile ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'}`}
-            >
-                {uploading ? 'Đang upload...' : 'Upload Ảnh'}
-            </button>
-
-            {uploadedImageUrl && (
-                <div className="mt-4">
-                    <p className="text-sm text-green-600 font-semibold mb-2">Ảnh đã được lưu tại server:</p>
-                    <a href={uploadedImageUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline text-sm break-all">
-                        {uploadedImageUrl}
-                    </a>
-                    <img src={uploadedImageUrl} alt="Uploaded" className="mt-2 max-h-48 rounded border border-green-500" />
+                <div className="upload-actions">
+                    <button
+                        onClick={handleUpload}
+                        disabled={uploading}
+                        className={`upload-btn ${uploading ? 'uploading' : ''}`}
+                    >
+                        {uploading ? (
+                            <>
+                                <span className="upload-spinner"></span>
+                                Đang tải lên...
+                            </>
+                        ) : (
+                            <>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                                Tải ảnh lên
+                            </>
+                        )}
+                    </button>
                 </div>
             )}
         </div>

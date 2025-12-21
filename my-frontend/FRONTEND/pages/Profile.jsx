@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import "./Profile.css";
 import { useToast } from "../contexts/ToastContext";
 import ImageUploader from "../components/ImageUploader";
+import { validateName, validateAge, validateHeight, validateWeight } from "../utils/validation";
 
 export default function Profile() {
   const toast = useToast();
@@ -23,7 +24,7 @@ export default function Profile() {
   useEffect(() => {
     if (!userId) return;
 
-    fetch("http://localhost:5000/api/profile", {
+    fetch("/api/profile", {
       method: "GET",
       credentials: "include",
     })
@@ -56,6 +57,31 @@ export default function Profile() {
       return;
     }
 
+    // Validate form fields
+    const nameValidation = validateName(profile.name);
+    if (!nameValidation.valid) {
+      toast.error(`❌ ${nameValidation.message}`);
+      return;
+    }
+
+    const ageValidation = validateAge(profile.age);
+    if (!ageValidation.valid) {
+      toast.error(`❌ ${ageValidation.message}`);
+      return;
+    }
+
+    const heightValidation = validateHeight(profile.height);
+    if (!heightValidation.valid) {
+      toast.error(`❌ ${heightValidation.message}`);
+      return;
+    }
+
+    const weightValidation = validateWeight(profile.weight);
+    if (!weightValidation.valid) {
+      toast.error(`❌ ${weightValidation.message}`);
+      return;
+    }
+
     const sessions = profile.activity.includes("6-7")
       ? 6
       : profile.activity.includes("1-2")
@@ -64,7 +90,7 @@ export default function Profile() {
 
     console.log("Saving profile with data:", profile);
 
-    fetch(`http://localhost:5000/api/profile/${userId}`, {
+    fetch(`/api/profile/${userId}`, {
       method: "POST",
       credentials: "include",
       headers: {

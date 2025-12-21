@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
-const API_BASE = "http://localhost:5000";
 
 export default function WeatherCard() {
   const [data, setData] = useState(null);
   useEffect(() => {
-    fetch(`${API_BASE}/api/weather?city=Hanoi,vn`)
+    fetch(`/api/weather?city=Hanoi,vn`)
       .then(r => r.json()).then(setData)
       .catch(() => setData({ error: "Không tải được thời tiết" }));
   }, []);

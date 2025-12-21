@@ -132,7 +132,7 @@ export default function AdminLayout() {
 
       { }
       <main className={`admin-main ${sidebarOpen ? "" : "expanded"}`}>
-        <CurrentComponent />
+        <CurrentComponent setCurrentPage={setCurrentPage} />
       </main>
     </div>
   );

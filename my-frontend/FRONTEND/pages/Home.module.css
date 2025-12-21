@@ -130,6 +130,8 @@
   letter-spacing: 2px;
   position: relative;
   animation: floatAnimation 3s ease-in-out infinite;
+  cursor: default;
+  user-select: none;
 }
 
 @keyframes floatAnimation {
@@ -150,6 +152,8 @@
   margin-top: 12px;
   font-weight: 500;
   letter-spacing: 0.5px;
+  cursor: default;
+  user-select: none;
 }
 
 .weatherWrap {
@@ -188,6 +192,8 @@
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+  cursor: default;
+  user-select: none;
 }
 
 .glass-effect::before {

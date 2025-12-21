@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import styles from './Register.module.css';
 import Toast from '../components/Toast';
+import { validateEmail, validatePassword } from '../utils/validation';
 
 const Register = () => {
     const navigate = useNavigate();
@@ -36,8 +37,17 @@ const Register = () => {
             return;
         }
 
-        if (formData.password.length < 8) {
-            showToast('Mật khẩu phải có ít nhất 8 ký tự', 'error');
+        // Validate email format
+        const emailValidation = validateEmail(formData.email);
+        if (!emailValidation.valid) {
+            showToast(emailValidation.message, 'error');
+            return;
+        }
+
+        // Validate password format (6-8 ký tự, có chữ hoa và chữ thường)
+        const passwordValidation = validatePassword(formData.password);
+        if (!passwordValidation.valid) {
+            showToast(passwordValidation.message, 'error');
             return;
         }
 
@@ -186,7 +196,7 @@ const Register = () => {
                                 value={formData.password}
                                 onChange={handleChange}
                                 className={styles.input}
-                                placeholder="Tối thiểu 8 ký tự, chữ hoa, số, ký tự đặc biệt"
+                                placeholder="6-8 ký tự, có chữ hoa và chữ thường"
                                 required
                             />
                         </div>

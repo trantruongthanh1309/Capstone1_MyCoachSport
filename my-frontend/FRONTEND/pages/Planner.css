@@ -20,6 +20,21 @@ body {
   background: var(--bg-page);
   padding: 40px 20px;
   color: var(--text-main);
+  max-width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.planner-wrap > .section {
+  width: 100%;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .planner-header {
@@ -33,11 +48,15 @@ body {
   color: #1e293b;
   margin-bottom: 8px;
   letter-spacing: -0.02em;
+  cursor: default;
+  user-select: none;
 }
 
 .planner-subtitle {
   color: #64748b;
   font-size: 1.05rem;
+  cursor: default;
+  user-select: none;
 }
 
 .user-actions {
@@ -70,12 +89,18 @@ body {
 /* Sections */
 .section {
   margin-bottom: 50px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .section-header {
   margin-bottom: 20px;
   padding-bottom: 10px;
   border-bottom: 2px solid #e2e8f0;
+  width: 100%;
+  text-align: center;
 }
 
 .section-header h2 {
@@ -86,6 +111,8 @@ body {
   gap: 10px;
   margin: 0;
   font-weight: 700;
+  cursor: default;
+  user-select: none;
 }
 
 .emoji {
@@ -99,6 +126,8 @@ body {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
   border: 1px solid #e2e8f0;
   overflow-x: auto;
+  margin: 0 auto;
+  max-width: 100%;
 }
 
 .planner-table {
@@ -115,6 +144,8 @@ body {
   font-weight: 600;
   white-space: nowrap;
   text-align: center;
+  cursor: default;
+  user-select: none;
 }
 
 .planner-table th:first-child {
@@ -136,11 +167,15 @@ body {
   font-size: 0.85rem;
   opacity: 0.9;
   font-weight: 500;
+  cursor: default;
+  user-select: none;
 }
 
 .day-date {
   font-size: 1.4rem;
   font-weight: 700;
+  cursor: default;
+  user-select: none;
 }
 
 .sticky-col {
@@ -158,6 +193,8 @@ body {
   text-align: center;
   padding: 20px;
   vertical-align: middle;
+  cursor: default;
+  user-select: none;
 }
 
 .time-icon {
@@ -174,6 +211,8 @@ body {
   min-width: 220px;
   vertical-align: top;
   height: 100%;
+  cursor: default;
+  user-select: none;
 }
 
 .item-card {
@@ -186,6 +225,8 @@ body {
   height: 100%;
   display: flex;
   flex-direction: column;
+  cursor: default;
+  user-select: none;
 }
 
 .item-card:hover {
@@ -205,6 +246,8 @@ body {
   color: #0f172a;
   margin: 0;
   line-height: 1.4;
+  cursor: default;
+  user-select: none;
 }
 
 .item-meta {
@@ -222,6 +265,8 @@ body {
   padding: 4px 8px;
   border-radius: 6px;
   font-weight: 600;
+  cursor: default;
+  user-select: none;
 }
 
 /* Unified Complete Button */
@@ -253,6 +298,16 @@ body {
   background: #cbd5e1;
   color: #64748b;
   cursor: default;
+}
+
+.btn-complete.missed {
+  background: #ef4444;
+  color: white;
+  cursor: not-allowed;
+}
+
+.btn-complete.missed:hover {
+  background: #dc2626;
 }
 
 /* Small buttons */
@@ -377,7 +432,11 @@ body {
 }
 
 .modal-content {
-  padding: 20px;
+  padding: 0;
+}
+
+.detail-modal .modal-content {
+  padding: 0;
 }
 
 .detail-pre {
@@ -454,20 +513,68 @@ body {
 .detail-modal .modal-content {
   overflow-y: auto;
   max-height: calc(90vh - 140px);
+  padding: 0 !important;
 }
 
 .workout-detail,
 .meal-detail {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 0;
+  padding: 0;
+  margin: 0;
 }
 
 .detail-section {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
+  border-radius: 0;
+  padding: 16px 20px;
+  margin: 0;
+  border-left: none;
+  border-right: none;
+}
+
+.detail-section:first-child {
+  border-top: none;
+}
+
+.detail-section:last-child {
+  border-bottom: none;
+}
+
+/* Video Container */
+.video-container {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.youtube-embed {
+  width: 100%;
+  aspect-ratio: 16 / 9;
   border-radius: 12px;
-  padding: 16px;
+  border: none;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.video-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.video-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px -1px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
 }
 
 .detail-section.safety-section {
@@ -483,6 +590,8 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+  cursor: default;
+  user-select: none;
 }
 
 .info-grid {
@@ -505,12 +614,16 @@ body {
   font-size: 0.85rem;
   color: #64748b;
   font-weight: 600;
+  cursor: default;
+  user-select: none;
 }
 
 .info-value {
   font-size: 0.95rem;
   color: #0f172a;
   font-weight: 500;
+  cursor: default;
+  user-select: none;
 }
 
 .info-value.intensity-badge,
@@ -548,6 +661,8 @@ body {
   color: #475569;
   line-height: 1.7;
   font-size: 0.95rem;
+  cursor: default;
+  user-select: none;
 }
 
 .detail-text.prerequisites {
@@ -572,6 +687,8 @@ body {
   line-height: 1.6;
   padding-left: 20px;
   position: relative;
+  cursor: default;
+  user-select: none;
 }
 
 .instruction-line::before {
@@ -602,6 +719,8 @@ body {
   color: #991b1b;
   line-height: 1.6;
   font-weight: 500;
+  cursor: default;
+  user-select: none;
 }
 
 .progression-box,
@@ -657,12 +776,298 @@ body {
 }
 
 /* Responsive */
+@media (max-width: 1200px) {
+  .cell-content {
+    min-width: 180px;
+    padding: 10px;
+  }
+
+  .item-card {
+    padding: 12px;
+  }
+
+  .item-title {
+    font-size: 1rem;
+  }
+
+  .meta-badge {
+    font-size: 0.75rem;
+    padding: 3px 6px;
+  }
+
+  .btn-complete {
+    font-size: 0.85rem;
+    padding: 8px;
+  }
+
+  .action-btn-small {
+    width: 28px;
+    height: 28px;
+    font-size: 0.9rem;
+  }
+
+  .day-date {
+    font-size: 1.2rem;
+  }
+
+  .day-name {
+    font-size: 0.75rem;
+  }
+
+  .planner-table th {
+    padding: 12px 16px;
+  }
+
+  .meal-time-label {
+    padding: 16px 12px;
+    font-size: 0.9rem;
+  }
+
+  .time-icon {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 968px) {
+  .cell-content {
+    min-width: 160px;
+    padding: 8px;
+  }
+
+  .item-card {
+    padding: 10px;
+  }
+
+  .item-title {
+    font-size: 0.95rem;
+    line-height: 1.3;
+  }
+
+  .item-meta {
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+
+  .meta-badge {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+  }
+
+  .btn-complete {
+    font-size: 0.8rem;
+    padding: 7px;
+  }
+
+  .action-btn-small {
+    width: 26px;
+    height: 26px;
+    font-size: 0.85rem;
+  }
+
+  .item-actions-compact {
+    gap: 4px;
+    margin-top: 8px;
+  }
+
+  .planner-title {
+    font-size: 1.8rem;
+  }
+
+  .planner-subtitle {
+    font-size: 0.95rem;
+  }
+
+  .section-header h2 {
+    font-size: 1.2rem;
+  }
+
+  .day-date {
+    font-size: 1.1rem;
+  }
+
+  .day-name {
+    font-size: 0.7rem;
+  }
+
+  .planner-table th {
+    padding: 10px 12px;
+  }
+
+  .meal-time-label {
+    padding: 14px 10px;
+    font-size: 0.85rem;
+  }
+
+  .time-icon {
+    font-size: 1.2rem;
+    margin-bottom: 3px;
+  }
+}
+
 @media (max-width: 768px) {
+  .planner-wrap {
+    padding: 20px 10px;
+  }
+
+  .planner-header {
+    margin-bottom: 30px;
+  }
+
+  .planner-title {
+    font-size: 1.5rem;
+  }
+
+  .planner-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .section {
+    margin-bottom: 30px;
+  }
+
+  .section-header h2 {
+    font-size: 1.1rem;
+  }
+
+  .cell-content {
+    min-width: 140px;
+    padding: 6px;
+  }
+
+  .item-card {
+    padding: 8px;
+    border-radius: 8px;
+  }
+
+  .item-title {
+    font-size: 0.85rem;
+    line-height: 1.2;
+  }
+
+  .item-meta {
+    gap: 3px;
+    margin-bottom: 6px;
+  }
+
+  .meta-badge {
+    font-size: 0.65rem;
+    padding: 2px 5px;
+  }
+
+  .btn-complete {
+    font-size: 0.75rem;
+    padding: 6px;
+    gap: 4px;
+  }
+
+  .action-btn-small {
+    width: 24px;
+    height: 24px;
+    font-size: 0.8rem;
+  }
+
+  .item-actions-compact {
+    gap: 3px;
+    margin-top: 6px;
+  }
+
+  .day-date {
+    font-size: 1rem;
+  }
+
+  .day-name {
+    font-size: 0.65rem;
+  }
+
+  .planner-table th {
+    padding: 8px 10px;
+    font-size: 0.85rem;
+  }
+
+  .meal-time-label {
+    padding: 12px 8px;
+    font-size: 0.8rem;
+  }
+
+  .time-icon {
+    font-size: 1.1rem;
+    margin-bottom: 2px;
+  }
+
+  .table-container {
+    border-radius: 12px;
+  }
+
   .info-grid {
     grid-template-columns: 1fr;
   }
 
   .detail-modal {
     max-width: 95%;
+  }
+}
+
+@media (max-width: 480px) {
+  .planner-wrap {
+    padding: 15px 8px;
+  }
+
+  .planner-title {
+    font-size: 1.3rem;
+  }
+
+  .planner-subtitle {
+    font-size: 0.85rem;
+  }
+
+  .cell-content {
+    min-width: 120px;
+    padding: 5px;
+  }
+
+  .item-card {
+    padding: 6px;
+  }
+
+  .item-title {
+    font-size: 0.75rem;
+  }
+
+  .meta-badge {
+    font-size: 0.6rem;
+    padding: 1px 4px;
+  }
+
+  .btn-complete {
+    font-size: 0.7rem;
+    padding: 5px;
+  }
+
+  .action-btn-small {
+    width: 22px;
+    height: 22px;
+    font-size: 0.75rem;
+  }
+
+  .day-date {
+    font-size: 0.9rem;
+  }
+
+  .day-name {
+    font-size: 0.6rem;
+  }
+
+  .planner-table th {
+    padding: 6px 8px;
+    font-size: 0.8rem;
+  }
+
+  .meal-time-label {
+    padding: 10px 6px;
+    font-size: 0.75rem;
+  }
+
+  .time-icon {
+    font-size: 1rem;
   }
 }

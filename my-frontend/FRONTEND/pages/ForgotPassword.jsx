@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import styles from './ForgotPassword.module.css';
 import Toast from '../components/Toast';
+import { validateEmail, validatePassword, validateOTP } from '../utils/validation';
 
 const ForgotPassword = () => {
     const navigate = useNavigate();
@@ -32,6 +33,13 @@ const ForgotPassword = () => {
 
         if (!formData.email) {
             showToast('Vui lòng nhập email', 'error');
+            return;
+        }
+
+        // Validate email format
+        const emailValidation = validateEmail(formData.email);
+        if (!emailValidation.valid) {
+            showToast(emailValidation.message, 'error');
             return;
         }
 
@@ -68,6 +76,13 @@ const ForgotPassword = () => {
 
         if (!formData.otp) {
             showToast('Vui lòng nhập mã OTP', 'error');
+            return;
+        }
+
+        // Validate OTP format
+        const otpValidation = validateOTP(formData.otp);
+        if (!otpValidation.valid) {
+            showToast(otpValidation.message, 'error');
             return;
         }
 
@@ -110,8 +125,10 @@ const ForgotPassword = () => {
             return;
         }
 
-        if (formData.newPassword.length < 6) {
-            showToast('Mật khẩu phải có ít nhất 6 ký tự', 'error');
+        // Validate password format (6-8 ký tự, có chữ hoa và chữ thường)
+        const passwordValidation = validatePassword(formData.newPassword);
+        if (!passwordValidation.valid) {
+            showToast(passwordValidation.message, 'error');
             return;
         }
 

@@ -13,14 +13,13 @@ def validate_email(email):
     return re.match(pattern, email) is not None
 
 def validate_password_strength(password):
-    if len(password) < 8:
-        return False, "Mật khẩu phải có ít nhất 8 ký tự"
+    # Yêu cầu: 6-8 ký tự, có chữ hoa và chữ thường
+    if len(password) < 6 or len(password) > 8:
+        return False, "Mật khẩu phải từ 6-8 ký tự"
     if not re.search(r'[A-Z]', password):
         return False, "Mật khẩu phải có ít nhất 1 chữ hoa"
-    if not re.search(r'[0-9]', password):
-        return False, "Mật khẩu phải có ít nhất 1 số"
-    if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
-        return False, "Mật khẩu phải có ít nhất 1 ký tự đặc biệt"
+    if not re.search(r'[a-z]', password):
+        return False, "Mật khẩu phải có ít nhất 1 chữ thường"
     return True, ""
 
 def generate_otp():
@@ -270,11 +269,15 @@ def login():
         if not data:
             return jsonify({"success": False, "error": "Không có dữ liệu"}), 400
         
-        email = data.get('email', '').strip()
+        email = data.get('email', '').strip().lower()
         password = data.get('password', '')
 
         if not email or not password:
             return jsonify({"success": False, "error": "Thiếu email hoặc mật khẩu"}), 400
+        
+        # Validate email format
+        if not validate_email(email):
+            return jsonify({"success": False, "error": "Email không hợp lệ"}), 400
 
         acc = Account.query.filter_by(Email=email, Password=password).first()
         

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import NotificationBell from "./NotificationBell";
 import "./Navbar.css";
@@ -11,6 +11,8 @@ export default function Navbar() {
     avatar: localStorage.getItem("user_avatar") || "https://png.pngtree.com/png-vector/20191110/ourmid/pngtree-avatar-icon-profile-icon-member-login-vector-isolated-png-image_1978396.jpg"
   });
   const navigate = useNavigate();
+  const dropdownRef = useRef(null);
+  const profileWrapperRef = useRef(null);
 
   useEffect(() => {
     fetch('/api/auth/me', {
@@ -34,6 +36,31 @@ export default function Navbar() {
       .catch(err => console.error("Lỗi fetch user:", err));
   }, []);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        showProfileDropdown &&
+        dropdownRef.current &&
+        profileWrapperRef.current &&
+        !dropdownRef.current.contains(event.target) &&
+        !profileWrapperRef.current.contains(event.target)
+      ) {
+        setShowProfileDropdown(false);
+      }
+    };
+
+    // Add event listener
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [showProfileDropdown]);
+
   const toggleProfileDropdown = () => {
     setShowProfileDropdown(!showProfileDropdown);
   };
@@ -53,7 +80,7 @@ export default function Navbar() {
       <header className="navbar">
         <div className="navbar-container">
           <div className="logo">
-            <Link to="/" className="logo-text">
+            <Link to="/home" className="logo-text">
               <span className="logo-icon">⚡</span>
               MySportCoach<span className="logo-ai">AI</span>
             </Link>
@@ -95,7 +122,7 @@ export default function Navbar() {
             <NotificationBell />
 
             { }
-            <div className="profile-wrapper" onClick={toggleProfileDropdown}>
+            <div className="profile-wrapper" ref={profileWrapperRef} onClick={toggleProfileDropdown}>
               <img
                 src={userData.avatar}
                 alt="Profile"
@@ -106,7 +133,7 @@ export default function Navbar() {
 
             { }
             {showProfileDropdown && (
-              <div className="profile-dropdown">
+              <div className="profile-dropdown" ref={dropdownRef}>
                 <div className="profile-header">
                   <img
                     src={userData.avatar}
@@ -120,20 +147,23 @@ export default function Navbar() {
                 </div>
                 <ul className="profile-menu">
                   <li>
-                    <Link to="/profile">
+                    <Link to="/profile" onClick={() => setShowProfileDropdown(false)}>
                       <span className="menu-icon">👤</span>
                       Hồ sơ cá nhân
                     </Link>
                   </li>
                   <li>
-                    <Link to="/settings">
+                    <Link to="/settings" onClick={() => setShowProfileDropdown(false)}>
                       <span className="menu-icon">⚙️</span>
                       Cài đặt
                     </Link>
                   </li>
                   <li className="divider"></li>
                   <li>
-                    <button onClick={handleLogout} className="logout-btn">
+                    <button onClick={() => {
+                      setShowProfileDropdown(false);
+                      handleLogout();
+                    }} className="logout-btn">
                       <span className="menu-icon">🚪</span>
                       Đăng xuất
                     </button>

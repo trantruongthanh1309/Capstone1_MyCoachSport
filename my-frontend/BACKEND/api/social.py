@@ -44,11 +44,20 @@ def create_post():
     
     try:
         data = request.get_json()
-        content = data.get('content')
+        content = data.get('content', '').strip() if data.get('content') else ''
         image_url = data.get('image_url')
+        title = data.get('title', '').strip() if data.get('title') else None
 
         if not content and not image_url:
             return jsonify({'success': False, 'message': 'Bài viết phải có nội dung hoặc ảnh'}), 400
+        
+        # Validate content length
+        if content and len(content) > 5000:
+            return jsonify({'success': False, 'message': 'Nội dung bài viết không được quá 5000 ký tự'}), 400
+        
+        # Validate title length if provided
+        if title and len(title) > 200:
+            return jsonify({'success': False, 'message': 'Tiêu đề không được quá 200 ký tự'}), 400
 
         post = Post(
             User_id=user_id,
@@ -121,10 +130,14 @@ def create_comment(post_id):
     
     try:
         data = request.get_json()
-        content = data.get('content')
+        content = data.get('content', '').strip()
         
         if not content:
             return jsonify({'error': 'Nội dung bình luận không được để trống'}), 400
+        
+        # Validate comment length
+        if len(content) > 1000:
+            return jsonify({'error': 'Bình luận không được quá 1000 ký tự'}), 400
 
         comment = Comment(
             Post_id=post_id,
@@ -223,14 +236,40 @@ def get_or_create_conversation(user2_id):
             db.session.add(conversation)
             db.session.commit()
         
-        messages = Message.query.filter_by(Conversation_id=conversation.Id)\
-            .order_by(Message.CreatedAt.asc()).all()
-        
-        return jsonify({
-            'success': True,
-            'conversation': conversation.to_dict(user_id),
-            'messages': [msg.to_dict() for msg in messages]
-        })
+        try:
+            messages = Message.query.filter_by(Conversation_id=conversation.Id)\
+                .order_by(Message.CreatedAt.asc()).all()
+            
+            # Convert messages to dict với error handling
+            messages_data = []
+            for msg in messages:
+                try:
+                    messages_data.append(msg.to_dict())
+                except Exception as e:
+                    current_app.logger.error(f"Error converting message {msg.Id} to dict: {e}")
+                    # Vẫn thêm message nhưng không có shared_post nếu có lỗi
+                    messages_data.append({
+                        'id': msg.Id,
+                        'conversation_id': msg.Conversation_id,
+                        'sender_id': msg.Sender_id,
+                        'sender_name': msg.sender.Name if msg.sender else 'Unknown',
+                        'content': msg.Content,
+                        'is_read': msg.IsRead,
+                        'created_at': msg.CreatedAt.isoformat() if msg.CreatedAt else None
+                    })
+            
+            return jsonify({
+                'success': True,
+                'conversation': conversation.to_dict(user_id),
+                'messages': messages_data
+            })
+        except Exception as msg_error:
+            current_app.logger.error(f"Error loading messages: {msg_error}")
+            return jsonify({
+                'success': True,
+                'conversation': conversation.to_dict(user_id),
+                'messages': []
+            })
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error in get_or_create_conversation: {str(e)}")
@@ -238,22 +277,24 @@ def get_or_create_conversation(user2_id):
 
 @social_bp.route('/conversations/<int:conversation_id>/messages', methods=['POST'])
 def send_message(conversation_id):
-    """Gửi tin nhắn"""
+    """Gửi tin nhắn (có thể kèm shared post)"""
     user_id = session.get('user_id')
     if not user_id:
         return jsonify({'error': 'Chưa đăng nhập'}), 401
     
     try:
         data = request.get_json()
-        content = data.get('content')
+        content = data.get('content', '')
+        shared_post_id = data.get('shared_post_id')
         
-        if not content:
-            return jsonify({'error': 'Nội dung tin nhắn không được để trống'}), 400
+        if not content and not shared_post_id:
+            return jsonify({'error': 'Nội dung tin nhắn hoặc bài đăng chia sẻ không được để trống'}), 400
 
         message = Message(
             Conversation_id=conversation_id,
             Sender_id=user_id,
-            Content=content
+            Content=content or '📎 Đã chia sẻ một bài đăng',
+            SharedPostId=shared_post_id
         )
         db.session.add(message)
         

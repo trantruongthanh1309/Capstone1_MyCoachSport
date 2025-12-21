@@ -26,7 +26,17 @@ def get_settings():
     
     try:
         settings_db = SystemSetting.query.all()
-        settings_dict = {s.Key: json.loads(s.Value) for s in settings_db}
+        settings_dict = {}
+        
+        for s in settings_db:
+            try:
+                # Try to parse as JSON first
+                value = json.loads(s.Value)
+            except (json.JSONDecodeError, TypeError):
+                # If not JSON, use as string
+                value = s.Value
+            
+            settings_dict[s.Key] = value
         
         final_settings = DEFAULT_SETTINGS.copy()
         final_settings.update(settings_dict)
@@ -36,7 +46,12 @@ def get_settings():
             'data': final_settings
         }), 200
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
+        print(f"Error loading settings: {e}")
+        # Return default settings if error
+        return jsonify({
+            'success': True,
+            'data': DEFAULT_SETTINGS
+        }), 200
 
 @settings_admin_bp.route('/api/admin/settings', methods=['POST'])
 def update_settings():
@@ -46,21 +61,32 @@ def update_settings():
     
     try:
         data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'error': 'No data provided'}), 400
         
+        updated_count = 0
         for key, value in data.items():
             if key in DEFAULT_SETTINGS:
-                setting = SystemSetting.query.get(key)
+                setting = SystemSetting.query.filter_by(Key=key).first()
                 if not setting:
-                    setting = SystemSetting(Key=key)
+                    setting = SystemSetting(Key=key, Value=json.dumps(value))
                     db.session.add(setting)
-                
-                setting.Value = json.dumps(value)
+                else:
+                    setting.Value = json.dumps(value)
+                updated_count += 1
         
-        db.session.commit()
-        
-        return jsonify({'success': True, 'message': 'Settings updated'}), 200
+        if updated_count > 0:
+            db.session.commit()
+            return jsonify({
+                'success': True, 
+                'message': f'Đã cập nhật {updated_count} cài đặt thành công'
+            }), 200
+        else:
+            return jsonify({'success': False, 'error': 'Không có cài đặt hợp lệ để cập nhật'}), 400
+            
     except Exception as e:
         db.session.rollback()
+        print(f"Error updating settings: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @settings_admin_bp.route('/api/admin/settings/clear-cache', methods=['POST'])

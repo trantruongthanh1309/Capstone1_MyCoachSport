@@ -1,7 +1,6 @@
 import { useState } from "react";
 import "./Videos.css";
 
-const API_BASE = "http://localhost:5000";
 const SUGGESTS = ["Bóng đá", "Bóng rổ", "Cầu lông", "Bơi lội", "Tennis", "Boxing", "Calisthenics"];
 
 export default function Videos() {
@@ -15,7 +14,7 @@ export default function Videos() {
     setState({ loading: true, error: "" });
     setVideos([]);
     try {
-      const r = await fetch(`${API_BASE}/api/videos?q=${encodeURIComponent(q)}&max=8`);
+      const r = await fetch(`/api/videos?q=${encodeURIComponent(q)}&max=8`);
       const d = await r.json();
       if (d.error) setState({ loading: false, error: d.error });
       else {

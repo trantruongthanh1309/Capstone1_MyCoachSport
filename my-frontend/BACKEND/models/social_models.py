@@ -1,6 +1,7 @@
 from db import db
 from datetime import datetime
 
+# Forward reference để tránh circular import
 class Post(db.Model):
     __tablename__ = 'SocialPosts'
     
@@ -127,13 +128,17 @@ class Message(db.Model):
     Conversation_id = db.Column(db.Integer, db.ForeignKey('Conversations.Id'), nullable=False)
     Sender_id = db.Column(db.Integer, db.ForeignKey('Users.Id'), nullable=False)
     Content = db.Column(db.UnicodeText, nullable=False)
+    SharedPostId = db.Column(db.Integer, db.ForeignKey('SocialPosts.Id'), nullable=True)
     IsRead = db.Column(db.Boolean, default=False)
     CreatedAt = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     
     sender = db.relationship('User', backref=db.backref('sent_messages', lazy=True))
     
+    # Không dùng relationship để tránh conflict với models.post.Post
+    # Sẽ query trực tiếp trong to_dict() khi cần
+    
     def to_dict(self):
-        return {
+        result = {
             'id': self.Id,
             'conversation_id': self.Conversation_id,
             'sender_id': self.Sender_id,
@@ -142,3 +147,22 @@ class Message(db.Model):
             'is_read': self.IsRead,
             'created_at': self.CreatedAt.isoformat() if self.CreatedAt else None
         }
+        if self.SharedPostId:
+            result['shared_post_id'] = self.SharedPostId
+            # Query trực tiếp từ SocialPosts table để tránh conflict
+            try:
+                # Query bằng table name để tránh conflict với models.post.Post
+                shared_post = Post.query.get(self.SharedPostId)
+                if shared_post:
+                    result['shared_post'] = {
+                        'id': shared_post.Id,
+                        'content': shared_post.Content,
+                        'image_url': shared_post.ImageUrl,
+                        'user_name': shared_post.user.Name if shared_post.user else 'Unknown',
+                        'user_avatar': shared_post.user.Avatar if shared_post.user else None,
+                        'created_at': shared_post.CreatedAt.isoformat() if shared_post.CreatedAt else None
+                    }
+            except Exception as e:
+                # Fallback: không load shared post nếu có lỗi
+                print(f"Error loading shared post: {e}")
+        return result

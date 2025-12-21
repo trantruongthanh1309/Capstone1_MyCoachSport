@@ -14,14 +14,14 @@ export default function SwapButton({ item, type, onSwapSuccess, userId }) {
             let payload = {};
 
             if (type === "meal") {
-                suggestEndpoint = "http://localhost:5000/api/smart-swap/suggest-meal";
+                suggestEndpoint = "/api/smart-swap/suggest-meal";
                 payload = {
                     user_id: userId,
                     current_meal_id: item.data.Id,
                     time_slot: item.data.MealType  // morning, afternoon, evening
                 };
             } else {
-                suggestEndpoint = "http://localhost:5000/api/smart-swap/suggest-workout";
+                suggestEndpoint = "/api/smart-swap/suggest-workout";
                 payload = {
                     user_id: userId,
                     current_workout_id: item.data.Id
@@ -50,7 +50,7 @@ export default function SwapButton({ item, type, onSwapSuccess, userId }) {
 
             const selectedOption = suggestions[0];
 
-            const swapEndpoint = "http://localhost:5000/api/ai/swap";
+            const swapEndpoint = "/api/ai/swap";
             const swapPayload = {
                 user_id: userId,
                 date: item.date,

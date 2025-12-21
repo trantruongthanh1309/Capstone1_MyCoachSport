@@ -58,10 +58,14 @@ def create_log():
         day = data.get('day', datetime.now().strftime("%Y-%m-%d"))
         meal_id = data.get('meal_id')
         workout_id = data.get('workout_id')
-        notes = data.get('notes')
+        notes = data.get('notes', '').strip() if data.get('notes') else ''
         rpe = data.get('rpe')
         rating = data.get('rating')
         feedback_type = data.get('feedback_type')
+        
+        # Validate notes length
+        if notes and len(notes) > 1000:
+            return jsonify({"success": False, "error": "Ghi chú không được quá 1000 ký tự"}), 400
 
         query = text("""
             INSERT INTO dbo.Logs 

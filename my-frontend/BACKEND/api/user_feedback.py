@@ -23,6 +23,14 @@ def submit_feedback():
         if not feedback_type or not title or not message:
             return jsonify({'success': False, 'error': 'Vui lòng điền đầy đủ thông tin'}), 400
         
+        # Validate title length
+        if len(title) > 200:
+            return jsonify({'success': False, 'error': 'Tiêu đề không được quá 200 ký tự'}), 400
+        
+        # Validate message length
+        if len(message) > 2000:
+            return jsonify({'success': False, 'error': 'Nội dung không được quá 2000 ký tự'}), 400
+        
         # Validate type
         valid_types = ['bug', 'feature', 'improvement', 'question', 'other']
         if feedback_type not in valid_types:
@@ -115,6 +123,8 @@ def get_feedback_detail(feedback_id):
         
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
 
 
 

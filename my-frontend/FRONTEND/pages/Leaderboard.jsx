@@ -27,7 +27,7 @@ export default function Leaderboard() {
 
   const fetchRankings = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/leaderboard/rankings', {
+      const res = await fetch('/api/leaderboard/rankings', {
         credentials: 'include'
       });
       const data = await res.json();
@@ -41,7 +41,7 @@ export default function Leaderboard() {
 
   const fetchMyStats = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/leaderboard/my-stats', {
+      const res = await fetch('/api/leaderboard/my-stats', {
         credentials: 'include'
       });
       const data = await res.json();
@@ -55,7 +55,7 @@ export default function Leaderboard() {
 
   const fetchAchievements = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/leaderboard/achievements', {
+      const res = await fetch('/api/leaderboard/achievements', {
         credentials: 'include'
       });
       const data = await res.json();
@@ -70,7 +70,7 @@ export default function Leaderboard() {
   const handleLogWorkout = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:5000/api/leaderboard/log-workout', {
+      const res = await fetch('/api/leaderboard/log-workout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

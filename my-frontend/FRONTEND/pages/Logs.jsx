@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import "./Logs.css";
 import { useToast } from "../contexts/ToastContext";
+import { validateLogContent } from "../utils/validation";
 
 export default function Logs() {
   const toast = useToast();
@@ -20,7 +21,7 @@ export default function Logs() {
   const [showModal, setShowModal] = useState(false);
   const [filter, setFilter] = useState("all");
 
-  const API_URL = "http://localhost:5000/api/logs";
+  const API_URL = "/api/logs";
 
   const fetchLogs = async () => {
     try {
@@ -53,6 +54,18 @@ export default function Logs() {
 
   const addLog = async (e) => {
     e.preventDefault();
+
+    // Validate log content
+    if (!content.trim()) {
+      toast.error("❌ Vui lòng nhập ghi chú");
+      return;
+    }
+    
+    const contentValidation = validateLogContent(content);
+    if (!contentValidation.valid) {
+      toast.error(`❌ ${contentValidation.message}`);
+      return;
+    }
 
     const newLog = {
       day: date,

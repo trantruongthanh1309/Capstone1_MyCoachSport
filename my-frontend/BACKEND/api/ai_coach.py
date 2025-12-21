@@ -15,6 +15,31 @@ def get_schedule():
     user_id = session['user_id']
     date = request.args.get('date', '2025-10-18')
     
+    # Kiểm tra profile có đầy đủ chưa
+    from models import User
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "Không tìm thấy người dùng"}), 404
+    
+    required_fields = {
+        "Age": user.Age,
+        "Sex": user.Sex,
+        "Height_cm": user.Height_cm,
+        "Weight_kg": user.Weight_kg,
+        "Sport": user.Sport,
+        "Goal": user.Goal,
+        "Sessions_per_week": user.Sessions_per_week
+    }
+    
+    missing_fields = [field for field, value in required_fields.items() if value is None or (isinstance(value, str) and value.strip() == "")]
+    
+    if missing_fields:
+        return jsonify({
+            "error": "profile_incomplete",
+            "message": "Vui lòng cập nhật đầy đủ thông tin trong hồ sơ trước khi xem lịch trình",
+            "missing_fields": missing_fields
+        }), 400
+    
     try:
         schedule = build_daily_schedule(user_id, date)
         
@@ -45,6 +70,27 @@ def get_schedule():
             else:
                 item['schedule_id'] = None
                 item['is_completed'] = False
+            
+            # Lấy feedback status (liked/disliked) từ Logs
+            feedback_query = text("""
+                SELECT TOP 1 FeedbackType 
+                FROM Logs 
+                WHERE User_id = :user_id 
+                AND (Meal_id = :meal_id OR Workout_id = :workout_id)
+                AND FeedbackType IS NOT NULL
+                ORDER BY CreatedAt DESC
+            """)
+            
+            feedback_result = db.session.execute(feedback_query, {
+                'user_id': user_id,
+                'meal_id': item_id if item_type == 'meal' else None,
+                'workout_id': item_id if item_type == 'workout' else None
+            }).first()
+            
+            if feedback_result and feedback_result.FeedbackType:
+                item['feedback_status'] = feedback_result.FeedbackType  # 'liked' hoặc 'disliked'
+            else:
+                item['feedback_status'] = None
         
         return jsonify(schedule)
     except Exception as e:
@@ -59,7 +105,13 @@ def submit_feedback():
         meal_id = data.get('meal_id')
         workout_id = data.get('workout_id')
         rating = data.get('rating')
-        feedback_type = data.get('feedback_type', 'liked')
+        # Xác định feedback_type dựa trên rating: 4-5 = liked, 1-2 = disliked
+        if rating >= 4:
+            feedback_type = 'liked'
+        elif rating <= 2:
+            feedback_type = 'disliked'
+        else:
+            feedback_type = data.get('feedback_type', 'liked')  # rating = 3 thì dùng mặc định hoặc từ request
             
         if not user_id or not rating:
             return jsonify({"error": "Thiếu user_id hoặc rating"}), 400
