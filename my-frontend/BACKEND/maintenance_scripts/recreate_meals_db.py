@@ -17,3 +17,7 @@ with app.app_context():
         print("Columns: Id, Name, Kcal, Protein, Carb, Fat, ServingSize, SuitableSports, MealTime, Ingredients, Recipe, CookingTimeMin, Difficulty, Image")
     except Exception as e:
         print(f"Error creating table: {e}")
+
+
+
+

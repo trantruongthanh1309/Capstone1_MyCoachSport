@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './AdminFeedback.css';
+import Toast from '../../components/Toast';
 
 const AdminFeedback = () => {
   const [feedbacks, setFeedbacks] = useState([]);
@@ -8,6 +9,11 @@ const AdminFeedback = () => {
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [stats, setStats] = useState({ total: 0, pending: 0, resolved: 0 });
+  const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
+
+  const showToast = (message, type = 'info') => {
+    setToast({ show: true, message, type });
+  };
 
   useEffect(() => {
     fetchFeedbacks();
@@ -51,6 +57,8 @@ const AdminFeedback = () => {
   };
 
   const handleResolve = async (id) => {
+    if (!confirm('Bạn có chắc muốn đánh dấu feedback này là đã xử lý?')) return;
+    
     try {
       const res = await fetch(`/api/admin/feedback/${id}/resolve`, {
         method: 'POST',
@@ -60,14 +68,14 @@ const AdminFeedback = () => {
       });
       const data = await res.json();
       if (data.success) {
-        alert('✅ Đã đánh dấu feedback là đã xử lý!');
+        showToast('✅ Đã đánh dấu feedback là đã xử lý!', 'success');
         fetchFeedbacks();
         fetchStats();
       } else {
-        alert('❌ Lỗi: ' + data.error);
+        showToast('❌ Lỗi: ' + data.error, 'error');
       }
     } catch (error) {
-      alert('❌ Lỗi: ' + error.message);
+      showToast('❌ Lỗi: ' + error.message, 'error');
     }
   };
 
@@ -80,14 +88,14 @@ const AdminFeedback = () => {
         });
         const data = await res.json();
         if (data.success) {
-          alert('🗑️ Đã xóa feedback!');
+          showToast('🗑️ Đã xóa feedback!', 'success');
           fetchFeedbacks();
           fetchStats();
         } else {
-          alert('❌ Lỗi: ' + data.error);
+          showToast('❌ Lỗi: ' + data.error, 'error');
         }
       } catch (error) {
-        alert('❌ Lỗi: ' + error.message);
+        showToast('❌ Lỗi: ' + error.message, 'error');
       }
     }
   };
@@ -96,21 +104,23 @@ const AdminFeedback = () => {
     try {
       const res = await fetch(`/api/admin/feedback/${id}/resolve`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json; charset=utf-8' 
+        },
         credentials: 'include',
         body: JSON.stringify({ reply })
       });
       const data = await res.json();
       if (data.success) {
-        alert('✅ Đã gửi phản hồi!');
+        showToast('✅ Đã gửi phản hồi!', 'success');
         setShowModal(false);
         fetchFeedbacks();
         fetchStats();
       } else {
-        alert('❌ Lỗi: ' + data.error);
+        showToast('❌ Lỗi: ' + data.error, 'error');
       }
     } catch (error) {
-      alert('❌ Lỗi: ' + error.message);
+      showToast('❌ Lỗi: ' + error.message, 'error');
     }
   };
 
@@ -134,9 +144,20 @@ const AdminFeedback = () => {
 
   return (
     <div className="admin-feedback">
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
+      )}
+      
       <div className="feedback-header">
         <div className="header-icon">📨</div>
-        <h1>Quản Lý Feedback</h1>
+        <div>
+          <h1>Quản Lý Feedback</h1>
+          <p className="header-subtitle">Xem và phản hồi feedback từ người dùng</p>
+        </div>
       </div>
 
       {}
@@ -179,7 +200,10 @@ const AdminFeedback = () => {
 
       {}
       {loading ? (
-        <div className="loading">Đang tải...</div>
+        <div className="loading-spinner">
+          <div className="admin-spinner"></div>
+          <p>Đang tải feedback...</p>
+        </div>
       ) : (
         <div className="feedback-list">
           {feedbacks.length === 0 ? (
@@ -264,6 +288,15 @@ const AdminFeedback = () => {
 const FeedbackModal = ({ feedback, onClose, onReply }) => {
   const [reply, setReply] = useState(feedback.response || '');
 
+  const getTypeLabel = (type) => {
+    const types = {
+      bug: { label: 'Lỗi', color: 'red' },
+      feature: { label: 'Đề xuất', color: 'blue' },
+      general: { label: 'Chung', color: 'gray' }
+    };
+    return types[type] || types.general;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (reply.trim()) {
@@ -287,7 +320,9 @@ const FeedbackModal = ({ feedback, onClose, onReply }) => {
             </div>
             <div className="detail-row">
               <strong>Loại:</strong>
-              <span>{feedback.type}</span>
+              <span className={`badge badge-${getTypeLabel(feedback.type).color}`} style={{ display: 'inline-block', marginTop: '0.25rem' }}>
+                {getTypeLabel(feedback.type).label}
+              </span>
             </div>
             <div className="detail-row">
               <strong>Tiêu đề:</strong>
@@ -299,10 +334,18 @@ const FeedbackModal = ({ feedback, onClose, onReply }) => {
             </div>
             <div className="detail-row">
               <strong>Trạng thái:</strong>
-              <span className={`status status-${feedback.status}`}>
-                {feedback.status === 'pending' ? 'Chờ xử lý' : 'Đã xử lý'}
+              <span className={`status status-${feedback.status}`} style={{ display: 'inline-block', marginTop: '0.25rem' }}>
+                {feedback.status === 'pending' ? '⏳ Chờ xử lý' : '✅ Đã xử lý'}
               </span>
             </div>
+            {feedback.response && (
+              <div className="detail-row">
+                <strong>Phản hồi đã gửi:</strong>
+                <div style={{ marginTop: '0.5rem', padding: '1rem', background: '#f8fafc', borderRadius: '10px', borderLeft: '3px solid #3b82f6' }}>
+                  {feedback.response}
+                </div>
+              </div>
+            )}
           </div>
 
           <form onSubmit={handleSubmit} className="reply-form">

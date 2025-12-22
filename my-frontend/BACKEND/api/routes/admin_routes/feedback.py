@@ -46,16 +46,36 @@ def resolve_feedback(feedback_id):
     
     try:
         feedback = Feedback.query.get_or_404(feedback_id)
-        data = request.get_json()
+        data = request.get_json(force=True)  # Force JSON parsing
         reply = data.get('reply', '')
+        
+        # Ensure UTF-8 encoding for reply - handle all cases
+        if reply is None:
+            reply = ''
+        elif isinstance(reply, bytes):
+            reply = reply.decode('utf-8', errors='replace')
+        elif not isinstance(reply, str):
+            reply = str(reply)
+        
+        # Normalize unicode characters to ensure proper encoding
+        import unicodedata
+        reply = unicodedata.normalize('NFC', reply)
         
         feedback.Status = 'resolved'
         feedback.Response = reply
         db.session.commit()
         
-        return jsonify({'success': True, 'message': 'Feedback resolved'}), 200
+        # Refresh to get updated data
+        db.session.refresh(feedback)
+        
+        return jsonify({
+            'success': True, 
+            'message': 'Feedback resolved',
+            'data': feedback.to_dict()
+        }), 200
     except Exception as e:
         db.session.rollback()
+        print(f"Error resolving feedback {feedback_id}: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @feedback_bp.route('/api/admin/feedback/<int:feedback_id>', methods=['DELETE'])

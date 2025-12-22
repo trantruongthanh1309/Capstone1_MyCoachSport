@@ -38,6 +38,7 @@ export default function Planner() {
   const [profileIncomplete, setProfileIncomplete] = useState(false);
   const [missingFields, setMissingFields] = useState([]);
   const [weekOffset, setWeekOffset] = useState(0); // 0 = tuần này, -1 = tuần trước, -2 = tuần trước nữa
+  const [completingIds, setCompletingIds] = useState(new Set()); // Track items đang được complete
   const toast = useToast();
 
   // Lấy user_id từ localStorage hoặc session
@@ -122,10 +123,11 @@ export default function Planner() {
     const formatDate = (date) => {
       const day = date.getDate().toString().padStart(2, '0');
       const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      return `${day}/${month}`;
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
     };
     
-    return `${formatDate(monday)} - ${formatDate(sunday)}/${sunday.getFullYear()}`;
+    return `${formatDate(monday)} - ${formatDate(sunday)}`;
   };
 
   const fetchWeeklyPlan = async (offset = weekOffset) => {
@@ -172,6 +174,11 @@ export default function Planner() {
         }
         const data = await res.json();
         plan[date] = data.schedule || [];
+        
+        // Debug log cho thứ 2
+        if (date === dates[0]) {
+          console.log(`[DEBUG] Schedule cho thứ 2 (${date}):`, data.schedule);
+        }
       }
       setWeeklyPlan(plan);
     } catch (err) {
@@ -189,6 +196,108 @@ export default function Planner() {
     const date = new Date(dateStr);
     date.setHours(0, 0, 0, 0);
     return date < today;
+  };
+
+  const isFutureDate = (dateStr) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const date = new Date(dateStr);
+    date.setHours(0, 0, 0, 0);
+    return date > today;
+  };
+
+  const isToday = (dateStr) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const date = new Date(dateStr);
+    date.setHours(0, 0, 0, 0);
+    return date.getTime() === today.getTime();
+  };
+
+  // Lấy thời gian của slot
+  const getSlotTime = (slot) => {
+    // Normalize slot name
+    let normalizedSlot = slot;
+    if (slot && typeof slot === 'string') {
+      normalizedSlot = slot.toLowerCase();
+      if (normalizedSlot.includes('morning') || normalizedSlot.includes('sáng')) normalizedSlot = 'morning';
+      else if (normalizedSlot.includes('afternoon') || normalizedSlot.includes('trưa')) normalizedSlot = 'afternoon';
+      else if (normalizedSlot.includes('evening') || normalizedSlot.includes('tối')) normalizedSlot = 'evening';
+    }
+    
+    // Thời gian của các slot
+    const slotTimes = {
+      'morning': { hour: 7, minute: 0 },      // 07:00
+      'afternoon': { hour: 12, minute: 0 },  // 12:00
+      'evening': { hour: 19, minute: 0 }     // 19:00
+    };
+    
+    return slotTimes[normalizedSlot] || null;
+  };
+
+  // Kiểm tra xem slot đã đến chưa (đã đến giờ của slot chưa)
+  const isSlotReached = (dateStr, slot) => {
+    // Nếu là ngày tương lai, chưa đến
+    if (isFutureDate(dateStr)) {
+      return false;
+    }
+    
+    // Nếu là ngày quá khứ, đã đến rồi
+    if (isPastDate(dateStr)) {
+      return true;
+    }
+    
+    // Nếu là hôm nay, check thời gian của slot
+    if (!isToday(dateStr)) {
+      return false;
+    }
+    
+    const slotTime = getSlotTime(slot);
+    if (!slotTime) {
+      // Nếu không tìm thấy slot, coi như đã đến (cho phép hoàn thành)
+      return true;
+    }
+    
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    
+    // So sánh thời gian hiện tại với thời gian slot
+    if (currentHour > slotTime.hour) {
+      return true; // Đã đến slot
+    } else if (currentHour === slotTime.hour && currentMinute >= slotTime.minute) {
+      return true; // Đã đến slot (cùng giờ và đã qua phút)
+    }
+    
+    return false; // Chưa đến slot
+  };
+
+  // Kiểm tra xem slot đã qua chưa trong ngày hôm nay
+  const isSlotPassed = (dateStr, slot) => {
+    if (!isToday(dateStr)) {
+      // Nếu không phải hôm nay, dùng logic cũ (check ngày)
+      return isPastDate(dateStr);
+    }
+    
+    // Nếu là hôm nay, check thời gian của slot
+    const slotTime = getSlotTime(slot);
+    if (!slotTime) {
+      // Nếu không tìm thấy slot, dùng logic cũ
+      return isPastDate(dateStr);
+    }
+    
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    
+    // So sánh thời gian hiện tại với thời gian slot
+    if (currentHour > slotTime.hour) {
+      return true; // Đã qua slot
+    } else if (currentHour === slotTime.hour && currentMinute >= slotTime.minute) {
+      return true; // Đã qua slot (cùng giờ nhưng đã qua phút)
+    }
+    
+    return false; // Chưa đến slot
   };
 
   const sendFeedback = async (itemId, type, rating) => {
@@ -228,8 +337,33 @@ export default function Planner() {
     setShowDetail(true);
   };
 
-  const handleComplete = async (scheduleId) => {
+  const handleComplete = async (scheduleId, event) => {
+    // Ngăn event bubbling
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation(); // Ngăn các handler khác
+    }
+    
+    // Kiểm tra scheduleId hợp lệ
+    if (!scheduleId || scheduleId === null || scheduleId === undefined) {
+      toast.error('Lỗi: Không tìm thấy ID của item');
+      console.error('Invalid scheduleId:', scheduleId);
+      return;
+    }
+    
+    // Kiểm tra xem item này đang được complete không (prevent double click)
+    if (completingIds.has(scheduleId)) {
+      console.log('Item đang được complete, bỏ qua request');
+      return;
+    }
+    
+    // Đánh dấu item đang được complete ngay lập tức
+    setCompletingIds(prev => new Set(prev).add(scheduleId));
+    
     try {
+      console.log('Completing schedule item:', scheduleId);
+      
       const res = await fetch('/api/leaderboard/complete-schedule-item', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -240,20 +374,83 @@ export default function Planner() {
       const data = await res.json();
 
       if (data.success) {
-        toast.success(data.message);
-        fetchWeeklyPlan(weekOffset);
+        toast.success(data.message || 'Đã hoàn thành!');
+        // Chỉ update local state, không refresh toàn bộ để tránh regenerate schedule
+        setWeeklyPlan(prev => {
+          const updated = { ...prev };
+          Object.keys(updated).forEach(date => {
+            if (updated[date]) {
+              // Update meal items
+              if (updated[date].meals) {
+                updated[date].meals = updated[date].meals.map(meal => {
+                  if (meal.schedule_id === scheduleId) {
+                    return { ...meal, is_completed: true };
+                  }
+                  return meal;
+                });
+              }
+              // Update workout items
+              if (updated[date].workouts) {
+                updated[date].workouts = updated[date].workouts.map(workout => {
+                  if (workout.schedule_id === scheduleId) {
+                    return { ...workout, is_completed: true };
+                  }
+                  return workout;
+                });
+              }
+            }
+          });
+          return updated;
+        });
       } else {
         toast.error(data.error || 'Lỗi khi hoàn thành');
+        console.error('Complete error:', data);
+        // Nếu lỗi, remove khỏi completingIds để có thể thử lại
+        setCompletingIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(scheduleId);
+          return newSet;
+        });
       }
     } catch (err) {
       console.error('Error completing item:', err);
-      toast.error('Lỗi kết nối');
+      toast.error('Lỗi kết nối: ' + err.message);
+      // Nếu lỗi, remove khỏi completingIds để có thể thử lại
+      setCompletingIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(scheduleId);
+        return newSet;
+      });
+    } finally {
+      // Sau khi xong (thành công hoặc lỗi), remove khỏi completingIds sau một chút
+      // Nhưng nếu thành công thì schedule sẽ refresh và button sẽ disabled tự động
+      setTimeout(() => {
+        setCompletingIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(scheduleId);
+          return newSet;
+        });
+      }, 1000);
     }
   };
 
   // Khi weekOffset thay đổi, fetch lại lịch
   useEffect(() => {
     fetchWeeklyPlan(weekOffset);
+  }, [weekOffset]);
+
+  // Listen event khi busy schedule được update để reload Planner
+  useEffect(() => {
+    const handleScheduleUpdate = () => {
+      console.log('📅 Schedule updated, reloading Planner...');
+      fetchWeeklyPlan(weekOffset);
+    };
+
+    window.addEventListener('scheduleUpdated', handleScheduleUpdate);
+
+    return () => {
+      window.removeEventListener('scheduleUpdated', handleScheduleUpdate);
+    };
   }, [weekOffset]);
 
   if (loading) return <div className="loading-screen"><div className="spinner"></div><p>⏳ Đang tải lịch trình...</p></div>;
@@ -407,8 +604,12 @@ export default function Planner() {
                               <h3 className="item-title">{mealItem.data.Name}</h3>
                             </div>
                             <div className="item-meta">
-                              <span className="meta-badge">🔥 {mealItem.data.Kcal} kcal</span>
-                              <span className="meta-badge">💪 {mealItem.data.Protein}g</span>
+                              {mealItem.data.Kcal && mealItem.data.Kcal > 0 && (
+                                <span className="meta-badge">🔥 {mealItem.data.Kcal} kcal</span>
+                              )}
+                              {mealItem.data.Protein && mealItem.data.Protein > 0 && (
+                                <span className="meta-badge">💪 {mealItem.data.Protein}g</span>
+                              )}
                               {mealItem.feedback_status === 'liked' && (
                                 <span className="meta-badge" style={{ background: '#dbeafe', color: '#1e40af' }}>
                                   👍 Đã thích
@@ -426,35 +627,70 @@ export default function Planner() {
                               className={`btn-complete ${
                                 mealItem.is_completed 
                                   ? 'completed' 
-                                  : isPastDate(date) 
+                                  : isSlotPassed(date, mealItem.data?.MealType || mealTimes[idx]) 
                                     ? 'missed' 
                                     : ''
                               }`}
-                              onClick={() => handleComplete(mealItem.schedule_id)}
-                              disabled={mealItem.is_completed || isPastDate(date)}
-                              title={isPastDate(date) && !mealItem.is_completed ? 'Đã quá hạn, không thể đánh dấu hoàn thành' : ''}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                e.stopImmediatePropagation();
+                                const slot = mealItem.data?.MealType || mealTimes[idx];
+                                const slotReached = isSlotReached(date, slot);
+                                if (!mealItem.is_completed && mealItem.schedule_id && !completingIds.has(mealItem.schedule_id) && slotReached) {
+                                  handleComplete(mealItem.schedule_id, e);
+                                } else if (!mealItem.schedule_id) {
+                                  toast.error('Lỗi: Không tìm thấy ID của item');
+                                  console.error('Missing schedule_id for meal:', mealItem);
+                                } else if (!slotReached) {
+                                  if (isFutureDate(date)) {
+                                    toast.error('Chưa đến ngày, không thể đánh dấu hoàn thành');
+                                  } else {
+                                    toast.error('Chưa đến giờ của bữa ăn này, không thể hoàn thành');
+                                  }
+                                }
+                              }}
+                              disabled={mealItem.is_completed || !mealItem.schedule_id || completingIds.has(mealItem.schedule_id) || !isSlotReached(date, mealItem.data?.MealType || mealTimes[idx])}
+                              title={
+                                mealItem.is_completed 
+                                  ? 'Đã hoàn thành' 
+                                  : !isSlotReached(date, mealItem.data?.MealType || mealTimes[idx])
+                                    ? isFutureDate(date)
+                                      ? 'Chưa đến ngày, không thể hoàn thành'
+                                      : 'Chưa đến giờ của bữa ăn này, không thể hoàn thành'
+                                    : completingIds.has(mealItem.schedule_id) 
+                                      ? 'Đang xử lý...' 
+                                      : !mealItem.schedule_id 
+                                        ? 'Thiếu thông tin ID' 
+                                        : 'Đánh dấu hoàn thành'
+                              }
                             >
                               {mealItem.is_completed 
                                 ? '✅ Đã ăn' 
-                                : isPastDate(date) 
+                                : !isSlotReached(date, mealItem.data?.MealType || mealTimes[idx])
+                                  ? isFutureDate(date)
+                                    ? '⏳ Chưa đến'
+                                    : '⏳ Chưa đến giờ'
+                                : isSlotPassed(date, mealItem.data?.MealType || mealTimes[idx])
                                   ? '❌ Bỏ lỡ' 
                                   : '☑️ Hoàn thành'
                               }
                             </button>
 
-                            { }
                             <div className="item-actions-compact">
                               <button
-                                className="action-btn-small like"
-                                onClick={() => sendFeedback(mealItem.data.Id, "meal", 5)}
-                                title="Thích"
+                                className={`action-btn-small like ${isPastDate(date) ? 'disabled' : ''}`}
+                                onClick={() => !isPastDate(date) && sendFeedback(mealItem.data.Id, "meal", 5)}
+                                disabled={isPastDate(date)}
+                                title={isPastDate(date) ? 'Lịch đã qua, không thể đánh giá' : 'Thích'}
                               >
                                 👍
                               </button>
                               <button
-                                className="action-btn-small dislike"
-                                onClick={() => sendFeedback(mealItem.data.Id, "meal", 2)}
-                                title="Không thích"
+                                className={`action-btn-small dislike ${isPastDate(date) ? 'disabled' : ''}`}
+                                onClick={() => !isPastDate(date) && sendFeedback(mealItem.data.Id, "meal", 2)}
+                                disabled={isPastDate(date)}
+                                title={isPastDate(date) ? 'Lịch đã qua, không thể đánh giá' : 'Không thích'}
                               >
                                 👎
                               </button>
@@ -465,7 +701,13 @@ export default function Planner() {
                               >
                                 ℹ️
                               </button>
-                              <SwapButton item={{ ...mealItem, date }} type="meal" userId={getUserId()} onSwapSuccess={fetchWeeklyPlan} />
+                              <SwapButton 
+                                item={{ ...mealItem, date }} 
+                                type="meal" 
+                                userId={getUserId()} 
+                                onSwapSuccess={fetchWeeklyPlan}
+                                disabled={isPastDate(date) || isSlotPassed(date, mealItem.data?.MealType || mealTimes[idx])}
+                              />
                             </div>
                           </div>
                         ) : (
@@ -509,9 +751,20 @@ export default function Planner() {
                 </td>
                 {dates.map((date) => {
                   const schedule = weeklyPlan[date] || [];
+                  // Tìm workout item - có thể time là "morning_slot" hoặc "morning" hoặc có chứa "morning"
                   const workoutItem = schedule.find(
-                    (item) => item.type === "workout" && item.time === "morning_slot"
+                    (item) => {
+                      if (item.type !== "workout") return false;
+                      const time = (item.time || "").toLowerCase();
+                      return time === "morning_slot" || time === "morning" || time.includes("morning");
+                    }
                   );
+                  
+                  // Debug log nếu thứ 2 không có workout
+                  if (date === dates[0] && !workoutItem && schedule.length > 0) {
+                    console.log(`[DEBUG] Thứ 2 (${date}) schedule:`, schedule.map(s => ({ type: s.type, time: s.time })));
+                  }
+                  
                   return (
                     <td key={date} className="cell-content">
                       {workoutItem ? (
@@ -520,8 +773,12 @@ export default function Planner() {
                             <h3 className="item-title">{workoutItem.data.Name}</h3>
                           </div>
                           <div className="item-meta">
-                            <span className="meta-badge">⏱️ {workoutItem.data.Duration_min} phút</span>
-                            <span className="meta-badge">💪 {workoutItem.data.Intensity}</span>
+                            {workoutItem.data.Duration_min && workoutItem.data.Duration_min > 0 && (
+                              <span className="meta-badge">⏱️ {workoutItem.data.Duration_min} phút</span>
+                            )}
+                            {workoutItem.data.Intensity && (
+                              <span className="meta-badge">💪 {workoutItem.data.Intensity}</span>
+                            )}
                             {workoutItem.feedback_status === 'liked' && (
                               <span className="meta-badge" style={{ background: '#dbeafe', color: '#1e40af' }}>
                                 👍 Đã thích
@@ -533,41 +790,95 @@ export default function Planner() {
                               </span>
                             )}
                           </div>
+                          
+                          {/* Workout Details: Sets/Reps/RestTime */}
+                          {((workoutItem.data.Sets && workoutItem.data.Sets !== '0' && workoutItem.data.Sets !== 0 && workoutItem.data.Sets.toString().trim() !== '') || 
+                            (workoutItem.data.Reps && workoutItem.data.Reps !== '0' && workoutItem.data.Reps !== 0 && workoutItem.data.Reps.toString().trim() !== '' && !workoutItem.data.Reps.toString().trim().endsWith(' 0')) || 
+                            (workoutItem.data.RestTime && workoutItem.data.RestTime > 0)) && (
+                            <div className="workout-details-compact">
+                              {workoutItem.data.Sets && workoutItem.data.Sets !== '0' && workoutItem.data.Sets !== 0 && workoutItem.data.Sets.toString().trim() !== '' && (
+                                <span className="detail-badge">📊 {workoutItem.data.Sets} hiệp</span>
+                              )}
+                              {workoutItem.data.Reps && workoutItem.data.Reps !== '0' && workoutItem.data.Reps !== 0 && workoutItem.data.Reps.toString().trim() !== '' && !workoutItem.data.Reps.toString().trim().endsWith(' 0') && (
+                                <span className="detail-badge">🔄 {workoutItem.data.Reps.toString().replace(/\s+0$/, '').trim()}</span>
+                              )}
+                              {workoutItem.data.RestTime && workoutItem.data.RestTime > 0 && (
+                                <span className="detail-badge">⏱️ {workoutItem.data.RestTime}s nghỉ</span>
+                              )}
+                            </div>
+                          )}
+                          
+                          {/* Primary Muscles - Ẩn trong card, chỉ hiển thị trong modal */}
+                          {/* Safety Warning - Ẩn trong card, chỉ hiển thị trong modal */}
 
-                          { }
                           <button
                             className={`btn-complete ${
                               workoutItem.is_completed 
                                 ? 'completed' 
-                                : isPastDate(date) 
+                                : isSlotPassed(date, workoutItem.time || 'morning') 
                                   ? 'missed' 
                                   : ''
                             }`}
-                            onClick={() => handleComplete(workoutItem.schedule_id)}
-                            disabled={workoutItem.is_completed || isPastDate(date)}
-                            title={isPastDate(date) && !workoutItem.is_completed ? 'Đã quá hạn, không thể đánh dấu hoàn thành' : ''}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              e.stopImmediatePropagation();
+                              const slot = workoutItem.time || 'morning';
+                              const slotReached = isSlotReached(date, slot);
+                              if (!workoutItem.is_completed && workoutItem.schedule_id && !completingIds.has(workoutItem.schedule_id) && slotReached) {
+                                handleComplete(workoutItem.schedule_id, e);
+                              } else if (!workoutItem.schedule_id) {
+                                toast.error('Lỗi: Không tìm thấy ID của item');
+                                console.error('Missing schedule_id for workout:', workoutItem);
+                              } else if (!slotReached) {
+                                if (isFutureDate(date)) {
+                                  toast.error('Chưa đến ngày, không thể đánh dấu hoàn thành');
+                                } else {
+                                  toast.error('Chưa đến giờ của buổi tập này, không thể hoàn thành');
+                                }
+                              }
+                            }}
+                            disabled={workoutItem.is_completed || !workoutItem.schedule_id || completingIds.has(workoutItem.schedule_id) || !isSlotReached(date, workoutItem.time || 'morning')}
+                            title={
+                              workoutItem.is_completed 
+                                ? 'Đã hoàn thành' 
+                                : !isSlotReached(date, workoutItem.time || 'morning')
+                                  ? isFutureDate(date)
+                                    ? 'Chưa đến ngày, không thể hoàn thành'
+                                    : 'Chưa đến giờ của buổi tập này, không thể hoàn thành'
+                                  : completingIds.has(workoutItem.schedule_id) 
+                                    ? 'Đang xử lý...' 
+                                    : !workoutItem.schedule_id 
+                                      ? 'Thiếu thông tin ID' 
+                                      : 'Đánh dấu hoàn thành'
+                            }
                           >
                             {workoutItem.is_completed 
                               ? '✅ Đã tập' 
-                              : isPastDate(date) 
+                              : !isSlotReached(date, workoutItem.time || 'morning')
+                                ? isFutureDate(date)
+                                  ? '⏳ Chưa đến'
+                                  : '⏳ Chưa đến giờ'
+                              : isSlotPassed(date, workoutItem.time || 'morning') 
                                 ? '❌ Bỏ lỡ' 
                                 : '☑️ Hoàn thành'
                             }
                           </button>
 
-                          { }
                           <div className="item-actions-compact">
                             <button
-                              className="action-btn-small like"
-                              onClick={() => sendFeedback(workoutItem.data.Id, "workout", 5)}
-                              title="Thích"
+                              className={`action-btn-small like ${isPastDate(date) ? 'disabled' : ''}`}
+                              onClick={() => !isPastDate(date) && sendFeedback(workoutItem.data.Id, "workout", 5)}
+                              disabled={isPastDate(date)}
+                              title={isPastDate(date) ? 'Lịch đã qua, không thể đánh giá' : 'Thích'}
                             >
                               👍
                             </button>
                             <button
-                              className="action-btn-small dislike"
-                              onClick={() => sendFeedback(workoutItem.data.Id, "workout", 2)}
-                              title="Không thích"
+                              className={`action-btn-small dislike ${isPastDate(date) ? 'disabled' : ''}`}
+                              onClick={() => !isPastDate(date) && sendFeedback(workoutItem.data.Id, "workout", 2)}
+                              disabled={isPastDate(date)}
+                              title={isPastDate(date) ? 'Lịch đã qua, không thể đánh giá' : 'Không thích'}
                             >
                               👎
                             </button>
@@ -578,7 +889,13 @@ export default function Planner() {
                             >
                               ℹ️
                             </button>
-                            <SwapButton item={{ ...workoutItem, date }} type="workout" userId={getUserId()} onSwapSuccess={fetchWeeklyPlan} />
+                            <SwapButton 
+                              item={{ ...workoutItem, date }} 
+                              type="workout" 
+                              userId={getUserId()} 
+                              onSwapSuccess={fetchWeeklyPlan}
+                              disabled={isPastDate(date) || isSlotPassed(date, workoutItem.time || 'morning')}
+                            />
                           </div>
                         </div>
                       ) : (
@@ -595,8 +912,13 @@ export default function Planner() {
                 </td>
                 {dates.map((date) => {
                   const schedule = weeklyPlan[date] || [];
+                  // Tìm workout item - có thể time là "evening_slot" hoặc "evening" hoặc có chứa "evening"
                   const workoutItem = schedule.find(
-                    (item) => item.type === "workout" && item.time === "evening_slot"
+                    (item) => {
+                      if (item.type !== "workout") return false;
+                      const time = (item.time || "").toLowerCase();
+                      return time === "evening_slot" || time === "evening" || time.includes("evening");
+                    }
                   );
                   return (
                     <td key={date} className="cell-content">
@@ -606,8 +928,12 @@ export default function Planner() {
                             <h3 className="item-title">{workoutItem.data.Name}</h3>
                           </div>
                           <div className="item-meta">
-                            <span className="meta-badge">⏱️ {workoutItem.data.Duration_min} phút</span>
-                            <span className="meta-badge">💪 {workoutItem.data.Intensity}</span>
+                            {workoutItem.data.Duration_min && workoutItem.data.Duration_min > 0 && (
+                              <span className="meta-badge">⏱️ {workoutItem.data.Duration_min} phút</span>
+                            )}
+                            {workoutItem.data.Intensity && (
+                              <span className="meta-badge">💪 {workoutItem.data.Intensity}</span>
+                            )}
                             {workoutItem.feedback_status === 'liked' && (
                               <span className="meta-badge" style={{ background: '#dbeafe', color: '#1e40af' }}>
                                 👍 Đã thích
@@ -619,41 +945,95 @@ export default function Planner() {
                               </span>
                             )}
                           </div>
+                          
+                          {/* Workout Details: Sets/Reps/RestTime */}
+                          {((workoutItem.data.Sets && workoutItem.data.Sets !== '0' && workoutItem.data.Sets !== 0 && workoutItem.data.Sets.toString().trim() !== '') || 
+                            (workoutItem.data.Reps && workoutItem.data.Reps !== '0' && workoutItem.data.Reps !== 0 && workoutItem.data.Reps.toString().trim() !== '' && !workoutItem.data.Reps.toString().trim().endsWith(' 0')) || 
+                            (workoutItem.data.RestTime && workoutItem.data.RestTime > 0)) && (
+                            <div className="workout-details-compact">
+                              {workoutItem.data.Sets && workoutItem.data.Sets !== '0' && workoutItem.data.Sets !== 0 && workoutItem.data.Sets.toString().trim() !== '' && (
+                                <span className="detail-badge">📊 {workoutItem.data.Sets} hiệp</span>
+                              )}
+                              {workoutItem.data.Reps && workoutItem.data.Reps !== '0' && workoutItem.data.Reps !== 0 && workoutItem.data.Reps.toString().trim() !== '' && !workoutItem.data.Reps.toString().trim().endsWith(' 0') && (
+                                <span className="detail-badge">🔄 {workoutItem.data.Reps.toString().replace(/\s+0$/, '').trim()}</span>
+                              )}
+                              {workoutItem.data.RestTime && workoutItem.data.RestTime > 0 && (
+                                <span className="detail-badge">⏱️ {workoutItem.data.RestTime}s nghỉ</span>
+                              )}
+                            </div>
+                          )}
+                          
+                          {/* Primary Muscles - Ẩn trong card, chỉ hiển thị trong modal */}
+                          {/* Safety Warning - Ẩn trong card, chỉ hiển thị trong modal */}
 
-                          { }
                           <button
                             className={`btn-complete ${
                               workoutItem.is_completed 
                                 ? 'completed' 
-                                : isPastDate(date) 
+                                : isSlotPassed(date, workoutItem.time || 'morning') 
                                   ? 'missed' 
                                   : ''
                             }`}
-                            onClick={() => handleComplete(workoutItem.schedule_id)}
-                            disabled={workoutItem.is_completed || isPastDate(date)}
-                            title={isPastDate(date) && !workoutItem.is_completed ? 'Đã quá hạn, không thể đánh dấu hoàn thành' : ''}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              e.stopImmediatePropagation();
+                              const slot = workoutItem.time || 'morning';
+                              const slotReached = isSlotReached(date, slot);
+                              if (!workoutItem.is_completed && workoutItem.schedule_id && !completingIds.has(workoutItem.schedule_id) && slotReached) {
+                                handleComplete(workoutItem.schedule_id, e);
+                              } else if (!workoutItem.schedule_id) {
+                                toast.error('Lỗi: Không tìm thấy ID của item');
+                                console.error('Missing schedule_id for workout:', workoutItem);
+                              } else if (!slotReached) {
+                                if (isFutureDate(date)) {
+                                  toast.error('Chưa đến ngày, không thể đánh dấu hoàn thành');
+                                } else {
+                                  toast.error('Chưa đến giờ của buổi tập này, không thể hoàn thành');
+                                }
+                              }
+                            }}
+                            disabled={workoutItem.is_completed || !workoutItem.schedule_id || completingIds.has(workoutItem.schedule_id) || !isSlotReached(date, workoutItem.time || 'morning')}
+                            title={
+                              workoutItem.is_completed 
+                                ? 'Đã hoàn thành' 
+                                : !isSlotReached(date, workoutItem.time || 'morning')
+                                  ? isFutureDate(date)
+                                    ? 'Chưa đến ngày, không thể hoàn thành'
+                                    : 'Chưa đến giờ của buổi tập này, không thể hoàn thành'
+                                  : completingIds.has(workoutItem.schedule_id) 
+                                    ? 'Đang xử lý...' 
+                                    : !workoutItem.schedule_id 
+                                      ? 'Thiếu thông tin ID' 
+                                      : 'Đánh dấu hoàn thành'
+                            }
                           >
                             {workoutItem.is_completed 
                               ? '✅ Đã tập' 
-                              : isPastDate(date) 
+                              : !isSlotReached(date, workoutItem.time || 'morning')
+                                ? isFutureDate(date)
+                                  ? '⏳ Chưa đến'
+                                  : '⏳ Chưa đến giờ'
+                              : isSlotPassed(date, workoutItem.time || 'morning') 
                                 ? '❌ Bỏ lỡ' 
                                 : '☑️ Hoàn thành'
                             }
                           </button>
 
-                          { }
                           <div className="item-actions-compact">
                             <button
-                              className="action-btn-small like"
-                              onClick={() => sendFeedback(workoutItem.data.Id, "workout", 5)}
-                              title="Thích"
+                              className={`action-btn-small like ${isPastDate(date) ? 'disabled' : ''}`}
+                              onClick={() => !isPastDate(date) && sendFeedback(workoutItem.data.Id, "workout", 5)}
+                              disabled={isPastDate(date)}
+                              title={isPastDate(date) ? 'Lịch đã qua, không thể đánh giá' : 'Thích'}
                             >
                               👍
                             </button>
                             <button
-                              className="action-btn-small dislike"
-                              onClick={() => sendFeedback(workoutItem.data.Id, "workout", 2)}
-                              title="Không thích"
+                              className={`action-btn-small dislike ${isPastDate(date) ? 'disabled' : ''}`}
+                              onClick={() => !isPastDate(date) && sendFeedback(workoutItem.data.Id, "workout", 2)}
+                              disabled={isPastDate(date)}
+                              title={isPastDate(date) ? 'Lịch đã qua, không thể đánh giá' : 'Không thích'}
                             >
                               👎
                             </button>
@@ -664,7 +1044,13 @@ export default function Planner() {
                             >
                               ℹ️
                             </button>
-                            <SwapButton item={{ ...workoutItem, date }} type="workout" userId={getUserId()} onSwapSuccess={fetchWeeklyPlan} />
+                            <SwapButton 
+                              item={{ ...workoutItem, date }} 
+                              type="workout" 
+                              userId={getUserId()} 
+                              onSwapSuccess={fetchWeeklyPlan}
+                              disabled={isPastDate(date) || isSlotPassed(date, workoutItem.time || 'morning')}
+                            />
                           </div>
                         </div>
                       ) : (
@@ -699,10 +1085,12 @@ export default function Planner() {
                         <span className="info-label">Môn thể thao:</span>
                         <span className="info-value">{detailItem.data.Sport || "N/A"}</span>
                       </div>
-                      <div className="info-item">
-                        <span className="info-label">Thời lượng:</span>
-                        <span className="info-value">{detailItem.data.Duration_min || 0} phút</span>
-                      </div>
+                      {detailItem.data.Duration_min && detailItem.data.Duration_min > 0 && (
+                        <div className="info-item">
+                          <span className="info-label">Thời lượng:</span>
+                          <span className="info-value">{detailItem.data.Duration_min} phút</span>
+                        </div>
+                      )}
                       <div className="info-item">
                         <span className="info-label">Cường độ:</span>
                         <span className="info-value intensity-badge">{detailItem.data.Intensity || "N/A"}</span>
@@ -715,31 +1103,35 @@ export default function Planner() {
                         <span className="info-label">Dụng cụ:</span>
                         <span className="info-value">{detailItem.data.Equipment || "Không cần"}</span>
                       </div>
-                      <div className="info-item">
-                        <span className="info-label">Calo đốt:</span>
-                        <span className="info-value">🔥 {detailItem.data.CalorieBurn || 0} kcal</span>
-                      </div>
+                      {detailItem.data.CalorieBurn && detailItem.data.CalorieBurn > 0 && (
+                        <div className="info-item">
+                          <span className="info-label">Calo đốt:</span>
+                          <span className="info-value">🔥 {detailItem.data.CalorieBurn} kcal</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   {/* Workout Details */}
-                  {(detailItem.data.Sets || detailItem.data.Reps || detailItem.data.RestTime) && (
+                  {((detailItem.data.Sets && detailItem.data.Sets !== '0' && detailItem.data.Sets !== 0) || 
+                    (detailItem.data.Reps && detailItem.data.Reps !== '0' && detailItem.data.Reps !== 0) || 
+                    (detailItem.data.RestTime && detailItem.data.RestTime > 0)) && (
                     <div className="detail-section">
                       <h4 className="section-title">💪 Chi Tiết Tập Luyện</h4>
                       <div className="info-grid">
-                        {detailItem.data.Sets && (
+                        {detailItem.data.Sets && detailItem.data.Sets !== '0' && detailItem.data.Sets !== 0 && (
                           <div className="info-item">
                             <span className="info-label">Số hiệp:</span>
                             <span className="info-value">{detailItem.data.Sets}</span>
                           </div>
                         )}
-                        {detailItem.data.Reps && (
+                        {detailItem.data.Reps && detailItem.data.Reps !== '0' && detailItem.data.Reps !== 0 && (
                           <div className="info-item">
                             <span className="info-label">Số lần/Thời gian:</span>
                             <span className="info-value">{detailItem.data.Reps}</span>
                           </div>
                         )}
-                        {detailItem.data.RestTime && (
+                        {detailItem.data.RestTime && detailItem.data.RestTime > 0 && (
                           <div className="info-item">
                             <span className="info-label">Nghỉ giữa hiệp:</span>
                             <span className="info-value">⏱️ {detailItem.data.RestTime}s</span>
@@ -858,22 +1250,30 @@ export default function Planner() {
                   <div className="detail-section">
                     <h4 className="section-title">🍽️ Thông Tin Dinh Dưỡng</h4>
                     <div className="info-grid">
-                      <div className="info-item">
-                        <span className="info-label">Calo:</span>
-                        <span className="info-value">🔥 {detailItem.data.Kcal || 0} kcal</span>
-                      </div>
-                      <div className="info-item">
-                        <span className="info-label">Protein:</span>
-                        <span className="info-value">💪 {detailItem.data.Protein || 0}g</span>
-                      </div>
-                      <div className="info-item">
-                        <span className="info-label">Carb:</span>
-                        <span className="info-value">🍚 {detailItem.data.Carb || 0}g</span>
-                      </div>
-                      <div className="info-item">
-                        <span className="info-label">Fat:</span>
-                        <span className="info-value">🥑 {detailItem.data.Fat || 0}g</span>
-                      </div>
+                      {detailItem.data.Kcal && detailItem.data.Kcal > 0 && (
+                        <div className="info-item">
+                          <span className="info-label">Calo:</span>
+                          <span className="info-value">🔥 {detailItem.data.Kcal} kcal</span>
+                        </div>
+                      )}
+                      {detailItem.data.Protein && detailItem.data.Protein > 0 && (
+                        <div className="info-item">
+                          <span className="info-label">Protein:</span>
+                          <span className="info-value">💪 {detailItem.data.Protein}g</span>
+                        </div>
+                      )}
+                      {detailItem.data.Carb && detailItem.data.Carb > 0 && (
+                        <div className="info-item">
+                          <span className="info-label">Carb:</span>
+                          <span className="info-value">🍚 {detailItem.data.Carb}g</span>
+                        </div>
+                      )}
+                      {detailItem.data.Fat && detailItem.data.Fat > 0 && (
+                        <div className="info-item">
+                          <span className="info-label">Fat:</span>
+                          <span className="info-value">🥑 {detailItem.data.Fat}g</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 

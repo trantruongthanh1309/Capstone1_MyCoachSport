@@ -2,11 +2,15 @@ import { useState } from "react";
 import { useToast } from "../contexts/ToastContext";
 import "../pages/PlannerEnhanced.css";
 
-export default function SwapButton({ item, type, onSwapSuccess, userId }) {
+export default function SwapButton({ item, type, onSwapSuccess, userId, disabled = false }) {
     const [swapping, setSwapping] = useState(false);
     const toast = useToast();
 
     const handleSwap = async () => {
+        if (disabled) {
+            toast.error("Đã qua thời gian, không thể đổi được nữa!");
+            return;
+        }
         setSwapping(true);
 
         try {
@@ -105,10 +109,13 @@ export default function SwapButton({ item, type, onSwapSuccess, userId }) {
 
     return (
         <button
-            className={`action-btn swap-btn ${swapping ? 'swapping' : ''}`}
+            className={`action-btn swap-btn ${swapping ? 'swapping' : ''} ${disabled ? 'disabled' : ''}`}
             onClick={handleSwap}
-            title={type === "meal" ? "Đổi món thông minh theo profile" : "Đổi bài tập phù hợp"}
-            disabled={swapping}
+            title={disabled 
+                ? "Đã qua thời gian, không thể đổi được nữa" 
+                : (type === "meal" ? "Đổi món thông minh theo profile" : "Đổi bài tập phù hợp")
+            }
+            disabled={swapping || disabled}
         >
             {swapping ? '⏳' : '🔄'}
         </button>

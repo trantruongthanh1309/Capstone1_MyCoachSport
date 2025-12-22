@@ -126,6 +126,11 @@ const AdminWorkouts = () => {
     }
   };
 
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedSport, selectedDifficulty]);
+
   useEffect(() => {
     fetchWorkouts();
     fetchStats();
@@ -202,7 +207,7 @@ const AdminWorkouts = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Bạn có chắc muốn xóa workout này?')) return;
+    if (!confirm('Bạn có chắc muốn xóa workout này? Hành động này không thể hoàn tác!')) return;
 
     try {
       const response = await fetch(`/api/admin/workouts/${id}`, {
@@ -210,16 +215,18 @@ const AdminWorkouts = () => {
         credentials: 'include'
       });
 
-      if (response.ok) {
-        showToast('Xóa thành công!', 'success');
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        showToast('✅ Xóa thành công!', 'success');
         fetchWorkouts();
         fetchStats();
       } else {
-        showToast('Có lỗi xảy ra', 'error');
+        showToast('❌ Lỗi: ' + (data.error || 'Không thể xóa workout'), 'error');
       }
     } catch (error) {
       console.error('Error:', error);
-      showToast('Có lỗi xảy ra', 'error');
+      showToast('❌ Lỗi kết nối server', 'error');
     }
   };
 

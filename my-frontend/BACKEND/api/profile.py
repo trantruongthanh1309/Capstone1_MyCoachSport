@@ -19,6 +19,7 @@ def to_dict(self):
     }
 @profile_bp.route('', methods=['GET'])
 def get_profile():
+    """Lấy profile của chính mình"""
     user_id_from_session = session.get('user_id')
 
     if not user_id_from_session:
@@ -28,10 +29,19 @@ def get_profile():
     if not user:
         return jsonify({"error": "Không tìm thấy hồ sơ"}), 404
 
+    # Lấy privacy settings
+    try:
+        privacy = json.loads(user.Privacy) if user.Privacy else {}
+    except:
+        privacy = {}
+    
+    # Kiểm tra showEmail setting (với chính mình thì luôn hiển thị email)
+    show_email = privacy.get('showEmail', False)
+    
     return jsonify({
         "Id": user.Id,
         "Name": user.Name,
-        "Email": user.Email,
+        "Email": user.Email,  # Với chính mình thì luôn hiển thị email
         "Age": user.Age,
         "Sex": user.Sex,
         "Height_cm": user.Height_cm,
@@ -39,7 +49,62 @@ def get_profile():
         "Sport": user.Sport,
         "Goal": user.Goal,
         "Sessions_per_week": user.Sessions_per_week,
-        "Avatar": user.Avatar
+        "Avatar": user.Avatar,
+        "privacy": privacy,
+        "is_own_profile": True
+    })
+
+@profile_bp.route('/<int:target_user_id>', methods=['GET'])
+def get_user_profile(target_user_id):
+    """Lấy profile của user khác (public view)"""
+    current_user_id = session.get('user_id')
+    
+    if not current_user_id:
+        return jsonify({"error": "Chưa đăng nhập"}), 401
+    
+    # Nếu xem profile của chính mình, redirect về endpoint chính
+    if target_user_id == current_user_id:
+        return get_profile()
+    
+    target_user = User.query.filter_by(Id=target_user_id).first()
+    if not target_user:
+        return jsonify({"error": "Không tìm thấy người dùng"}), 404
+    
+    # Kiểm tra privacy settings
+    try:
+        privacy = json.loads(target_user.Privacy) if target_user.Privacy else {}
+    except:
+        privacy = {}
+    
+    # Kiểm tra profilePublic
+    profile_public = privacy.get('profilePublic', True)
+    if not profile_public:
+        return jsonify({"error": "Hồ sơ này ở chế độ riêng tư"}), 403
+    
+    # Kiểm tra showEmail setting
+    show_email = privacy.get('showEmail', False)
+    
+    # Kiểm tra showProgress setting
+    show_progress = privacy.get('showProgress', True)
+    
+    return jsonify({
+        "Id": target_user.Id,
+        "Name": target_user.Name,
+        "Email": target_user.Email if show_email else None,  # Ẩn email nếu showEmail = false
+        "Age": target_user.Age if show_progress else None,  # Ẩn age nếu showProgress = false
+        "Sex": target_user.Sex if show_progress else None,  # Ẩn sex nếu showProgress = false
+        "Height_cm": target_user.Height_cm if show_progress else None,  # Ẩn height nếu showProgress = false
+        "Weight_kg": target_user.Weight_kg if show_progress else None,  # Ẩn weight nếu showProgress = false
+        "Sport": target_user.Sport,
+        "Goal": target_user.Goal if show_progress else None,  # Ẩn goal nếu showProgress = false
+        "Sessions_per_week": target_user.Sessions_per_week if show_progress else None,
+        "Avatar": target_user.Avatar,
+        "is_own_profile": False,
+        "privacy": {
+            "showEmail": show_email,
+            "showProgress": show_progress,
+            "profilePublic": profile_public
+        }
     })
 
 @profile_bp.route('/<int:user_id>', methods=['POST'])

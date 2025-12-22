@@ -82,6 +82,20 @@
     pointer-events: none;
 }
 
+.swap-btn.disabled,
+.swap-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+    background: linear-gradient(135deg, #9ca3af, #6b7280);
+}
+
+.swap-btn.disabled:hover,
+.swap-btn:disabled:hover {
+    transform: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
 .swap-modal-overlay {
     position: fixed;
     top: 0;

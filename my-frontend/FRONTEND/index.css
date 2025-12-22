@@ -11,6 +11,31 @@ body {
   background: #ffffff;
   color: #1f2937;
   line-height: 1.6;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Theme Variables */
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+}
+
+/* Dark Theme */
+.theme-dark,
+.theme-dark body {
+  background: #1a1a2e;
+  color: #ffffff;
+  --bg-primary: #1a1a2e;
+  --bg-secondary: #16213e;
+  --text-primary: #ffffff;
+  --text-secondary: #a0aec0;
+}
+
+.theme-dark .app-container {
+  background: #1a1a2e;
+  color: #ffffff;
 }
 
 .app-container {

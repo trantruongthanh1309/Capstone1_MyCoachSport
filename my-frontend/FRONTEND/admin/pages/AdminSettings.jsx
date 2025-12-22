@@ -15,6 +15,13 @@ const AdminSettings = () => {
     apiRateLimit: 1000,
   });
 
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalMeals: 0,
+    totalWorkouts: 0,
+    storageUsed: 0
+  });
+
   // State for Toast notifications
   const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
 
@@ -61,12 +68,17 @@ const AdminSettings = () => {
             totalUsers: data.data.total_users || 0,
             totalMeals: data.data.total_meals || 0,
             totalWorkouts: data.data.total_workouts || 0,
-            storageUsed: 67.5 // Mock data
+            storageUsed: 0 // Will be calculated if needed
           });
         }
+      } else {
+        // If API fails, show default stats
+        setStats(prev => ({ ...prev, totalUsers: 0, totalMeals: 0, totalWorkouts: 0 }));
       }
     } catch (error) {
       console.error('Error fetching stats:', error);
+      // Set default stats on error
+      setStats(prev => ({ ...prev, totalUsers: 0, totalMeals: 0, totalWorkouts: 0 }));
     }
   };
 
@@ -74,7 +86,7 @@ const AdminSettings = () => {
     const { name, value, type, checked } = e.target;
     setSettings(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? checked : (type === 'number' ? Number(value) : value)
     }));
   };
 
@@ -151,8 +163,16 @@ const AdminSettings = () => {
         if (response.ok) {
           const data = await response.json();
           if (data.success) {
-            showToast('✅ Cache đã được xóa!', 'success');
+            const message = data.cleared_sessions 
+              ? `✅ Cache đã được xóa! (Đã xóa ${data.cleared_sessions} session files cũ)`
+              : '✅ Cache đã được xóa!';
+            showToast(message, 'success');
+          } else {
+            showToast('❌ Lỗi: ' + (data.error || 'Không thể xóa cache'), 'error');
           }
+        } else {
+          const data = await response.json().catch(() => ({}));
+          showToast('❌ Lỗi: ' + (data.error || 'Không thể xóa cache'), 'error');
         }
       } catch (error) {
         console.error('Error clearing cache:', error);
@@ -173,8 +193,18 @@ const AdminSettings = () => {
         if (response.ok) {
           const data = await response.json();
           if (data.success) {
-            showToast('✅ Backup đã được khởi động! Kiểm tra server logs.', 'success');
+            showToast(data.message || '✅ Backup đã được khởi động!', 'success');
+            if (data.note) {
+              setTimeout(() => {
+                showToast(data.note, 'info');
+              }, 3000);
+            }
+          } else {
+            showToast('❌ Lỗi: ' + (data.error || 'Không thể tạo backup'), 'error');
           }
+        } else {
+          const data = await response.json().catch(() => ({}));
+          showToast('❌ Lỗi: ' + (data.error || 'Không thể tạo backup'), 'error');
         }
       } catch (error) {
         console.error('Error backing up:', error);
@@ -236,7 +266,7 @@ const AdminSettings = () => {
                 <div className="stat-card">
                   <div className="stat-icon">💾</div>
                   <div className="stat-info">
-                    <div className="stat-value">{stats.storageUsed.toFixed(1)} MB</div>
+                    <div className="stat-value">{stats.storageUsed > 0 ? stats.storageUsed.toFixed(1) : '0.0'} MB</div>
                     <div className="stat-label">DUNG LƯỢNG</div>
                   </div>
                 </div>

@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../pages/NewsFeed.css";
 import { validateComment } from "../utils/validation";
+import { useToast } from "../contexts/ToastContext";
 
 
 const SPORT_ICONS = {
@@ -29,6 +31,8 @@ const TOPIC_LABELS = {
 };
 
 export default function PostCard({ post, currentUserId, onStartChat, onShare }) {
+    const navigate = useNavigate();
+    const toast = useToast();
     const [isLiked, setIsLiked] = useState(post.is_liked);
     const [likesCount, setLikesCount] = useState(post.likes_count);
     const [showComments, setShowComments] = useState(false);
@@ -85,7 +89,7 @@ export default function PostCard({ post, currentUserId, onStartChat, onShare }) 
         // Validate comment
         const commentValidation = validateComment(commentContent);
         if (!commentValidation.valid) {
-            alert(commentValidation.message);
+            toast.error(`❌ ${commentValidation.message}`);
             return;
         }
 
@@ -100,9 +104,18 @@ export default function PostCard({ post, currentUserId, onStartChat, onShare }) 
             if (data.success) {
                 setComments([data.comment, ...comments]);
                 setCommentContent("");
+                toast.success("✅ Đã thêm bình luận");
+            } else {
+                // Xử lý lỗi từ backend (bad words, etc.)
+                if (data.code === 'BAD_WORDS') {
+                    toast.error(`🚫 ${data.error || 'Bình luận chứa từ ngữ không phù hợp'}`);
+                } else {
+                    toast.error(`❌ ${data.error || 'Không thể thêm bình luận'}`);
+                }
             }
         } catch (err) {
             console.error("Error posting comment:", err);
+            toast.error("❌ Lỗi kết nối khi thêm bình luận");
         }
     };
 
@@ -123,10 +136,27 @@ export default function PostCard({ post, currentUserId, onStartChat, onShare }) 
                     src={post.user_avatar || "https://via.placeholder.com/45"}
                     alt="Avatar"
                     className="user-avatar"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        if (post.user_id) {
+                            navigate(`/profile/${post.user_id}`);
+                        }
+                    }}
+                    style={{ cursor: 'pointer' }}
                 />
                 <div className="post-info">
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <h4>{post.user_name}</h4>
+                        <h4 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (post.user_id) {
+                                    navigate(`/profile/${post.user_id}`);
+                                }
+                            }}
+                            style={{ cursor: 'pointer', margin: 0 }}
+                        >
+                            {post.user_name}
+                        </h4>
                         {post.user_id !== currentUserId && (
                             <button
                                 className="msg-icon-btn"
@@ -229,10 +259,27 @@ export default function PostCard({ post, currentUserId, onStartChat, onShare }) 
                                     src={comment.user_avatar || "https://via.placeholder.com/32"}
                                     alt="Avatar"
                                     className="user-avatar"
-                                    style={{ width: 32, height: 32 }}
+                                    style={{ width: 32, height: 32, cursor: 'pointer' }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (comment.user_id) {
+                                            navigate(`/profile/${comment.user_id}`);
+                                        }
+                                    }}
                                 />
                                 <div className="comment-bubble">
-                                    <div className="comment-user">{comment.user_name}</div>
+                                    <div 
+                                        className="comment-user"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (comment.user_id) {
+                                                navigate(`/profile/${comment.user_id}`);
+                                            }
+                                        }}
+                                        style={{ cursor: 'pointer' }}
+                                    >
+                                        {comment.user_name}
+                                    </div>
                                     <div className="comment-text">{comment.content}</div>
                                 </div>
                             </div>

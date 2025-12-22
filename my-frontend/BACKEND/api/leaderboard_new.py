@@ -88,7 +88,7 @@ def get_my_workouts():
 
 @leaderboard_bp.route('/complete-schedule-item', methods=['POST'])
 def complete_schedule_item():
-    """Đánh dấu hoàn thành item trong schedule (workout hoặc meal)"""
+    """Đánh dấu hoàn thành item trong schedule (workout hoặc meal) - CHỈ MỘT ITEM"""
     user_id = session.get('user_id')
     if not user_id:
         return jsonify({'error': 'Chưa đăng nhập'}), 401
@@ -100,10 +100,46 @@ def complete_schedule_item():
         if not schedule_id:
             return jsonify({'error': 'Thiếu schedule_id'}), 400
         
+        # Validate schedule_id là số
+        try:
+            schedule_id = int(schedule_id)
+        except (ValueError, TypeError):
+            return jsonify({'error': 'schedule_id không hợp lệ'}), 400
+        
+        # Kiểm tra xem item có tồn tại và thuộc về user này không
+        check_query = text("""
+            SELECT Id, UserId, Type, MealId, WorkoutId, Date, Slot, IsCompleted
+            FROM UserPlans
+            WHERE Id = :schedule_id
+        """)
+        existing_item = db.session.execute(check_query, {'schedule_id': schedule_id}).first()
+        
+        if not existing_item:
+            return jsonify({'error': 'Không tìm thấy schedule item'}), 404
+        
+        # Kiểm tra user_id có khớp không
+        if existing_item.UserId != user_id:
+            return jsonify({'error': 'Không có quyền thực hiện hành động này'}), 403
+        
+        # Kiểm tra đã completed chưa (check cả True và 1)
+        is_already_completed = existing_item.IsCompleted
+        if isinstance(is_already_completed, bool) and is_already_completed:
+            return jsonify({'success': True, 'message': 'Item đã được hoàn thành trước đó'}), 200
+        elif isinstance(is_already_completed, (int, str)) and str(is_already_completed) in ['1', 'True', 'true']:
+            return jsonify({'success': True, 'message': 'Item đã được hoàn thành trước đó'}), 200
+        
+        # UPDATE CHỈ MỘT RECORD - đảm bảo bằng cách check lại user_id
+        # SQL Server dùng bit (0/1), không phải boolean
+        # THÊM logging để debug
+        print(f"🔍 [COMPLETE DEBUG] Attempting to complete schedule_id={schedule_id} for user_id={user_id}")
+        print(f"🔍 [COMPLETE DEBUG] Existing item: Type={existing_item.Type}, Date={existing_item.Date}, Slot={existing_item.Slot}, IsCompleted={existing_item.IsCompleted}")
+        
         update_query = text("""
             UPDATE UserPlans
             SET IsCompleted = 1
-            WHERE Id = :schedule_id AND UserId = :user_id AND (IsCompleted = 0 OR IsCompleted IS NULL)
+            WHERE Id = :schedule_id 
+            AND UserId = :user_id 
+            AND (IsCompleted = 0 OR IsCompleted IS NULL)
         """)
         
         result = db.session.execute(update_query, {
@@ -112,8 +148,25 @@ def complete_schedule_item():
         })
         db.session.commit()
         
+        print(f"🔍 [COMPLETE DEBUG] Update result: rowcount={result.rowcount}")
+        
+        # Kiểm tra lại để đảm bảo chỉ update đúng 1 record
         if result.rowcount == 0:
-            return jsonify({'error': 'Không tìm thấy schedule item hoặc đã hoàn thành rồi'}), 404
+            # Có thể đã bị completed bởi request khác, hoặc có vấn đề khác
+            # Check lại để xem có phải đã completed không
+            recheck_query = text("""
+                SELECT IsCompleted FROM UserPlans WHERE Id = :schedule_id
+            """)
+            recheck = db.session.execute(recheck_query, {'schedule_id': schedule_id}).first()
+            if recheck and (recheck.IsCompleted == 1 or recheck.IsCompleted == True):
+                return jsonify({'success': True, 'message': 'Item đã được hoàn thành'}), 200
+            return jsonify({'error': 'Không thể cập nhật item. Vui lòng thử lại.'}), 400
+        elif result.rowcount > 1:
+            # Điều này không nên xảy ra, nhưng nếu có thì rollback
+            db.session.rollback()
+            return jsonify({'error': 'Lỗi hệ thống: Nhiều records bị ảnh hưởng'}), 500
+        
+        print(f"✅ [COMPLETE] User {user_id} completed schedule item {schedule_id} (Type: {existing_item.Type}, Date: {existing_item.Date})")
         
         item_query = text("""
             SELECT Type, MealId, WorkoutId, Date, Slot
@@ -125,33 +178,18 @@ def complete_schedule_item():
         if not item:
             return jsonify({'error': 'Không tìm thấy schedule item'}), 404
         
-        # Kiểm tra thời gian - chỉ cho phép đánh dấu hoàn thành khi đã đến/quá giờ
+        # Kiểm tra thời gian - cho phép đánh dấu hoàn thành cho ngày trong quá khứ hoặc hôm nay
+        # Bỏ check thời gian cụ thể để user có thể hoàn thành sớm hoặc muộn
         from datetime import time as dt_time
         now = datetime.now()
         # item là Row object từ SQL query: (Type[0], MealId[1], WorkoutId[2], Date[3], Slot[4])
         item_date = item[3]  # Date ở index 3
         slot = item[4]  # Slot ở index 4
         
-        # Xác định giờ bắt đầu của slot
-        slot_times = {
-            'morning': dt_time(7, 0),    # 07:00
-            'afternoon': dt_time(12, 0),  # 12:00
-            'evening': dt_time(19, 0)     # 19:00
-        }
-        
-        slot_time = slot_times.get(slot.lower() if slot else '')
-        
-        if slot_time:
-            # So sánh với ngày và giờ của item
-            item_datetime = datetime.combine(item_date, slot_time)
-            
-            # Cho phép đánh dấu hoàn thành nếu:
-            # 1. Ngày đã qua (quá khứ)
-            # 2. Hoặc cùng ngày và giờ hiện tại >= giờ của slot
-            if now.date() < item_date:
-                return jsonify({'error': 'Chưa đến ngày, không thể đánh dấu hoàn thành'}), 400
-            elif now.date() == item_date and now.time() < slot_time:
-                return jsonify({'error': 'Chưa đến giờ, không thể đánh dấu hoàn thành'}), 400
+        # Chỉ chặn nếu ngày ở tương lai (chưa đến)
+        # Cho phép complete cho ngày hôm nay hoặc quá khứ
+        if item_date and now.date() < item_date:
+            return jsonify({'error': 'Chưa đến ngày, không thể đánh dấu hoàn thành'}), 400
         
         points = 0
         

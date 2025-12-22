@@ -34,8 +34,16 @@ export default function AdminUsers() {
   };
 
   useEffect(() => {
-    fetchUsers();
     fetchFilters();
+    fetchUsers();
+  }, []);
+
+  useEffect(() => {
+    // Skip initial mount to avoid double fetch
+    if (pagination.page === 1 && !filters.search && !filters.sport && !filters.goal) {
+      return;
+    }
+    fetchUsers();
   }, [pagination.page, filters]);
 
   const fetchUsers = async () => {
@@ -143,6 +151,8 @@ export default function AdminUsers() {
   };
 
   const handleAdd = () => {
+    // Clear search filter to prevent any autofill interference
+    setFilters({ search: '', sport: '', goal: '' });
     setNewUser({
       name: '',
       email: '',
@@ -259,8 +269,11 @@ export default function AdminUsers() {
           <input
             type="text"
             placeholder="🔍 Tìm kiếm tên hoặc email..."
-            value={filters.search}
+            value={filters.search || ''}
             onChange={handleSearch}
+            autoComplete="off"
+            name="user-search"
+            id="user-search"
           />
         </div>
 
@@ -436,19 +449,27 @@ export default function AdminUsers() {
                 </div>
                 <div className="form-group">
                   <label>Môn thể thao</label>
-                  <input
-                    type="text"
+                  <select
                     value={selectedUser.sport || ''}
                     onChange={(e) => setSelectedUser({ ...selectedUser, sport: e.target.value })}
-                  />
+                  >
+                    <option value="">Chọn môn thể thao</option>
+                    {sports.map(sport => (
+                      <option key={sport} value={sport}>{sport}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="form-group">
                   <label>Mục tiêu</label>
-                  <input
-                    type="text"
+                  <select
                     value={selectedUser.goal || ''}
                     onChange={(e) => setSelectedUser({ ...selectedUser, goal: e.target.value })}
-                  />
+                  >
+                    <option value="">Chọn mục tiêu</option>
+                    {goals.map(goal => (
+                      <option key={goal} value={goal}>{goal}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="form-group">
                   <label>Role</label>
@@ -510,6 +531,9 @@ export default function AdminUsers() {
                     value={newUser.email}
                     onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
                     placeholder="example@email.com"
+                    autoComplete="new-password"
+                    name="new-user-email"
+                    id="new-user-email"
                   />
                 </div>
                 <div className="form-group">
@@ -562,21 +586,27 @@ export default function AdminUsers() {
                 </div>
                 <div className="form-group">
                   <label>Môn thể thao</label>
-                  <input
-                    type="text"
+                  <select
                     value={newUser.sport}
                     onChange={(e) => setNewUser({ ...newUser, sport: e.target.value })}
-                    placeholder="Nhập môn thể thao"
-                  />
+                  >
+                    <option value="">Chọn môn thể thao</option>
+                    {sports.map(sport => (
+                      <option key={sport} value={sport}>{sport}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="form-group">
                   <label>Mục tiêu</label>
-                  <input
-                    type="text"
+                  <select
                     value={newUser.goal}
                     onChange={(e) => setNewUser({ ...newUser, goal: e.target.value })}
-                    placeholder="Nhập mục tiêu"
-                  />
+                  >
+                    <option value="">Chọn mục tiêu</option>
+                    {goals.map(goal => (
+                      <option key={goal} value={goal}>{goal}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="form-group">
                   <label>Role</label>

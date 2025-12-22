@@ -269,6 +269,66 @@ body {
   user-select: none;
 }
 
+/* Workout Details Compact */
+.workout-details-compact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+  margin-top: 4px;
+}
+
+.detail-badge {
+  background: #dbeafe;
+  border: 1px solid #93c5fd;
+  color: #1e40af;
+  font-size: 0.75rem;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Muscles Compact */
+.muscles-compact {
+  margin-bottom: 8px;
+  margin-top: 4px;
+}
+
+.muscle-label {
+  display: inline-block;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  color: #92400e;
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+/* Safety Compact */
+.safety-compact {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
+  margin-top: 4px;
+  padding: 4px 8px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 4px;
+}
+
+.safety-icon {
+  font-size: 0.8rem;
+}
+
+.safety-text {
+  font-size: 0.7rem;
+  color: #991b1b;
+  font-weight: 600;
+}
+
 /* Unified Complete Button */
 .btn-complete {
   width: 100%;
@@ -355,6 +415,19 @@ body {
   color: #3b82f6;
   border-color: #3b82f6;
   background: #eff6ff;
+}
+
+.action-btn-small.disabled,
+.action-btn-small:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.action-btn-small.disabled:hover,
+.action-btn-small:disabled:hover {
+  transform: none;
+  background-color: inherit;
 }
 
 .empty-cell {

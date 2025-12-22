@@ -1,6 +1,8 @@
 from flask import Blueprint, request, jsonify
 from .admin_middleware import require_admin
 from models.workout import Workout
+from models.user_plan import UserPlan
+from models.user_schedule import UserSchedule
 from db import db
 from datetime import datetime
 
@@ -24,13 +26,10 @@ def get_workouts():
         if search:
             query = query.filter(Workout.Name.contains(search))
         if sport:
-            query = query.filter(
-                db.or_(
-                    Workout.Sport.contains(sport),
-                    Workout.AITags.contains(sport)
-                )
-            )
+            # Match exact sport value
+            query = query.filter(Workout.Sport == sport)
         if difficulty:
+            # Match exact difficulty value
             query = query.filter(Workout.Difficulty == difficulty)
         if is_active is not None:
             query = query.filter(Workout.IsActive == (is_active.lower() == 'true'))
@@ -165,15 +164,33 @@ def delete_workout(workout_id):
     
     try:
         workout = Workout.query.get_or_404(workout_id)
-        # Soft delete instead of hard delete
-        workout.IsActive = False
-        workout.UpdatedAt = datetime.utcnow()
+        
+        # Count related records
+        user_plans_count = UserPlan.query.filter_by(WorkoutId=workout_id).count()
+        user_schedules_count = UserSchedule.query.filter_by(WorkoutId=workout_id).count()
+        
+        # Delete or update related records
+        if user_plans_count > 0:
+            # Delete UserPlans that reference this workout
+            UserPlan.query.filter_by(WorkoutId=workout_id).delete()
+        
+        if user_schedules_count > 0:
+            # Delete UserSchedules that reference this workout
+            UserSchedule.query.filter_by(WorkoutId=workout_id).delete()
+        
+        # Now delete the workout
+        db.session.delete(workout)
         db.session.commit()
         
-        return jsonify({'success': True, 'message': 'Workout deactivated'}), 200
+        message = f'Workout đã được xóa vĩnh viễn'
+        if user_plans_count > 0 or user_schedules_count > 0:
+            message += f' (đã xóa {user_plans_count + user_schedules_count} bản ghi liên quan)'
+        
+        return jsonify({'success': True, 'message': message}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({'success': False, 'error': str(e)}), 500
+        print(f"Error deleting workout {workout_id}: {e}")
+        return jsonify({'success': False, 'error': f'Không thể xóa workout: {str(e)}'}), 500
 
 @workouts_admin_bp.route('/api/admin/workouts/<int:workout_id>/hard-delete', methods=['DELETE'])
 def hard_delete_workout(workout_id):

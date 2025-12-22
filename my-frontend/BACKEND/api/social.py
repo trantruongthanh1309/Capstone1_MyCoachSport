@@ -3,6 +3,7 @@ from models.social_models import Post, Comment, Like, Share, Conversation, Messa
 from models.user_model import User
 from db import db
 from datetime import datetime
+import json
 
 social_bp = Blueprint('social', __name__, url_prefix='/api/social')
 
@@ -129,6 +130,8 @@ def create_comment(post_id):
         return jsonify({'error': 'Chưa đăng nhập'}), 401
     
     try:
+        from utils.bad_words_filter import contains_bad_words
+        
         data = request.get_json()
         content = data.get('content', '').strip()
         
@@ -138,6 +141,15 @@ def create_comment(post_id):
         # Validate comment length
         if len(content) > 1000:
             return jsonify({'error': 'Bình luận không được quá 1000 ký tự'}), 400
+        
+        # Kiểm tra từ ngữ khiếm nhã
+        has_bad_words, bad_word = contains_bad_words(content)
+        if has_bad_words:
+            return jsonify({
+                'error': 'Bình luận chứa từ ngữ không phù hợp. Vui lòng sử dụng ngôn ngữ lịch sự.',
+                'code': 'BAD_WORDS',
+                'bad_word': bad_word
+            }), 400
 
         comment = Comment(
             Post_id=post_id,
@@ -277,12 +289,33 @@ def get_or_create_conversation(user2_id):
 
 @social_bp.route('/conversations/<int:conversation_id>/messages', methods=['POST'])
 def send_message(conversation_id):
-    """Gửi tin nhắn (có thể kèm shared post)"""
+    """Gửi tin nhắn (có thể kèm shared post) - Kiểm tra privacy settings"""
     user_id = session.get('user_id')
     if not user_id:
         return jsonify({'error': 'Chưa đăng nhập'}), 401
     
     try:
+        # Lấy conversation để tìm recipient
+        conversation = Conversation.query.get(conversation_id)
+        if not conversation:
+            return jsonify({'error': 'Không tìm thấy cuộc trò chuyện'}), 404
+        
+        # Xác định người nhận (user khác, không phải người gửi)
+        recipient_id = conversation.User1_id if conversation.User2_id == user_id else conversation.User2_id
+        
+        # Kiểm tra privacy settings của người nhận
+        recipient = User.query.get(recipient_id)
+        if recipient:
+            try:
+                privacy = json.loads(recipient.Privacy) if recipient.Privacy else {}
+                if not privacy.get('allowMessages', True):
+                    return jsonify({
+                        'error': 'Người này đã chặn nhận tin nhắn. Bạn không thể gửi tin nhắn cho họ.',
+                        'code': 'MESSAGES_BLOCKED'
+                    }), 403
+            except:
+                pass  # Nếu không parse được privacy, cho phép gửi (default)
+        
         data = request.get_json()
         content = data.get('content', '')
         shared_post_id = data.get('shared_post_id')
@@ -298,7 +331,6 @@ def send_message(conversation_id):
         )
         db.session.add(message)
         
-        conversation = Conversation.query.get(conversation_id)
         if conversation:
             conversation.LastMessageAt = datetime.utcnow()
         

@@ -8,16 +8,7 @@ export default function Leaderboard() {
   const [myStats, setMyStats] = useState(null);
   const [achievements, setAchievements] = useState([]);
   const [activeTab, setActiveTab] = useState('rankings');
-  const [showLogModal, setShowLogModal] = useState(false);
   const toast = useToast();
-
-  const [workoutForm, setWorkoutForm] = useState({
-    workout_name: '',
-    sport: '',
-    duration_minutes: 30,
-    calories_burned: 0,
-    difficulty: 'Medium'
-  });
 
   useEffect(() => {
     fetchRankings();
@@ -67,36 +58,6 @@ export default function Leaderboard() {
     }
   };
 
-  const handleLogWorkout = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await fetch('/api/leaderboard/log-workout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(workoutForm)
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success(data.message);
-        setShowLogModal(false);
-        setWorkoutForm({
-          workout_name: '',
-          sport: '',
-          duration_minutes: 30,
-          calories_burned: 0,
-          difficulty: 'Medium'
-        });
-        fetchRankings();
-        fetchMyStats();
-        fetchAchievements();
-      } else {
-        toast.error(data.error || 'Lỗi khi ghi nhận bài tập');
-      }
-    } catch (err) {
-      toast.error('Lỗi kết nối');
-    }
-  };
 
   const getRankColor = (rank) => {
     if (rank === 1) return '#FFD700';
@@ -118,9 +79,6 @@ export default function Leaderboard() {
       <div className="leaderboard-header">
         <h1 className="leaderboard-title">🏆 Bảng Xếp Hạng</h1>
         <p className="leaderboard-subtitle">Cạnh tranh và chinh phục đỉnh cao!</p>
-        <button className="btn-log-workout" onClick={() => setShowLogModal(true)}>
-          ➕ Ghi nhận bài tập
-        </button>
       </div>
 
       {}
@@ -250,78 +208,6 @@ export default function Leaderboard() {
         </div>
       )}
 
-      {}
-      {showLogModal && (
-        <div className="modal-overlay" onClick={() => setShowLogModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Ghi nhận bài tập</h2>
-              <button className="modal-close" onClick={() => setShowLogModal(false)}>✕</button>
-            </div>
-            <form onSubmit={handleLogWorkout}>
-              <div className="form-group">
-                <label>Tên bài tập *</label>
-                <input
-                  type="text"
-                  value={workoutForm.workout_name}
-                  onChange={(e) => setWorkoutForm({ ...workoutForm, workout_name: e.target.value })}
-                  placeholder="VD: Chạy bộ buổi sáng"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Môn thể thao</label>
-                <select
-                  value={workoutForm.sport}
-                  onChange={(e) => setWorkoutForm({ ...workoutForm, sport: e.target.value })}
-                >
-                  <option value="">-- Chọn môn --</option>
-                  <option value="Bóng đá">Bóng đá</option>
-                  <option value="Bơi lội">Bơi lội</option>
-                  <option value="Chạy bộ">Chạy bộ</option>
-                  <option value="Gym">Gym</option>
-                  <option value="Yoga">Yoga</option>
-                  <option value="Cầu lông">Cầu lông</option>
-                  <option value="Bóng rổ">Bóng rổ</option>
-                </select>
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Thời gian (phút)</label>
-                  <input
-                    type="number"
-                    value={workoutForm.duration_minutes}
-                    onChange={(e) => setWorkoutForm({ ...workoutForm, duration_minutes: parseInt(e.target.value) })}
-                    min="1"
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Calo đốt cháy</label>
-                  <input
-                    type="number"
-                    value={workoutForm.calories_burned}
-                    onChange={(e) => setWorkoutForm({ ...workoutForm, calories_burned: parseInt(e.target.value) })}
-                    min="0"
-                  />
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Độ khó</label>
-                <select
-                  value={workoutForm.difficulty}
-                  onChange={(e) => setWorkoutForm({ ...workoutForm, difficulty: e.target.value })}
-                >
-                  <option value="Easy">Dễ (x1.0)</option>
-                  <option value="Medium">Trung bình (x1.5)</option>
-                  <option value="Hard">Khó (x2.0)</option>
-                  <option value="Expert">Chuyên gia (x3.0)</option>
-                </select>
-              </div>
-              <button type="submit" className="btn-submit">Ghi nhận</button>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

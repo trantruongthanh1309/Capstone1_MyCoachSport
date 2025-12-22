@@ -108,7 +108,41 @@ def get_goals_filter():
 
     try:
         goals = db.session.query(User.Goal).distinct().filter(User.Goal.isnot(None)).all()
-        return jsonify({'success': True, 'data': [g[0] for g in goals if g[0]]}), 200
+        goal_list = [g[0] for g in goals if g[0]]
+        
+        # Normalize and deduplicate goals
+        # Standard goals mapping
+        goal_mapping = {
+            'duy trì': 'Duy trì cân nặng',
+            'duy trì cân nặng': 'Duy trì cân nặng',
+            'tang co': 'Tăng cơ',
+            'tăng cơ': 'Tăng cơ',
+            'giảm cân': 'Giảm cân',
+            'giam can': 'Giảm cân',
+        }
+        
+        normalized_goals = set()
+        for goal in goal_list:
+            if not goal:
+                continue
+            
+            # Skip goals with encoding errors (contain '?')
+            if '?' in goal:
+                continue
+            
+            # Normalize: lowercase and strip
+            goal_lower = goal.lower().strip()
+            
+            # Map to standard form
+            if goal_lower in goal_mapping:
+                normalized_goals.add(goal_mapping[goal_lower])
+            else:
+                # Keep original if it's a valid goal (capitalize first letter)
+                normalized_goals.add(goal.strip())
+        
+        # Sort and return
+        sorted_goals = sorted(list(normalized_goals))
+        return jsonify({'success': True, 'data': sorted_goals}), 200
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 

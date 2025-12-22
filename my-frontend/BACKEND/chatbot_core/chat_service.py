@@ -157,8 +157,11 @@ def handle_calc_tdee(user_context):
     # Simplified TDEE response
     return "Tính TDEE: Bạn hãy vào phần Profile để xem chi tiết nhé, mình đã tính sẵn trong đó rồi! 📊"
 
-def handle_schedule_query(user_context):
-    """Trả lời về lịch tập/ăn (KHÔNG bao gồm lịch bận)"""
+def handle_schedule_query(user_context, filter_type=None):
+    """
+    Trả lời về lịch tập/ăn (KHÔNG bao gồm lịch bận)
+    filter_type: None (tất cả), 'workout' (chỉ tập), 'meal' (chỉ ăn)
+    """
     if not user_context or not user_context.get('id'):
         return "Bạn cần đăng nhập để mình xem lịch giúp nhé! 🔒"
     
@@ -203,11 +206,29 @@ def handle_schedule_query(user_context):
                      if w: msg += f"💪 {time_str}: Tập {w.Name}\n"
                  elif s.MealId:
                      m = Meal.query.get(s.MealId)
-                     if m: msg += f"🥗 {time_str}: Ăn {m.Name} ({m.Calories} kcal)\n"
+                     if m: msg += f"🥗 {time_str}: Ăn {m.Name} ({m.Kcal} kcal)\n"
             return msg
 
 
-        msg = f"📅 **Lịch hôm nay của {user_context['name']}:**\n\n"
+        # Filter plans based on filter_type
+        if filter_type == 'workout':
+            plans = [p for p in plans if p.Type == 'workout']
+            msg_prefix = f"💪 **Lịch tập hôm nay của {user_context['name']}:**\n\n"
+        elif filter_type == 'meal':
+            plans = [p for p in plans if p.Type == 'meal']
+            msg_prefix = f"🍽️ **Lịch ăn hôm nay của {user_context['name']}:**\n\n"
+        else:
+            msg_prefix = f"📅 **Lịch hôm nay của {user_context['name']}:**\n\n"
+        
+        if not plans:
+            if filter_type == 'workout':
+                return f"Hôm nay {user_context['name']} chưa có lịch tập. Vào Planner tạo lịch ngay nhé! 💪"
+            elif filter_type == 'meal':
+                return f"Hôm nay {user_context['name']} chưa có lịch ăn. Vào Planner tạo lịch ngay nhé! 🍽️"
+            else:
+                return f"Hôm nay {user_context['name']} chưa có lịch. Vào Planner tạo lịch ngay nhé! 📅"
+        
+        msg = msg_prefix
         slot_order = {'morning': 1, 'afternoon': 2, 'evening': 3}
         plans.sort(key=lambda x: slot_order.get(x.Slot, 4))
 
@@ -218,6 +239,7 @@ def handle_schedule_query(user_context):
         }
         
         current_slot = None
+        has_content = False
         for plan in plans:
             display_slot = slot_names.get(plan.Slot, plan.Slot)
             if plan.Slot != current_slot:
@@ -227,21 +249,37 @@ def handle_schedule_query(user_context):
             if plan.Type == 'meal' and plan.MealId:
                 meal = Meal.query.get(plan.MealId)
                 if meal:
-                    msg += f"   - 🍽️ {meal.Name} ({meal.Calories} kcal)\n"
+                    msg += f"   - 🍽️ {meal.Name} ({meal.Kcal} kcal)\n"
+                    has_content = True
             elif plan.Type == 'workout' and plan.WorkoutId:
                 workout = Workout.query.get(plan.WorkoutId)
                 if workout:
                     msg += f"   - 💪 {workout.Name}\n"
+                    has_content = True
+        
+        if not has_content:
+            if filter_type == 'workout':
+                return f"Hôm nay {user_context['name']} chưa có lịch tập. Vào Planner tạo lịch ngay nhé! 💪"
+            elif filter_type == 'meal':
+                return f"Hôm nay {user_context['name']} chưa có lịch ăn. Vào Planner tạo lịch ngay nhé! 🍽️"
         
         return msg
     except Exception as e:
         print(f"Error in handle_schedule_query: {e}")
         return "Có lỗi khi lấy lịch. Bạn thử lại sau nhé! ⚠️"
 
-def handle_schedule_query_smart(user_context):
+def handle_schedule_query_smart(user_context, message=""):
+    # Detect filter type from message
+    message_lower = message.lower() if message else ""
+    filter_type = None
+    if "tập" in message_lower and "ăn" not in message_lower and "thực đơn" not in message_lower:
+        filter_type = 'workout'
+    elif ("ăn" in message_lower or "thực đơn" in message_lower or "bữa" in message_lower) and "tập" not in message_lower:
+        filter_type = 'meal'
+    
     # Reuse original logic but add advice
-    base_msg = handle_schedule_query(user_context)
-    if "Lịch trống" in base_msg or "đăng nhập" in base_msg:
+    base_msg = handle_schedule_query(user_context, filter_type=filter_type)
+    if "Lịch trống" in base_msg or "chưa có" in base_msg or "đăng nhập" in base_msg or "Có lỗi" in base_msg or "lỗi" in base_msg.lower():
         return base_msg
         
     # Analyze for advice
@@ -479,7 +517,11 @@ def get_response(msg, user_context=None):
 
     if prob.item() > 0.75:
         if tag in INTENT_HANDLERS and user_context:
-            return INTENT_HANDLERS[tag](user_context)
+            handler = INTENT_HANDLERS[tag]
+            # Pass message to schedule handlers for context
+            if tag in ["schedule", "check_today_schedule", "check_week_schedule"]:
+                return handler(user_context, msg)
+            return handler(user_context)
             
         for intent in intents['intents']:
             if tag == intent['tag']:

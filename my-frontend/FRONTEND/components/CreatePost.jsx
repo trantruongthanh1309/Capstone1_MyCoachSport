@@ -149,14 +149,6 @@ export default function CreatePost({ onPostCreated, userAvatar }) {
                         Chia sẻ hành trình tập luyện của bạn...
                     </div>
                 </div>
-                <div className="create-post-actions">
-                    <button className="action-btn" onClick={() => setIsOpen(true)}>
-                        📷 Ảnh/Video
-                    </button>
-                    <button className="action-btn" onClick={() => setIsOpen(true)}>
-                        💪 Check-in
-                    </button>
-                </div>
             </div>
 
             {isOpen && createPortal(

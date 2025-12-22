@@ -1,7 +1,11 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "../contexts/ToastContext";
 import "../pages/NewsFeed.css";
 
 export default function Messenger({ currentUserId, startChatWithUser }) {
+    const navigate = useNavigate();
+    const toast = useToast();
     const [conversations, setConversations] = useState([]);
     const [activeChat, setActiveChat] = useState(null);
     const [messages, setMessages] = useState([]);
@@ -72,6 +76,13 @@ export default function Messenger({ currentUserId, startChatWithUser }) {
                 setMessages([...messages, data.message]);
                 setMsgContent("");
                 loadConversations();
+            } else {
+                // Hiển thị lỗi nếu bị chặn
+                if (data.code === 'MESSAGES_BLOCKED') {
+                    toast.error(`🔒 ${data.error || 'Không thể gửi tin nhắn'}`);
+                } else {
+                    toast.error(`❌ ${data.error || 'Không thể gửi tin nhắn'}`);
+                }
             }
         } catch (err) {
             console.error("Error sending message:", err);
@@ -153,9 +164,17 @@ export default function Messenger({ currentUserId, startChatWithUser }) {
                             <div
                                 key={conv.id}
                                 className={`conversation-item ${activeChat?.id === conv.id ? 'active' : ''}`}
-                                onClick={() => setActiveChat(conv)}
                             >
-                                <div className="conv-avatar">
+                                <div 
+                                    className="conv-avatar"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (conv.other_user?.id) {
+                                            navigate(`/profile/${conv.other_user.id}`);
+                                        }
+                                    }}
+                                    style={{ cursor: 'pointer' }}
+                                >
                                     <img
                                         src={conv.other_user?.avatar || "https://via.placeholder.com/40"}
                                         alt="Avatar"
@@ -163,8 +182,22 @@ export default function Messenger({ currentUserId, startChatWithUser }) {
                                     />
                                     <div className="online-status"></div>
                                 </div>
-                                <div className="conv-info">
-                                    <h5>{conv.other_user?.name}</h5>
+                                <div 
+                                    className="conv-info"
+                                    style={{ flex: 1, cursor: 'pointer' }}
+                                    onClick={() => setActiveChat(conv)}
+                                >
+                                    <h5 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (conv.other_user?.id) {
+                                                navigate(`/profile/${conv.other_user.id}`);
+                                            }
+                                        }}
+                                        style={{ cursor: 'pointer', marginBottom: '4px' }}
+                                    >
+                                        {conv.other_user?.name}
+                                    </h5>
                                     <div className="conv-last-msg">
                                         {conv.last_message?.sender_id === currentUserId ? "Bạn: " : ""}
                                         {conv.last_message?.content || "Bắt đầu trò chuyện"}
@@ -179,8 +212,15 @@ export default function Messenger({ currentUserId, startChatWithUser }) {
             {}
             {activeChat && (
                 <div className="chat-window">
-                    <div className="chat-header" onClick={() => setActiveChat(null)}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div className="chat-header">
+                        <div 
+                            style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', flex: 1 }}
+                            onClick={(e) => {
+                                if (activeChat.other_user?.id) {
+                                    navigate(`/profile/${activeChat.other_user.id}`);
+                                }
+                            }}
+                        >
                             <img
                                 src={activeChat.other_user?.avatar || "https://via.placeholder.com/30"}
                                 alt="Avatar"
@@ -191,7 +231,12 @@ export default function Messenger({ currentUserId, startChatWithUser }) {
                                 <span style={{ fontSize: '0.7rem', opacity: 0.8 }}>Đang hoạt động</span>
                             </div>
                         </div>
-                        <span style={{ fontSize: '1.2rem' }}>✖</span>
+                        <span 
+                            style={{ fontSize: '1.2rem', cursor: 'pointer' }}
+                            onClick={() => setActiveChat(null)}
+                        >
+                            ✖
+                        </span>
                     </div>
 
                     <div className="chat-body" ref={chatBodyRef}>

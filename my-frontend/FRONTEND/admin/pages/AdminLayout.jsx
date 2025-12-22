@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import AdminDashboard from "./AdminDashboard";
 import AdminUsers from "./AdminUsers";
 import AdminPosts from "./AdminPosts";
@@ -11,8 +12,30 @@ import "./AdminLayout.css";
 import "./AdminOverride.css";
 
 export default function AdminLayout() {
-  const [currentPage, setCurrentPage] = useState("dashboard");
+  const location = useLocation();
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Extract page from URL (e.g., /admin/users -> "users", /admin -> "dashboard")
+  const getPageFromUrl = () => {
+    const path = location.pathname;
+    if (path === "/admin" || path === "/admin/") {
+      return "dashboard";
+    }
+    const parts = path.split("/").filter(Boolean);
+    if (parts.length >= 2 && parts[0] === "admin") {
+      return parts[1] || "dashboard";
+    }
+    return "dashboard";
+  };
+
+  const [currentPage, setCurrentPage] = useState(getPageFromUrl());
+
+  // Update currentPage when URL changes (e.g., on refresh or browser back/forward)
+  useEffect(() => {
+    const pageFromUrl = getPageFromUrl();
+    setCurrentPage(pageFromUrl);
+  }, [location.pathname]);
 
   const menuItems = [
     {
@@ -109,7 +132,12 @@ export default function AdminLayout() {
             <button
               key={item.id}
               className={`menu-item ${currentPage === item.id ? "active" : ""}`}
-              onClick={() => setCurrentPage(item.id)}
+              onClick={() => {
+                setCurrentPage(item.id);
+                // Update URL to reflect current page
+                const newPath = item.id === "dashboard" ? "/admin" : `/admin/${item.id}`;
+                navigate(newPath, { replace: true });
+              }}
               title={item.label}
             >
               <span className="menu-icon">{item.icon}</span>

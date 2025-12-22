@@ -4,6 +4,7 @@ from datetime import datetime
 import random
 import json
 import hashlib
+import re
 
 class SmartRecommendationEngine:
     def __init__(self, user_id, date_str):
@@ -70,12 +71,17 @@ class SmartRecommendationEngine:
         
         busy = set()
         for s in schedules:
-            if s.Period and s.Note and s.Note.strip():
-                # Normalize period name
+            # Chỉ tính là busy nếu có Period và có Note (không rỗng)
+            if s.Period:
                 period_lower = s.Period.lower().strip()
                 normalized_period = period_map.get(period_lower, period_lower)
-                busy.add(normalized_period)
-                print(f"   ⛔ Busy slot: {s.Period} ({normalized_period}) - '{s.Note}'")
+                
+                # Kiểm tra Note: chỉ busy nếu có Note và Note không rỗng
+                if s.Note and isinstance(s.Note, str) and s.Note.strip():
+                    busy.add(normalized_period)
+                    print(f"   ⛔ Busy slot: {s.Period} ({normalized_period}) - '{s.Note}'")
+                else:
+                    print(f"   ℹ️ Slot {s.Period} ({normalized_period}) has no note, NOT marked as busy")
         
         print(f"   📋 Total busy slots: {busy}")
         return busy
@@ -101,16 +107,70 @@ class SmartRecommendationEngine:
             elif "general" in workout_aitags or "tất cả" in workout_aitags:
                 score += 20
         
-        # Goal matching (use Goals field)
+        # ========== GOAL MATCHING - QUAN TRỌNG NHẤT ==========
         user_goal = (self.user.Goal or "").lower()
         workout_goals = (getattr(workout, 'Goals', '') or getattr(workout, 'GoalFocus', '') or "").lower()
+        workout_name = (workout.Name or "").lower()
+        workout_aitags_lower = workout_aitags
+        intensity = (getattr(workout, 'Intensity', '') or "").lower()
+        calorie_burn = getattr(workout, 'CalorieBurn', 0) or 0
         
-        if "tăng cơ" in user_goal:
-            if "sức mạnh" in workout_goals or "strength" in workout_goals:
-                score += 30
-        elif "giảm cân" in user_goal:
-            if "cardio" in workout_goals or "tim mạch" in workout_goals:
-                score += 30
+        goal_score = 0
+        goal_penalty = 0
+        
+        # Giảm cân: Ưu tiên cardio, HIIT, chạy bộ, bài tập đốt nhiều calo
+        if "giảm cân" in user_goal or "weight loss" in user_goal or "giảm mỡ" in user_goal:
+            # Positive signals (cộng điểm)
+            if any(keyword in workout_goals + " " + workout_name + " " + workout_aitags_lower 
+                   for keyword in ["cardio", "tim mạch", "hiit", "chạy", "running", "aerobic", "đốt cháy", "calorie burn"]):
+                goal_score += 100  # Rất quan trọng!
+            elif intensity in ["rất cao", "very high", "cao", "high"]:
+                goal_score += 60
+            elif calorie_burn > 300:  # Đốt nhiều calo
+                goal_score += 40
+            
+            # Negative signals (trừ điểm nặng)
+            if any(keyword in workout_goals + " " + workout_name + " " + workout_aitags_lower 
+                   for keyword in ["sức mạnh", "strength", "tăng cơ", "muscle gain", "bulk", "tạ"]):
+                goal_penalty -= 80  # Trừ điểm nặng cho strength training khi goal là giảm cân
+            elif calorie_burn < 100 and intensity in ["thấp", "low", "nhẹ"]:
+                goal_penalty -= 50  # Trừ điểm cho bài tập ít đốt calo
+        
+        # Tăng cân/Tăng cơ: Ưu tiên strength training, resistance, tạ
+        elif "tăng cơ" in user_goal or "tăng cân" in user_goal or "muscle gain" in user_goal or "bulk" in user_goal:
+            # Positive signals
+            if any(keyword in workout_goals + " " + workout_name + " " + workout_aitags_lower 
+                   for keyword in ["sức mạnh", "strength", "resistance", "tăng cơ", "muscle", "tạ", "weight", "gym"]):
+                goal_score += 100  # Rất quan trọng!
+            elif intensity in ["rất cao", "very high", "cao", "high"]:
+                goal_score += 50
+            elif "sets" in workout_name or "reps" in workout_name.lower():
+                goal_score += 30  # Có sets/reps thường là strength training
+            
+            # Negative signals
+            if any(keyword in workout_goals + " " + workout_name + " " + workout_aitags_lower 
+                   for keyword in ["cardio", "tim mạch", "chạy", "running", "aerobic"]):
+                goal_penalty -= 60  # Trừ điểm cho cardio khi goal là tăng cơ
+            elif calorie_burn > 400 and "cardio" in workout_name:
+                goal_penalty -= 40
+        
+        # Duy trì: Cân bằng giữa cardio và strength
+        elif "duy trì" in user_goal or "maintain" in user_goal or "cân bằng" in user_goal:
+            # Ưu tiên bài tập cân bằng
+            if any(keyword in workout_goals + " " + workout_aitags_lower 
+                   for keyword in ["general", "tất cả", "balanced", "all-around", "full body"]):
+                goal_score += 80
+            elif intensity in ["trung bình", "medium", "moderate"]:
+                goal_score += 40
+            elif 150 <= calorie_burn <= 350:  # Đốt calo vừa phải
+                goal_score += 30
+            
+            # Không quá nghiêng về một bên
+            if (calorie_burn > 500 and "cardio" in workout_name) or \
+               (any(keyword in workout_name for keyword in ["strength", "tạ"]) and calorie_burn < 50):
+                goal_penalty -= 30
+        
+        score += goal_score + goal_penalty
         
         # Muscle group matching (use PrimaryMuscles if available)
         primary_muscles = (getattr(workout, 'PrimaryMuscles', '') or "").lower()
@@ -133,7 +193,13 @@ class SmartRecommendationEngine:
             # New user with prerequisites required, slight penalty
             score -= 5
         
-        score += random.randint(-5, 5)
+        # Chỉ thêm random nhỏ để có chút đa dạng (giảm từ ±5 xuống ±3)
+        score += random.randint(-3, 3)
+        
+        # Nếu workout hoàn toàn không phù hợp với goal, trả về điểm rất thấp
+        if goal_penalty <= -70:
+            return score - 200  # Điểm rất thấp, khó được chọn
+        
         return score
 
     def _score_meal(self, meal, time_slot):
@@ -200,43 +266,68 @@ class SmartRecommendationEngine:
             return False
         
         # Kiểm tra xem có tất cả items đã completed không
-        completed_items = [item for item in existing_items if hasattr(item, 'IsCompleted') and item.IsCompleted]
-        all_completed = len(completed_items) > 0 and len(completed_items) == len(existing_items)
+        # Check cả None và False
+        completed_items = [item for item in existing_items if getattr(item, 'IsCompleted', False) == True]
+        all_completed = len(existing_items) > 0 and len(completed_items) == len(existing_items)
         
-        # Nếu tất cả items đã completed, không regenerate dù profile hash thay đổi
+        # Nếu tất cả items đã completed, KHÔNG regenerate dù profile hash thay đổi
+        # Chỉ update ProfileHash nếu cần, nhưng giữ nguyên items
         if all_completed:
-            print(f"✅ [ALL COMPLETED] All {len(existing_items)} items completed for {self.date_str}, keeping existing schedule")
+            current_hash = self._get_user_profile_hash()
+            saved_hash = existing_items[0].ProfileHash if hasattr(existing_items[0], 'ProfileHash') else None
+            
+            # Nếu hash thay đổi, chỉ update hash, không regenerate
+            if saved_hash and saved_hash != current_hash:
+                print(f"✅ [ALL COMPLETED + HASH CHANGED] All {len(existing_items)} items completed for {self.date_str}, updating hash only, keeping existing schedule")
+                # Update hash cho tất cả items nhưng không regenerate
+                for item in existing_items:
+                    item.ProfileHash = current_hash
+                db.session.commit()
+            
+            return False
+        
+        # Kiểm tra xem có items nào có ProfileHash = None không (đã bị invalidate)
+        # Nếu có items bị invalidate, đã được xử lý ở _load_existing_schedule, không cần check lại ở đây
+        invalidated_items = [item for item in existing_items if not item.ProfileHash and not (hasattr(item, 'IsCompleted') and item.IsCompleted)]
+        if invalidated_items:
+            # Đã được xử lý ở _load_existing_schedule, không cần regenerate lại
             return False
             
         current_hash = self._get_user_profile_hash()
         saved_hash = existing_items[0].ProfileHash if hasattr(existing_items[0], 'ProfileHash') else None
         
         # Nếu hash thay đổi, chỉ regenerate nếu có items chưa completed
-        # Nếu tất cả items đã completed, giữ nguyên lịch
         if saved_hash and saved_hash != current_hash:
-            # Kiểm tra lại xem có items nào chưa completed không
             incomplete_items = [item for item in existing_items if not (hasattr(item, 'IsCompleted') and item.IsCompleted)]
             if len(incomplete_items) == 0:
                 print(f"✅ [PROFILE CHANGED BUT ALL COMPLETED] Profile changed but all items completed, keeping schedule")
                 return False
             print(f"🔄 [PROFILE CHANGED] User {self.user_id} profile changed, regenerating schedule (has {len(incomplete_items)} incomplete items)...")
             return True
+        
+        # Nếu hash khớp và không có items bị invalidate, giữ nguyên schedule
+        print(f"✅ [PROFILE UNCHANGED] Profile hash matches, keeping existing schedule")
         return False
     
     def _load_existing_schedule(self):
-        if self._has_profile_changed():
-            print("   ⚠️ Profile changed, will regenerate schedule")
-            return None
-        
         items = UserPlan.query.filter_by(
             UserId=self.user_id,
             Date=self.date_obj
         ).all()
         
+        # Nếu không có items, regenerate
         if not items:
+            print("   ⚠️ No existing schedule, will generate new")
+            return None
+        
+        # Đơn giản: chỉ check profile changed, không check invalidate phức tạp
+        if self._has_profile_changed():
+            print("   ⚠️ Profile changed, will regenerate schedule")
             return None
         
         busy_slots = self._get_busy_slots()
+        print(f"   📋 [LOAD EXISTING] Found {len(items)} items for {self.date_str}, busy_slots: {busy_slots}")
+        
         schedule = []
         time_map = {
             "morning": "07:00 - 08:00",
@@ -244,53 +335,101 @@ class SmartRecommendationEngine:
             "evening": "19:00 - 20:00"
         }
         
-        # Không filter out items nếu đã completed - giữ nguyên lịch đã hoàn thành
+        # Normalize slot mapping
+        slot_normalize = {
+            "sáng": "morning", "buổi sáng": "morning",
+            "trưa": "afternoon", "buổi trưa": "afternoon",
+            "tối": "evening", "buổi tối": "evening"
+        }
+        
+        # Track các slots đã có items (để check xem có thiếu không)
+        filled_slots = {
+            "morning": {"meal": False, "workout": False},
+            "afternoon": {"meal": False, "workout": False},
+            "evening": {"meal": False, "workout": False}
+        }
+        
+        # Load tất cả items, filter out items ở busy slots (trừ completed)
         for item in items:
-            # Nếu item đã completed, luôn hiển thị dù có busy hay không
-            if item.IsCompleted:
+            is_completed = getattr(item, 'IsCompleted', False) == True
+            item_slot = item.Slot.lower().strip() if item.Slot else ""
+            
+            # Normalize slot
+            normalized_slot = slot_normalize.get(item_slot, item_slot)
+            if normalized_slot not in ["morning", "afternoon", "evening"]:
+                normalized_slot = item_slot  # Giữ nguyên nếu không match
+            
+            is_busy = normalized_slot in busy_slots
+            
+            # Nếu item đã completed, luôn hiển thị
+            if is_completed:
                 if item.Type == "meal" and item.MealId:
                     meal = Meal.query.get(item.MealId)
                     if meal:
                         meal_data = self._serialize_meal(meal)
                         meal_data["MealType"] = item.Slot
                         schedule.append({
-                            "time": time_map.get(item.Slot, item.Slot),
+                            "time": time_map.get(normalized_slot, item.Slot),
                             "type": "meal",
                             "data": meal_data
                         })
+                        if normalized_slot in filled_slots:
+                            filled_slots[normalized_slot]["meal"] = True
                 elif item.Type == "workout" and item.WorkoutId:
                     workout = Workout.query.get(item.WorkoutId)
                     if workout:
                         schedule.append({
-                            "time": f"{item.Slot}_slot",
+                            "time": f"{normalized_slot}_slot",
                             "type": "workout",
                             "data": self._serialize_workout(workout)
                         })
+                        if normalized_slot in filled_slots:
+                            filled_slots[normalized_slot]["workout"] = True
                 continue
             
-            # Chỉ filter out items chưa completed nếu slot bận
-            if item.Slot and item.Slot.lower() in busy_slots:
-                print(f"   🚫 Filtered out {item.Type} at {item.Slot} (busy)")
+            # Filter out items chưa completed ở busy slots
+            if is_busy:
                 continue
             
+            # Thêm items không busy
             if item.Type == "meal" and item.MealId:
                 meal = Meal.query.get(item.MealId)
                 if meal:
                     meal_data = self._serialize_meal(meal)
                     meal_data["MealType"] = item.Slot
                     schedule.append({
-                        "time": time_map.get(item.Slot, item.Slot),
+                        "time": time_map.get(normalized_slot, item.Slot),
                         "type": "meal",
                         "data": meal_data
                     })
+                    if normalized_slot in filled_slots:
+                        filled_slots[normalized_slot]["meal"] = True
             elif item.Type == "workout" and item.WorkoutId:
                 workout = Workout.query.get(item.WorkoutId)
                 if workout:
                     schedule.append({
-                        "time": f"{item.Slot}_slot",
+                        "time": f"{normalized_slot}_slot",
                         "type": "workout",
                         "data": self._serialize_workout(workout)
                     })
+                    if normalized_slot in filled_slots:
+                        filled_slots[normalized_slot]["workout"] = True
+        
+        # QUAN TRỌNG: Kiểm tra xem có thiếu items cho slots không busy không
+        # Nếu thiếu, return None để trigger regenerate
+        missing_items = []
+        for slot in ["morning", "afternoon", "evening"]:
+            if slot not in busy_slots:
+                # Slot không busy, phải có meal
+                if not filled_slots[slot]["meal"]:
+                    missing_items.append(f"{slot} meal")
+                # Morning và evening phải có workout (afternoon optional)
+                if slot in ["morning", "evening"] and not filled_slots[slot]["workout"]:
+                    missing_items.append(f"{slot} workout")
+        
+        if missing_items:
+            print(f"   ⚠️ Missing items for non-busy slots: {missing_items}, will regenerate")
+            return None
         
         if not schedule:
             return None
@@ -302,26 +441,56 @@ class SmartRecommendationEngine:
         }
 
     def _save_schedule(self, schedule_items):
-        # Lấy các UserPlan cũ để preserve IsCompleted
+        # Đơn giản: Lấy các UserPlan cũ để preserve IsCompleted
         existing_plans = UserPlan.query.filter_by(
             UserId=self.user_id,
             Date=self.date_obj
         ).all()
         
-        # Tạo map để lưu IsCompleted theo (Type, Slot, MealId/WorkoutId)
+        # Tạo map để lưu IsCompleted
         completed_map = {}
         for plan in existing_plans:
             key = (plan.Type, plan.Slot, plan.MealId if plan.Type == "meal" else plan.WorkoutId)
             if plan.IsCompleted:
                 completed_map[key] = True
         
-        # Xóa các plan cũ
-        UserPlan.query.filter_by(
-            UserId=self.user_id,
-            Date=self.date_obj
-        ).delete()
-        
         profile_hash = self._get_user_profile_hash()
+        
+        # Tạo set các items mới
+        new_items_set = set()
+        for item in schedule_items:
+            if item["type"] == "meal":
+                time_slot = None
+                if "07:00" in item["time"]: time_slot = "morning"
+                elif "12:00" in item["time"]: time_slot = "afternoon"
+                elif "19:00" in item["time"]: time_slot = "evening"
+                if time_slot:
+                    meal_id = item["data"]["Id"]
+                    new_items_set.add(("meal", time_slot, meal_id))
+            elif item["type"] == "workout":
+                time_slot = item["time"].replace("_slot", "")
+                workout_id = item["data"]["Id"]
+                new_items_set.add(("workout", time_slot, workout_id))
+        
+        # Kiểm tra busy slots
+        current_busy_slots = self._get_busy_slots()
+        
+        # Đơn giản: Xóa items cũ CHƯA completed và không còn trong schedule mới
+        # Giữ nguyên completed items
+        for plan in existing_plans:
+            key = (plan.Type, plan.Slot, plan.MealId if plan.Type == "meal" else plan.WorkoutId)
+            is_completed = getattr(plan, 'IsCompleted', False) == True
+            plan_slot = plan.Slot.lower() if plan.Slot else ""
+            is_now_busy = plan_slot in current_busy_slots
+            
+            # Giữ nguyên completed items
+            if is_completed:
+                plan.ProfileHash = profile_hash
+                continue
+            
+            # Xóa nếu busy hoặc không còn trong schedule mới
+            if is_now_busy or key not in new_items_set:
+                db.session.delete(plan)
         
         for item in schedule_items:
             if item["type"] == "meal":
@@ -333,39 +502,82 @@ class SmartRecommendationEngine:
                 if time_slot:
                     meal_id = item["data"]["Id"]
                     key = ("meal", time_slot, meal_id)
-                    is_completed = completed_map.get(key, False)
                     
-                    new_item = UserPlan(
+                    # Kiểm tra xem item này đã tồn tại chưa
+                    existing = UserPlan.query.filter_by(
                         UserId=self.user_id,
                         Date=self.date_obj,
                         Slot=time_slot,
                         Type="meal",
-                        MealId=meal_id,
-                        ProfileHash=profile_hash,
-                        IsCompleted=is_completed
-                    )
-                    db.session.add(new_item)
+                        MealId=meal_id
+                    ).first()
+                    
+                    if not existing:
+                        is_completed = completed_map.get(key, False)
+                        new_item = UserPlan(
+                            UserId=self.user_id,
+                            Date=self.date_obj,
+                            Slot=time_slot,
+                            Type="meal",
+                            MealId=meal_id,
+                            ProfileHash=profile_hash,
+                            IsCompleted=is_completed
+                        )
+                        db.session.add(new_item)
+                    else:
+                        # Item đã tồn tại, chỉ update hash
+                        existing.ProfileHash = profile_hash
                     
             elif item["type"] == "workout":
                 time_slot = item["time"].replace("_slot", "")
                 workout_id = item["data"]["Id"]
                 key = ("workout", time_slot, workout_id)
-                is_completed = completed_map.get(key, False)
                 
-                new_item = UserPlan(
+                # Kiểm tra xem item này đã tồn tại chưa
+                existing = UserPlan.query.filter_by(
                     UserId=self.user_id,
                     Date=self.date_obj,
                     Slot=time_slot,
                     Type="workout",
-                    WorkoutId=workout_id,
-                    ProfileHash=profile_hash,
-                    IsCompleted=is_completed
-                )
-                db.session.add(new_item)
+                    WorkoutId=workout_id
+                ).first()
+                
+                if not existing:
+                    is_completed = completed_map.get(key, False)
+                    new_item = UserPlan(
+                        UserId=self.user_id,
+                        Date=self.date_obj,
+                        Slot=time_slot,
+                        Type="workout",
+                        WorkoutId=workout_id,
+                        ProfileHash=profile_hash,
+                        IsCompleted=is_completed
+                    )
+                    db.session.add(new_item)
+                else:
+                    # Item đã tồn tại, chỉ update hash
+                    existing.ProfileHash = profile_hash
         
         db.session.commit()
 
     def generate_plan(self):
+        # Check xem tất cả items đã completed chưa - nếu rồi thì KHÔNG regenerate
+        existing_items = UserPlan.query.filter_by(
+            UserId=self.user_id,
+            Date=self.date_obj
+        ).all()
+        
+        if existing_items:
+            completed_items = [item for item in existing_items if getattr(item, 'IsCompleted', False) == True]
+            all_completed = len(completed_items) == len(existing_items) and len(existing_items) > 0
+            
+            if all_completed:
+                print(f"🚫 [GENERATE PLAN SKIP] All {len(existing_items)} items completed for {self.date_str}, skipping regeneration")
+                # Vẫn return existing schedule
+                existing = self._load_existing_schedule()
+                if existing:
+                    return existing
+        
         existing = self._load_existing_schedule()
         if existing:
             return existing
@@ -376,18 +588,28 @@ class SmartRecommendationEngine:
         busy_slots = self._get_busy_slots()
         schedule = []
         
-        # --- WORKOUT GENERATION (Keep existing logic but stricter sport) ---
+        # --- WORKOUT GENERATION (Đơn giản: tạo cho tất cả slots không busy) ---
         print(f"💪 [WORKOUT] Checking workout slots...")
+        print(f"   📋 Busy slots detected: {busy_slots}")
         
         workout_slots = []
-        if "morning" not in busy_slots: workout_slots.append("morning")
-        else: print(f"   ⏭️ Skipped morning (busy)")
+        if "morning" not in busy_slots: 
+            workout_slots.append("morning")
+            print(f"   ✅ Morning slot available (not busy)")
+        else: 
+            print(f"   ⏭️ Skipped morning (busy)")
         
-        if "evening" not in busy_slots: workout_slots.append("evening")
-        else: print(f"   ⏭️ Skipped evening (busy)")
+        if "evening" not in busy_slots: 
+            workout_slots.append("evening")
+            print(f"   ✅ Evening slot available (not busy)")
+        else: 
+            print(f"   ⏭️ Skipped evening (busy)")
         
         if len(workout_slots) < 2 and "afternoon" not in busy_slots:
             workout_slots.append("afternoon")
+            print(f"   ✅ Afternoon slot added as backup")
+        
+        print(f"   📋 Selected workout slots to fill: {workout_slots}")
         
         all_workouts = Workout.query.filter_by(IsActive=True).all()
         user_sport = (self.user.Sport or "").lower()
@@ -427,20 +649,56 @@ class SmartRecommendationEngine:
             scored_workouts = [(w, self._score_workout(w, slot)) for w in pool]
             scored_workouts.sort(key=lambda x: x[1], reverse=True)
             
-            top_workouts = scored_workouts[:5]
-            if top_workouts:
-                selected_workout = random.choice(top_workouts)[0]
+            # Lọc bỏ các workout có điểm quá thấp (không phù hợp với goal)
+            valid_workouts = [(w, s) for w, s in scored_workouts if s > 0]
+            
+            if valid_workouts:
+                # Ưu tiên chọn từ top 3 có điểm cao nhất (thay vì random từ top 5)
+                # Điều này đảm bảo chọn workout phù hợp nhất với goal
+                top_workouts = valid_workouts[:3]
+                
+                # Nếu top workout có điểm cao hơn đáng kể (>= 20 điểm), chọn nó luôn
+                if len(top_workouts) > 1 and top_workouts[0][1] >= top_workouts[1][1] + 20:
+                    selected_workout = top_workouts[0][0]
+                    selected_score = top_workouts[0][1]
+                    print(f"   ✅ Added {slot} workout (BEST MATCH): {selected_workout.Name} (score: {selected_score})")
+                else:
+                    # Nếu các workout có điểm gần nhau, chọn random từ top 3 để có đa dạng
+                    selected_workout, selected_score = random.choice(top_workouts)
+                    print(f"   ✅ Added {slot} workout (TOP 3): {selected_workout.Name} (score: {selected_score})")
+                
                 schedule.append({
                     "time": f"{slot}_slot",
                     "type": "workout",
                     "data": self._serialize_workout(selected_workout)
                 })
-                print(f"   ✅ Added {slot} workout: {selected_workout.Name} (score: {top_workouts[0][1]})")
+            elif scored_workouts:
+                # Fallback: use the highest scored workout even if score is low
+                selected_workout = scored_workouts[0][0]
+                selected_score = scored_workouts[0][1]
+                schedule.append({
+                    "time": f"{slot}_slot",
+                    "type": "workout",
+                    "data": self._serialize_workout(selected_workout)
+                })
+                print(f"   ⚠️ Added {slot} workout with fallback (low score): {selected_workout.Name} (score: {selected_score})")
             else:
-                print(f"   ❌ No workout selected for {slot}")
+                # Fallback cuối cùng: chọn workout bất kỳ nếu không có workout nào phù hợp
+                # Đảm bảo luôn có workout cho slot không busy
+                if pool:
+                    selected_workout = pool[0]
+                    print(f"   ⚠️ Using fallback workout for {slot}: {selected_workout.Name} (no suitable workout found)")
+                    schedule.append({
+                        "time": f"{slot}_slot",
+                        "type": "workout",
+                        "data": self._serialize_workout(selected_workout)
+                    })
+                else:
+                    print(f"   ❌ ERROR: No workouts available at all for {slot}!")
+                    print(f"   ❌ Pool size: {len(pool)}, scored workouts: {len(scored_workouts)}")
 
 
-        # --- MEAL GENERATION (STRICT MODE) ---
+        # --- MEAL GENERATION (Đơn giản: tạo cho tất cả slots không busy) ---
         periods = ["morning", "afternoon", "evening"]
         time_map = {
             "morning": "07:00 - 08:00",
@@ -497,8 +755,12 @@ class SmartRecommendationEngine:
             final_pool = sport_candidates if sport_candidates else time_candidates
             
             if not final_pool:
-                print(f"      ❌ No meals available for {period}, skipping")
-                continue
+                print(f"      ⚠️ No meals available for {period}, using all meals as last resort")
+                # Fallback cuối cùng: dùng tất cả meals nếu không có meal nào phù hợp
+                final_pool = all_meals
+                if not final_pool:
+                    print(f"      ❌ ERROR: No meals in database at all!")
+                    continue
 
             # 3. Score & Pick (Score now just adds refined preference like goal/ingredients)
             scored_meals = []
@@ -522,6 +784,22 @@ class SmartRecommendationEngine:
                     "data": meal_data
                 })
                 print(f"   ✅ Added {period} meal: {chosen_meal.Name}")
+            else:
+                # Fallback: chọn meal bất kỳ nếu không có meal nào phù hợp
+                # Đảm bảo luôn có meal cho slot không busy
+                if final_pool:
+                    chosen_meal = random.choice(final_pool)
+                    meal_data = self._serialize_meal(chosen_meal)
+                    meal_data["MealType"] = period
+                    
+                    schedule.append({
+                        "time": time_map[period],
+                        "type": "meal",
+                        "data": meal_data
+                    })
+                    print(f"   ⚠️ Added {period} meal with fallback: {chosen_meal.Name} (no suitable meal found)")
+                else:
+                    print(f"   ❌ ERROR: No meals available for {period}!")
 
         self._save_schedule(schedule)
 
@@ -552,6 +830,24 @@ class SmartRecommendationEngine:
 
     def _serialize_workout(self, w):
         """Serialize workout with new 26-column structure"""
+        # Clean Sets/Reps - remove empty strings, '0', or 0 values
+        sets = getattr(w, 'Sets', '') or ''
+        if sets == '0' or sets == 0:
+            sets = ''
+        elif isinstance(sets, str):
+            sets = sets.strip()
+        
+        reps = getattr(w, 'Reps', '') or ''
+        if reps == '0' or reps == 0:
+            reps = ''
+        elif isinstance(reps, str):
+            # Remove trailing " 0" from reps string if exists (e.g., "20 phút 0" -> "20 phút")
+            reps = re.sub(r'\s+0\s*$', '', reps.strip()).strip()
+        
+        rest_time = getattr(w, 'RestTime', None)
+        if rest_time == 0:
+            rest_time = None
+        
         return {
             # Core Info
             "Id": w.Id,
@@ -561,12 +857,12 @@ class SmartRecommendationEngine:
             "Duration_min": w.Duration_min,
             "VideoUrl": getattr(w, 'VideoUrl', None),
             "Difficulty": getattr(w, 'Difficulty', ''),
-            "CalorieBurn": getattr(w, 'CalorieBurn', None),
+            "CalorieBurn": getattr(w, 'CalorieBurn', None) if getattr(w, 'CalorieBurn', None) and getattr(w, 'CalorieBurn', None) > 0 else None,
             
             # Workout Details
-            "Sets": getattr(w, 'Sets', ''),
-            "Reps": getattr(w, 'Reps', ''),
-            "RestTime": getattr(w, 'RestTime', None),
+            "Sets": sets,
+            "Reps": reps,
+            "RestTime": rest_time,
             
             # Descriptions
             "Description": getattr(w, 'Description', ''),

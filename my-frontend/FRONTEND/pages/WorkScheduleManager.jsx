@@ -75,6 +75,7 @@ export default function WorkScheduleManager() {
         toast.error("Lỗi tải lịch");
         setIsLoading(false);
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleInputChange = (day, period, value) => {
@@ -94,8 +95,16 @@ export default function WorkScheduleManager() {
         body: JSON.stringify(schedule),
       });
       if (res.ok) {
+        const data = await res.json();
         const btn = document.querySelector('.save-btn');
         btn?.classList.add('success-pulse');
+        
+        // Nếu backend yêu cầu regenerate, dispatch event để Planner reload
+        if (data.regenerate_needed) {
+          // Dispatch custom event để Planner biết cần reload
+          window.dispatchEvent(new CustomEvent('scheduleUpdated'));
+        }
+        
         setTimeout(() => {
           toast.success("✅ Lưu lịch thành công!");
         }, 500);

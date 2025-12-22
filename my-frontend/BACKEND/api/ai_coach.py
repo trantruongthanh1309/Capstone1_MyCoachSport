@@ -44,32 +44,134 @@ def get_schedule():
         schedule = build_daily_schedule(user_id, date)
         
         for item in schedule.get('schedule', []):
-            query = text("""
-                SELECT TOP 1 Id, IsCompleted 
-                FROM UserPlans 
-                WHERE UserId = :user_id 
-                AND Date = :date 
-                AND Type = :item_type 
-                AND (MealId = :meal_id OR WorkoutId = :workout_id)
-            """)
-            
             item_type = item.get('type')
             item_id = item.get('data', {}).get('Id')
+            item_time = item.get('time', '')  # Format: "morning_slot", "afternoon_slot", "evening_slot", hoặc "07:00 - 08:00"
             
-            result = db.session.execute(query, {
-                'user_id': user_id,
-                'date': date,
-                'item_type': item_type,
-                'meal_id': item_id if item_type == 'meal' else None,
-                'workout_id': item_id if item_type == 'workout' else None
-            }).first()
+            # Extract slot từ time - có thể là "morning_slot" hoặc "07:00 - 08:00"
+            slot = None
+            if item_time:
+                if '_slot' in item_time:
+                    slot = item_time.replace('_slot', '').strip()
+                elif 'morning' in item_time.lower() or '07:00' in item_time:
+                    slot = 'morning'
+                elif 'afternoon' in item_time.lower() or '12:00' in item_time:
+                    slot = 'afternoon'
+                elif 'evening' in item_time.lower() or '19:00' in item_time:
+                    slot = 'evening'
+            
+            # Query để tìm UserPlan record - match nhiều điều kiện
+            if item_type == 'meal' and item_id:
+                query = text("""
+                    SELECT TOP 1 Id, IsCompleted, Slot
+                    FROM UserPlans 
+                    WHERE UserId = :user_id 
+                    AND Date = :date 
+                    AND Type = :item_type 
+                    AND MealId = :meal_id
+                    ORDER BY Id DESC
+                """)
+                query_params = {
+                    'user_id': user_id,
+                    'date': date,
+                    'item_type': item_type,
+                    'meal_id': item_id
+                }
+            elif item_type == 'workout' and item_id:
+                query = text("""
+                    SELECT TOP 1 Id, IsCompleted, Slot
+                    FROM UserPlans 
+                    WHERE UserId = :user_id 
+                    AND Date = :date 
+                    AND Type = :item_type 
+                    AND WorkoutId = :workout_id
+                    ORDER BY Id DESC
+                """)
+                query_params = {
+                    'user_id': user_id,
+                    'date': date,
+                    'item_type': item_type,
+                    'workout_id': item_id
+                }
+            else:
+                # Fallback nếu không có item_id
+                item['schedule_id'] = None
+                item['is_completed'] = False
+                continue
+            
+            # Nếu có slot, thêm điều kiện slot vào query để chính xác hơn
+            if slot:
+                if item_type == 'meal':
+                    query = text("""
+                        SELECT TOP 1 Id, IsCompleted, Slot
+                        FROM UserPlans 
+                        WHERE UserId = :user_id 
+                        AND Date = :date 
+                        AND Type = :item_type 
+                        AND MealId = :meal_id
+                        AND Slot = :slot
+                        ORDER BY Id DESC
+                    """)
+                    query_params['slot'] = slot
+                elif item_type == 'workout':
+                    query = text("""
+                        SELECT TOP 1 Id, IsCompleted, Slot
+                        FROM UserPlans 
+                        WHERE UserId = :user_id 
+                        AND Date = :date 
+                        AND Type = :item_type 
+                        AND WorkoutId = :workout_id
+                        AND Slot = :slot
+                        ORDER BY Id DESC
+                    """)
+                    query_params['slot'] = slot
+            
+            result = db.session.execute(query, query_params).first()
             
             if result:
                 item['schedule_id'] = result.Id
                 item['is_completed'] = bool(result.IsCompleted) if result.IsCompleted is not None else False
+                print(f"   ✅ Found schedule_id {result.Id} for {item_type} {item_id} (slot: {result.Slot})")
             else:
+                # Nếu không tìm thấy với slot, thử lại không có slot
+                if slot:
+                    if item_type == 'meal':
+                        fallback_query = text("""
+                            SELECT TOP 1 Id, IsCompleted, Slot
+                            FROM UserPlans 
+                            WHERE UserId = :user_id 
+                            AND Date = :date 
+                            AND Type = :item_type 
+                            AND MealId = :meal_id
+                            ORDER BY Id DESC
+                        """)
+                    else:
+                        fallback_query = text("""
+                            SELECT TOP 1 Id, IsCompleted, Slot
+                            FROM UserPlans 
+                            WHERE UserId = :user_id 
+                            AND Date = :date 
+                            AND Type = :item_type 
+                            AND WorkoutId = :workout_id
+                            ORDER BY Id DESC
+                        """)
+                    fallback_result = db.session.execute(fallback_query, {
+                        'user_id': user_id,
+                        'date': date,
+                        'item_type': item_type,
+                        'meal_id': item_id if item_type == 'meal' else None,
+                        'workout_id': item_id if item_type == 'workout' else None
+                    }).first()
+                    
+                    if fallback_result:
+                        item['schedule_id'] = fallback_result.Id
+                        item['is_completed'] = bool(fallback_result.IsCompleted) if fallback_result.IsCompleted is not None else False
+                        print(f"   ⚠️ Found schedule_id {fallback_result.Id} without slot match for {item_type} {item_id}")
+                        continue
+                
                 item['schedule_id'] = None
                 item['is_completed'] = False
+                print(f"   ❌ No schedule_id found for {item_type} {item_id} (slot: {slot}, date: {date})")
             
             # Lấy feedback status (liked/disliked) từ Logs
             feedback_query = text("""

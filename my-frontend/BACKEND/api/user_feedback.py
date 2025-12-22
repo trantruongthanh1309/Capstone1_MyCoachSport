@@ -12,13 +12,19 @@ def submit_feedback():
         if not user_id:
             return jsonify({'success': False, 'error': 'Chưa đăng nhập'}), 401
         
-        data = request.get_json()
+        data = request.get_json(force=True)
         
         # Validate required fields
         feedback_type = data.get('type', '').strip()
         title = data.get('title', '').strip()
         message = data.get('message', '').strip()
         priority = data.get('priority', 'low')
+        
+        # Ensure UTF-8 encoding for Vietnamese characters
+        if isinstance(title, bytes):
+            title = title.decode('utf-8')
+        if isinstance(message, bytes):
+            message = message.decode('utf-8')
         
         if not feedback_type or not title or not message:
             return jsonify({'success': False, 'error': 'Vui lòng điền đầy đủ thông tin'}), 400
@@ -41,7 +47,8 @@ def submit_feedback():
         if priority not in valid_priorities:
             priority = 'low'
         
-        # Create feedback
+        # Create feedback - ensure UTF-8 encoding
+        # SQL Server uses NVARCHAR for Unicode, so we need to ensure proper encoding
         feedback = Feedback(
             User_id=user_id,
             Type=feedback_type,
@@ -52,7 +59,14 @@ def submit_feedback():
         )
         
         db.session.add(feedback)
-        db.session.commit()
+        try:
+            db.session.commit()
+            # Refresh to get the latest data
+            db.session.refresh(feedback)
+        except Exception as e:
+            db.session.rollback()
+            print(f"❌ Error saving feedback: {e}")
+            raise
         
         return jsonify({
             'success': True,

@@ -7,16 +7,15 @@ from flask_session import Session
 from db import db 
 from utils.logger import setup_logger
 
-from api.leaderboard import leaderboard_bp  
 from api.logs import logs_bp  
 from api.videos import videos_bp  
+from api.weather import weather_bp
 from api.auth import auth_bp
 from api.profile import profile_bp
 from api.planner import planner_bp
 from api.ai_coach import ai_coach_bp
 from api.schedule_manager import schedule_bp
 from api.meals import meals_bp
-from api.newsfeed import newsfeed_bp
 from api.chatbot_local import chatbot_bp
 from api.smart_swap import smart_swap_bp
 from api.settings import settings_bp
@@ -131,6 +130,7 @@ def after_request(response):
 
 app.register_blueprint(logs_bp, url_prefix='/api/logs')
 app.register_blueprint(videos_bp, url_prefix='/api/videos')
+app.register_blueprint(weather_bp, url_prefix='/api/weather')
 app.register_blueprint(auth_bp)
 app.register_blueprint(profile_bp, url_prefix='/api/profile') 
 app.register_blueprint(planner_bp, url_prefix="/api/planner")
@@ -144,7 +144,6 @@ app.register_blueprint(workouts_admin_bp)
 app.register_blueprint(posts_admin_bp)
 app.register_blueprint(feedback_bp)
 app.register_blueprint(meals_bp, url_prefix='/api/meals')
-app.register_blueprint(newsfeed_bp, url_prefix='/api/newsfeed')
 app.register_blueprint(chatbot_bp, url_prefix='/api/bot')
 app.register_blueprint(smart_swap_bp, url_prefix='/api/smart-swap')
 app.register_blueprint(settings_bp, url_prefix='/api/settings')

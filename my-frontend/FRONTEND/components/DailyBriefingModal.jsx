@@ -34,7 +34,7 @@ export default function DailyBriefingModal() {
                 console.log('📡 Fetching schedule for user:', userId, 'date:', today);
 
                 const res = await fetch(
-                    `http://localhost:5000/api/ai/schedule?user_id=${userId}&date=${today}`,
+                    `/api/ai/schedule?date=${today}`,
                     { credentials: 'include' }
                 );
                 const data = await res.json();
@@ -82,48 +82,67 @@ export default function DailyBriefingModal() {
         if (currentPhase === 'morning') {
             message = "Chào ngày mới! Sáng nay";
             relevantMeals = plan.meals.filter(m => {
-                const type = m.data?.MealType?.toLowerCase();
-                console.log('🌅 Morning meal check:', m.data?.Name, 'Type:', type);
-                return type === 'morning' || type === 'breakfast';
+                const type = (m.data?.MealType || '').toLowerCase();
+                const time = (m.time || '').toLowerCase();
+                const isMorningMeal = type === 'morning' || type === 'breakfast' || 
+                                     time.includes('morning') || time.includes('07:00') || time.includes('08:00');
+                console.log('🌅 Morning meal check:', m.data?.Name, 'Type:', type, 'Time:', time, 'Match:', isMorningMeal);
+                return isMorningMeal;
             });
             relevantWorkouts = plan.workouts.filter(w => {
-                const time = w.time?.toLowerCase();
-                return time === 'morning_slot' || time === 'morning';
+                const time = (w.time || '').toLowerCase();
+                const isMorningWorkout = time.includes('morning') || time.includes('morning_slot') || 
+                                        (!time && w.data?.Slot === 'morning');
+                console.log('🌅 Morning workout check:', w.data?.Name, 'Time:', time, 'Match:', isMorningWorkout);
+                return isMorningWorkout;
             });
         }
         else if (currentPhase === 'noon') {
             message = "Đã đến giờ trưa! Trưa nay";
             relevantMeals = plan.meals.filter(m => {
-                const type = m.data?.MealType?.toLowerCase();
-                console.log('☀️ Noon meal check:', m.data?.Name, 'Type:', type);
-                return type === 'afternoon' || type === 'lunch' || type === 'noon';
+                const type = (m.data?.MealType || '').toLowerCase();
+                const time = (m.time || '').toLowerCase();
+                const isNoonMeal = type === 'afternoon' || type === 'lunch' || type === 'noon' ||
+                                  time.includes('afternoon') || time.includes('12:00') || time.includes('13:00');
+                console.log('☀️ Noon meal check:', m.data?.Name, 'Type:', type, 'Time:', time, 'Match:', isNoonMeal);
+                return isNoonMeal;
             });
             relevantWorkouts = plan.workouts.filter(w => {
-                const time = w.time?.toLowerCase();
-                return time === 'afternoon_slot' || time === 'noon';
+                const time = (w.time || '').toLowerCase();
+                const isNoonWorkout = time.includes('afternoon') || time.includes('afternoon_slot') ||
+                                     (!time && w.data?.Slot === 'afternoon');
+                return isNoonWorkout;
             });
         }
         else if (currentPhase === 'afternoon') {
             message = "Cố lên! Chiều nay";
             relevantMeals = plan.meals.filter(m => {
-                const type = m.data?.MealType?.toLowerCase();
-                return type === 'afternoon' || type === 'snack';
+                const type = (m.data?.MealType || '').toLowerCase();
+                const time = (m.time || '').toLowerCase();
+                return (type === 'afternoon' || type === 'snack' || time.includes('afternoon')) && 
+                       !(type === 'evening' || type === 'dinner' || time.includes('evening'));
             });
             relevantWorkouts = plan.workouts.filter(w => {
-                const time = w.time?.toLowerCase();
-                return time === 'afternoon_slot' || time === 'evening_slot';
+                const time = (w.time || '').toLowerCase();
+                return time.includes('afternoon') || time.includes('afternoon_slot');
             });
         }
         else {
             message = "Buổi tối thư giãn! Tối nay";
             relevantMeals = plan.meals.filter(m => {
-                const type = m.data?.MealType?.toLowerCase();
-                console.log('🌙 Evening meal check:', m.data?.Name, 'Type:', type);
-                return type === 'evening' || type === 'dinner';
+                const type = (m.data?.MealType || '').toLowerCase();
+                const time = (m.time || '').toLowerCase();
+                const isEveningMeal = type === 'evening' || type === 'dinner' || 
+                                     time.includes('evening') || time.includes('19:00') || time.includes('20:00');
+                console.log('🌙 Evening meal check:', m.data?.Name, 'Type:', type, 'Time:', time, 'Match:', isEveningMeal);
+                return isEveningMeal;
             });
             relevantWorkouts = plan.workouts.filter(w => {
-                const time = w.time?.toLowerCase();
-                return time === 'evening_slot' || time === 'evening';
+                const time = (w.time || '').toLowerCase();
+                const isEveningWorkout = time.includes('evening') || time.includes('evening_slot') ||
+                                        (!time && w.data?.Slot === 'evening');
+                console.log('🌙 Evening workout check:', w.data?.Name, 'Time:', time, 'Slot:', w.data?.Slot, 'Match:', isEveningWorkout);
+                return isEveningWorkout;
             });
         }
 
@@ -156,16 +175,20 @@ export default function DailyBriefingModal() {
                         <div className="briefing-section highlight">
                             <div className="section-title">
                                 <span className="emoji">🏋️‍♂️</span>
-                                <span>Tập Luyện</span>
+                                <span>TẬP LUYỆN</span>
                             </div>
                             <div className="item-list">
-                                {content.workouts.map((item, index) => (
-                                    <div key={index} className="briefing-item workout featured-item">
+                                {content.workouts
+                                    .filter((item, index, self) => 
+                                        index === self.findIndex(w => w.data?.Id === item.data?.Id)
+                                    )
+                                    .map((item, index) => (
+                                    <div key={`workout-${item.data?.Id || index}`} className="briefing-item workout featured-item">
                                         <div className="item-icon">💪</div>
                                         <div className="item-details">
                                             <div className="item-name">{item.data?.Name || 'N/A'}</div>
                                             <div className="item-subtext">
-                                                {item.data?.Duration_min || 0} phút • {item.data?.Intensity || 'N/A'}
+                                                {item.data?.Duration_min || item.data?.Duration || 0} phút • {item.data?.Intensity || 'Trung bình'}
                                             </div>
                                         </div>
                                     </div>
@@ -178,11 +201,15 @@ export default function DailyBriefingModal() {
                         <div className="briefing-section highlight">
                             <div className="section-title">
                                 <span className="emoji">🍽️</span>
-                                <span>Dinh Dưỡng</span>
+                                <span>DINH DƯỠNG</span>
                             </div>
                             <div className="item-list">
-                                {content.meals.map((item, index) => (
-                                    <div key={index} className="briefing-item meal featured-item">
+                                {content.meals
+                                    .filter((item, index, self) => 
+                                        index === self.findIndex(m => m.data?.Id === item.data?.Id)
+                                    )
+                                    .map((item, index) => (
+                                    <div key={`meal-${item.data?.Id || index}`} className="briefing-item meal featured-item">
                                         <div className="item-icon">🥗</div>
                                         <div className="item-details">
                                             <div className="item-name">{item.data?.Name || 'N/A'}</div>

@@ -245,27 +245,6 @@ export default function AdminMeals() {
             </div>
           </div>
           <div className="stat-card">
-            <div className="stat-icon">🍳</div>
-            <div>
-              <h3>{stats.breakfast}</h3>
-              <p>Bữa sáng</p>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon">🍱</div>
-            <div>
-              <h3>{stats.lunch}</h3>
-              <p>Bữa trưa</p>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon">🍽️</div>
-            <div>
-              <h3>{stats.dinner}</h3>
-              <p>Bữa tối</p>
-            </div>
-          </div>
-          <div className="stat-card">
             <div className="stat-icon">🔥</div>
             <div>
               <h3>{stats.avg_kcal}</h3>

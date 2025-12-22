@@ -16,12 +16,13 @@ def get_notifications():
 
     now = datetime.now()
     today = now.date()
+    # Chỉ lấy thông báo cho hôm nay (vì chỉ hiển thị lịch sắp tới trong vòng 2 giờ)
     
     print(f"🔔 Fetching notifications for user_id={user_id}, date={today}")
     
     notifs = []
     
-    # Lấy từ UserPlans (lịch từ Planner)
+    # Lấy từ UserPlans (lịch từ Planner) - chỉ hôm nay
     try:
         plans = UserPlan.query.filter(
             UserPlan.UserId == user_id,
@@ -29,10 +30,21 @@ def get_notifications():
         ).all()
         print(f"📅 Found {len(plans)} plan items for today")
         
+        # Normalize slot mapping
+        slot_normalize = {
+            "sáng": "morning", "buổi sáng": "morning",
+            "trưa": "afternoon", "buổi trưa": "afternoon",
+            "tối": "evening", "buổi tối": "evening"
+        }
+        
         for plan in plans:
             sched_time = None
             item_type = plan.Type  # "meal" or "workout"
             name = ""
+            
+            # Normalize slot
+            plan_slot = (plan.Slot or "").lower().strip()
+            normalized_slot = slot_normalize.get(plan_slot, plan_slot)
             
             # Tính thời gian dựa trên Slot
             slot_times = {
@@ -41,9 +53,12 @@ def get_notifications():
                 'evening': (19, 0) if item_type == 'meal' else (20, 0)
             }
             
-            if plan.Slot in slot_times:
-                h, m = slot_times[plan.Slot]
-                sched_time = datetime.combine(today, datetime.strptime(f"{h}:{m}", "%H:%M").time())
+            if normalized_slot in slot_times:
+                h, m = slot_times[normalized_slot]
+                sched_time = datetime.combine(plan.Date, datetime.strptime(f"{h}:{m}", "%H:%M").time())
+            elif plan_slot in slot_times:
+                h, m = slot_times[plan_slot]
+                sched_time = datetime.combine(plan.Date, datetime.strptime(f"{h}:{m}", "%H:%M").time())
             
             if plan.Type == 'meal' and plan.MealId:
                 m = Meal.query.get(plan.MealId)
@@ -58,13 +73,20 @@ def get_notifications():
                 diff = sched_time - now
                 minutes_diff = int(diff.total_seconds() / 60)
                 
-                if minutes_diff > -180:  # Chỉ hiển thị trong vòng 3 giờ (quá khứ hoặc tương lai)
+                # Chỉ hiển thị thông báo cho lịch sắp tới (trong vòng 2 giờ) hoặc đã qua gần đây (trong vòng 30 phút)
+                if minutes_diff >= -30 and minutes_diff <= 120:  # Từ 30 phút trước đến 2 giờ sau
                     if minutes_diff < 0:
                         title = f"Bạn đã lỡ { 'bài tập' if item_type == 'workout' else 'bữa ăn' }?"
                         msg = f"{name} (lúc {sched_time.strftime('%H:%M')})"
-                    elif minutes_diff <= 30:
+                    elif minutes_diff <= 15:
                         title = f"Sắp đến giờ { 'tập' if item_type == 'workout' else 'ăn' }!"
                         msg = f"Chuẩn bị: {name} ({minutes_diff} phút nữa)"
+                    elif minutes_diff <= 30:
+                        title = f"Sắp đến giờ { 'tập' if item_type == 'workout' else 'ăn' }!"
+                        msg = f"{name} trong {minutes_diff} phút ({sched_time.strftime('%H:%M')})"
+                    elif minutes_diff <= 60:
+                        title = f"Sắp đến giờ { 'tập' if item_type == 'workout' else 'ăn' }!"
+                        msg = f"{name} trong {minutes_diff} phút ({sched_time.strftime('%H:%M')})"
                     else:
                         title = f"Lịch { 'tập' if item_type == 'workout' else 'ăn' } sắp tới"
                         msg = f"{name} vào lúc {sched_time.strftime('%H:%M')}"
@@ -79,6 +101,8 @@ def get_notifications():
                     })
     except Exception as e:
         print(f"❌ Error fetching UserPlans: {e}")
+        import traceback
+        traceback.print_exc()
     
     # Lấy từ UserSchedule (lịch bận có MealId/WorkoutId)
     try:
@@ -156,13 +180,20 @@ def get_notifications():
             
             print(f"    📊 Time diff: {minutes_diff} minutes")
             
-            if minutes_diff > -180:
+            # Chỉ hiển thị thông báo cho lịch sắp tới (trong vòng 2 giờ) hoặc đã qua gần đây (trong vòng 30 phút)
+            if minutes_diff >= -30 and minutes_diff <= 120:
                 if minutes_diff < 0:
                     title = f"Bạn đã lỡ { 'bài tập' if item_type == 'workout' else 'bữa ăn' }?"
                     msg = f"{name} (lúc {sched_time.strftime('%H:%M')})"
-                elif minutes_diff <= 30:
+                elif minutes_diff <= 15:
                     title = f"Sắp đến giờ { 'tập' if item_type == 'workout' else 'ăn' }!"
                     msg = f"Chuẩn bị: {name} ({minutes_diff} phút nữa)"
+                elif minutes_diff <= 30:
+                    title = f"Sắp đến giờ { 'tập' if item_type == 'workout' else 'ăn' }!"
+                    msg = f"{name} trong {minutes_diff} phút ({sched_time.strftime('%H:%M')})"
+                elif minutes_diff <= 60:
+                    title = f"Sắp đến giờ { 'tập' if item_type == 'workout' else 'ăn' }!"
+                    msg = f"{name} trong {minutes_diff} phút ({sched_time.strftime('%H:%M')})"
                 else:
                     title = f"Lịch { 'tập' if item_type == 'workout' else 'ăn' } sắp tới"
                     msg = f"{name} vào lúc {sched_time.strftime('%H:%M')}"
@@ -177,7 +208,7 @@ def get_notifications():
                 })
                 print(f"    ✅ Added to notifications")
             else:
-                print(f"    ⏭️ Skipped - too far in the past")
+                print(f"    ⏭️ Skipped - outside time window (30 min before to 2 hours after)")
     except Exception as e:
         print(f"❌ Error fetching UserSchedule: {e}")
             

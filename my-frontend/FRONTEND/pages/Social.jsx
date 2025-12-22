@@ -191,6 +191,17 @@ const styles = `
     font-size: 15px;
     color: #050505;
     line-height: 1.5;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  .post-content p {
+    margin: 0 0 8px 0;
+  }
+  
+  .post-content p:last-child {
+    margin-bottom: 0;
   }
   
   .post-image-container {
@@ -198,13 +209,37 @@ const styles = `
     background: #f0f2f5;
     display: flex;
     justify-content: center;
+    align-items: center;
     cursor: pointer;
+    overflow: hidden;
+    position: relative;
+    min-height: 200px;
   }
   
   .post-image {
+    width: 100%;
+    height: auto;
     max-width: 100%;
-    max-height: 600px;
+    max-height: 1000px;
     object-fit: contain;
+    display: block;
+    image-rendering: auto;
+    -webkit-backface-visibility: hidden;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+  
+  /* Đảm bảo hình ảnh hiển thị đầy đủ trên mọi màn hình */
+  @media (min-width: 768px) {
+    .post-image {
+      max-height: 1200px;
+    }
+  }
+  
+  @media (max-width: 767px) {
+    .post-image {
+      max-height: 600px;
+    }
   }
   
   .post-stats {
@@ -436,15 +471,36 @@ function Post({ post, onLike, onComment, onDelete, currentUser, onShare }) {
         )}
       </div>
 
-      <div className="post-content">{post.content}</div>
+      <div className="post-content">
+        {post.content ? (
+          typeof post.content === 'string' ? (
+            post.content.split('\n').map((line, idx) => (
+              <p key={idx}>{line || '\u00A0'}</p>
+            ))
+          ) : (
+            post.content
+          )
+        ) : null}
+      </div>
 
       {post.image_url && (
         <div className="post-image-container">
           <img
             className="post-image"
             src={post.image_url}
-            alt=""
-            onError={(e) => (e.currentTarget.style.display = "none")}
+            alt={post.content || "Post image"}
+            loading="lazy"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+              console.error("Failed to load image:", post.image_url);
+            }}
+            onLoad={(e) => {
+              // Đảm bảo hình ảnh load đầy đủ
+              const img = e.currentTarget;
+              if (img.naturalWidth === 0 || img.naturalHeight === 0) {
+                console.warn("Image loaded but dimensions are 0:", post.image_url);
+              }
+            }}
           />
         </div>
       )}
@@ -604,7 +660,12 @@ function ShareModal({ post, onClose, onShare }) {
         onShare && onShare();
         onClose();
       } else {
-        throw new Error(msgData.error || 'Không thể chia sẻ');
+        // Hiển thị lỗi chi tiết nếu bị chặn
+        if (msgData.code === 'MESSAGES_BLOCKED') {
+          toast.error(`🔒 ${msgData.error || 'Người này đã chặn nhận tin nhắn'}`);
+        } else {
+          throw new Error(msgData.error || 'Không thể chia sẻ');
+        }
       }
     } catch (err) {
       toast.error(`❌ Lỗi: ${err.message}`);

@@ -160,14 +160,54 @@ export const validatePostContent = (content) => {
   return { valid: true };
 };
 
-// Validate comment (not empty, max 1000 chars)
+// Bad words list (Tiếng Việt và Tiếng Anh)
+const BAD_WORDS = [
+  // Tiếng Việt
+  'địt', 'đụ', 'đéo', 'đm', 'dm', 'đmm', 'clmm', 'clgt', 'vl', 'vcl', 'vkl',
+  'lồn', 'buồi', 'dái', 'cặc', 'cặt', 'dick', 'pussy', 'asshole', 'bitch',
+  'đồ ngu', 'đồ chó', 'đồ súc vật', 'đồ khùng', 'đồ điên',
+  'fuck', 'shit', 'damn', 'hell', 'crap', 'bastard', 'idiot', 'stupid',
+  'ngu si', 'ngu xuẩn', 'đần độn', 'thiểu năng',
+  'đồ con hoang', 'đồ khốn', 'đồ súc vật', 'đồ khốn nạn',
+  'cút', 'biến đi', 'đi chết đi',
+  'đồ chết tiệt', 'đồ mất dạy', 'đồ vô văn hóa'
+];
+
+// Helper function to check for bad words
+const containsBadWords = (text) => {
+  if (!text) return { found: false, word: null };
+  
+  const textLower = text.toLowerCase().trim();
+  const words = textLower.split(/\s+/);
+  
+  for (const badWord of BAD_WORDS) {
+    // Check exact word match
+    if (words.includes(badWord)) {
+      return { found: true, word: badWord };
+    }
+    // Check if bad word is contained in text (to catch variations)
+    if (textLower.includes(badWord)) {
+      return { found: true, word: badWord };
+    }
+  }
+  
+  return { found: false, word: null };
+};
+
+// Validate comment (not empty, max 1000 chars, no bad words)
 export const validateComment = (comment) => {
   if (!comment || comment.trim() === '') {
-    return { valid: false, message: 'Bình luận không được để trống' };
+    return { valid: false, message: 'Nội dung bình luận không được để trống' };
   }
   
   if (comment.length > 1000) {
-    return { valid: false, message: 'Bình luận không được quá 1000 ký tự' };
+    return { valid: false, message: 'Nội dung bình luận không được quá 1000 ký tự' };
+  }
+  
+  // Kiểm tra từ ngữ khiếm nhã
+  const badWordCheck = containsBadWords(comment);
+  if (badWordCheck.found) {
+    return { valid: false, message: 'Bình luận chứa từ ngữ không phù hợp. Vui lòng sử dụng ngôn ngữ lịch sự.' };
   }
   
   return { valid: true };

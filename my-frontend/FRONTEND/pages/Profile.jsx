@@ -1,12 +1,20 @@
 import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import "./Profile.css";
 import { useToast } from "../contexts/ToastContext";
 import ImageUploader from "../components/ImageUploader";
 import { validateName, validateAge, validateHeight, validateWeight } from "../utils/validation";
 
 export default function Profile() {
+  const { userId: urlUserId } = useParams();
+  const navigate = useNavigate();
   const toast = useToast();
-  const [userId, setUserId] = useState(localStorage.getItem("user_id") || "");
+  const currentUserId = localStorage.getItem("user_id");
+  
+  // Nếu có userId trong URL thì dùng, không thì dùng current user
+  const [userId, setUserId] = useState(urlUserId || currentUserId || "");
+  const [isViewingOtherProfile, setIsViewingOtherProfile] = useState(false);
+  const [isOwnProfile, setIsOwnProfile] = useState(true);
   const [profile, setProfile] = useState({
     name: "Người Dùng",
     sex: "Nam",
@@ -16,38 +24,73 @@ export default function Profile() {
     activity: "Vừa phải (3-5 ngày/tuần)",
     goal: "Duy trì cân nặng",
     sport: "Bóng đá",
+    email: "",
     avatar: "https://scontent.fdad3-6.fna.fbcdn.net/v/t39.30808-6/502146546_1398928527897385_7313017022900260020_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeH4YsIHxcYTMqx2z1giIot1-wWF3OqloOX7BYXc6qWg5djHXbAsMzwKd7ZNYlGPlStCnZjUBYnvCCQAKtMEliqS&_nc_ohc=mDibpFMF-hAQ7kNvwFnj7gZ&_nc_oc=AdlrVnC7KepvDk-8dc3WSouO7dp_CvLKA3RnKOYiuJbv7yZdMKv0udKzHf7nRBK_jetdXBwOmAPmPQCzke3siUN1&_nc_zt=23&_nc_ht=scontent.fdad3-6.fna&_nc_gid=HVl7nfmhRBwnwoq09Z2-_g&oh=00_AfifDlVn8smWIsDLmmLqfZSBOBENrEVhVUM4NBwYcxAwKA&oe=690D6F68"
   });
 
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
+    // Update userId nếu có trong URL
+    if (urlUserId) {
+      setUserId(urlUserId);
+      setIsViewingOtherProfile(urlUserId !== currentUserId);
+      setIsOwnProfile(urlUserId === currentUserId);
+    } else {
+      setIsViewingOtherProfile(false);
+      setIsOwnProfile(true);
+    }
+  }, [urlUserId, currentUserId]);
+
+  useEffect(() => {
     if (!userId) return;
 
-    fetch("/api/profile", {
+    const apiUrl = isViewingOtherProfile 
+      ? `/api/profile/${userId}` 
+      : "/api/profile";
+
+    fetch(apiUrl, {
       method: "GET",
       credentials: "include",
     })
       .then((res) => res.json())
       .then((data) => {
         if (!data.error) {
+          // Lấy privacy settings từ response
+          const privacy = data.privacy || {};
+          const showProgress = privacy.showProgress !== false; // Default true
+          const showEmail = privacy.showEmail !== false; // Default true (khi xem profile chính mình)
+          
           setProfile({
             name: data.Name,
-            sex: data.Sex,
-            age: data.Age,
-            height: data.Height_cm,
-            weight: data.Weight_kg,
-            sport: data.Sport,
-            goal: data.Goal,
+            sex: data.Sex || (isViewingOtherProfile && !showProgress ? "Không hiển thị" : ""),
+            age: data.Age || (isViewingOtherProfile && !showProgress ? null : 0),
+            height: data.Height_cm || (isViewingOtherProfile && !showProgress ? null : 0),
+            weight: data.Weight_kg || (isViewingOtherProfile && !showProgress ? null : 0),
+            sport: data.Sport || "",
+            goal: data.Goal || (isViewingOtherProfile && !showProgress ? "Không hiển thị" : ""),
             activity: data.Activity || "Vừa phải (3-5 ngày/tuần)",
-            avatar: data.Avatar || profile.avatar
+            email: data.Email || (isViewingOtherProfile && !showEmail ? null : ""),  // Email sẽ là null nếu showEmail = false
+            avatar: data.Avatar || profile.avatar,
+            showProgress: showProgress,  // Lưu để dùng trong render
+            showEmail: showEmail
           });
+          setIsOwnProfile(data.is_own_profile !== false);
         } else {
           console.warn("Lỗi:", data.error);
+          if (data.error === "Hồ sơ này ở chế độ riêng tư") {
+            toast.error("🔒 Hồ sơ này ở chế độ riêng tư");
+            navigate("/profile");
+          } else {
+            toast.error(`❌ ${data.error}`);
+          }
         }
       })
-      .catch((err) => console.warn("Error fetching profile:", err));
-  }, [userId]);
+      .catch((err) => {
+        console.warn("Error fetching profile:", err);
+        toast.error("❌ Lỗi khi tải hồ sơ");
+      });
+  }, [userId, isViewingOtherProfile, navigate, toast]);
 
   const saveProfile = () => {
     console.log("Lưu hồ sơ đang được gọi...");
@@ -127,36 +170,47 @@ export default function Profile() {
     setProfile({ ...profile, avatar: url });
   };
 
-  const bmi = (profile.weight / Math.pow(profile.height / 100, 2)).toFixed(1);
-  const tdee = Math.round(
-    (10 * profile.weight +
-      6.25 * profile.height -
-      5 * profile.age +
-      (profile.sex === "Nam" ? 5 : -161)) *
-    1.55
-  );
+  // Tính BMI và TDEE chỉ khi có đủ thông tin và được phép hiển thị
+  const canShowProgress = isOwnProfile || profile.showProgress !== false;
+  const hasProgressData = profile.weight && profile.height && profile.age;
+  
+  const bmi = (hasProgressData && canShowProgress) 
+    ? (profile.weight / Math.pow(profile.height / 100, 2)).toFixed(1)
+    : null;
+    
+  const tdee = (hasProgressData && canShowProgress)
+    ? Math.round(
+        (10 * profile.weight +
+          6.25 * profile.height -
+          5 * profile.age +
+          (profile.sex === "Nam" ? 5 : -161)) *
+        1.55
+      )
+    : null;
 
   const getBMICategory = (bmi) => {
+    if (!bmi) return { category: 'Không có dữ liệu', color: 'gray' };
     if (bmi < 18.5) return { category: 'Thiếu cân', color: 'yellow' };
     if (bmi < 25) return { category: 'Bình thường', color: 'green' };
     if (bmi < 30) return { category: 'Thừa cân', color: 'orange' };
     return { category: 'Béo phì', color: 'red' };
   };
 
-  const bmiInfo = getBMICategory(parseFloat(bmi));
+  const bmiInfo = bmi ? getBMICategory(parseFloat(bmi)) : { category: 'Không hiển thị', color: 'gray' };
 
   return (
     <div className="profile-wrapper">
       <div className="profile-container">
-
-        { }
         <div className="profile-left">
           <div className="user-profile-header">
-            <h1 className="user-profile-title">Hồ Sơ Cá Nhân</h1>
-            <div className="profile-subtitle">Quản lý thông tin của bạn</div>
+            <h1 className="user-profile-title">
+              {isOwnProfile ? "Hồ Sơ Cá Nhân" : `Hồ Sơ của ${profile.name}`}
+            </h1>
+            <div className="profile-subtitle">
+              {isOwnProfile ? "Quản lý thông tin của bạn" : "Xem thông tin người dùng"}
+            </div>
           </div>
 
-          { }
           <div className="avatar-section">
             <div className="avatar-box">
               <img
@@ -166,38 +220,45 @@ export default function Profile() {
               />
               <div className="avatar-ring"></div>
             </div>
-            {isEditing && (
+            {isEditing && isOwnProfile && (
               <div className="mt-4">
                 <ImageUploader onUploadSuccess={handleAvatarUpload} />
               </div>
             )}
             <h3 className="avatar-name">{profile.name}</h3>
-            <p className="avatar-info">{profile.sex}, {profile.age} tuổi</p>
+            <p className="avatar-info">
+              {canShowProgress && profile.sex && profile.age 
+                ? `${profile.sex}, ${profile.age} tuổi` 
+                : canShowProgress 
+                  ? "Thông tin không đầy đủ"
+                  : "Thông tin riêng tư"}
+            </p>
           </div>
 
-          { }
           <div className="form-section">
 
-            { }
-            <div className="form-group">
-              <label className="form-label">
-                <span className="label-icon">🆔</span>
-                User ID
-              </label>
-              <input
-                type="number"
-                value={userId}
-                onChange={(e) => {
-                  setUserId(e.target.value);
-                  localStorage.setItem("user_id", e.target.value);
-                }}
-                placeholder="Nhập User ID"
-                className="form-input"
-                disabled={!isEditing}
-              />
-            </div>
+            {isOwnProfile && (
+              <>
+                <div className="form-group">
+                  <label className="form-label">
+                    <span className="label-icon">🆔</span>
+                    User ID
+                  </label>
+                  <input
+                    type="number"
+                    value={userId}
+                    onChange={(e) => {
+                      setUserId(e.target.value);
+                      localStorage.setItem("user_id", e.target.value);
+                    }}
+                    placeholder="Nhập User ID"
+                    className="form-input"
+                    disabled={!isEditing || !isOwnProfile}
+                  />
+                </div>
+              </>
+            )}
 
-            { }
             <div className="form-group">
               <label className="form-label">
                 <span className="label-icon">👤</span>
@@ -209,78 +270,78 @@ export default function Profile() {
                 onChange={(e) => setProfile({ ...profile, name: e.target.value })}
                 placeholder="Họ và tên"
                 className="form-input"
-                disabled={!isEditing}
+                disabled={!isEditing || !isOwnProfile}
               />
             </div>
 
-            { }
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">
-                  <span className="label-icon">🎂</span>
-                  Tuổi
-                </label>
-                <input
-                  type="number"
-                  value={profile.age}
-                  onChange={(e) => setProfile({ ...profile, age: +e.target.value })}
-                  placeholder="Tuổi"
-                  className="form-input"
-                  disabled={!isEditing}
-                />
+            {canShowProgress && (
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">
+                    <span className="label-icon">🎂</span>
+                    Tuổi
+                  </label>
+                  <input
+                    type="number"
+                    value={profile.age || ''}
+                    onChange={(e) => setProfile({ ...profile, age: +e.target.value })}
+                    placeholder="Tuổi"
+                    className="form-input"
+                    disabled={!isEditing || !isOwnProfile}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">
+                    <span className="label-icon">⚧</span>
+                    Giới tính
+                  </label>
+                  <select
+                    value={profile.sex || ''}
+                    onChange={(e) => setProfile({ ...profile, sex: e.target.value })}
+                    className="form-input form-select"
+                    disabled={!isEditing || !isOwnProfile}
+                  >
+                    <option value="Nam">Nam</option>
+                    <option value="Nữ">Nữ</option>
+                  </select>
+                </div>
               </div>
+            )}
 
-              <div className="form-group">
-                <label className="form-label">
-                  <span className="label-icon">⚧</span>
-                  Giới tính
-                </label>
-                <select
-                  value={profile.sex}
-                  onChange={(e) => setProfile({ ...profile, sex: e.target.value })}
-                  className="form-input form-select"
-                  disabled={!isEditing}
-                >
-                  <option value="Nam">Nam</option>
-                  <option value="Nữ">Nữ</option>
-                </select>
+            {canShowProgress && (
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">
+                    <span className="label-icon">⚖️</span>
+                    Cân nặng (kg)
+                  </label>
+                  <input
+                    type="number"
+                    value={profile.weight || ''}
+                    onChange={(e) => setProfile({ ...profile, weight: +e.target.value })}
+                    placeholder="Cân nặng"
+                    className="form-input"
+                    disabled={!isEditing || !isOwnProfile}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">
+                    <span className="label-icon">📏</span>
+                    Chiều cao (cm)
+                  </label>
+                  <input
+                    type="number"
+                    value={profile.height || ''}
+                    onChange={(e) => setProfile({ ...profile, height: +e.target.value })}
+                    placeholder="Chiều cao"
+                    className="form-input"
+                    disabled={!isEditing || !isOwnProfile}
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
-            { }
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">
-                  <span className="label-icon">⚖️</span>
-                  Cân nặng (kg)
-                </label>
-                <input
-                  type="number"
-                  value={profile.weight}
-                  onChange={(e) => setProfile({ ...profile, weight: +e.target.value })}
-                  placeholder="Cân nặng"
-                  className="form-input"
-                  disabled={!isEditing}
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">
-                  <span className="label-icon">📏</span>
-                  Chiều cao (cm)
-                </label>
-                <input
-                  type="number"
-                  value={profile.height}
-                  onChange={(e) => setProfile({ ...profile, height: +e.target.value })}
-                  placeholder="Chiều cao"
-                  className="form-input"
-                  disabled={!isEditing}
-                />
-              </div>
-            </div>
-
-            { }
             <div className="form-group">
               <label className="form-label">
                 <span className="label-icon">⚽</span>
@@ -312,7 +373,6 @@ export default function Profile() {
               </select>
             </div>
 
-            { }
             <div className="form-group">
               <label className="form-label">
                 <span className="label-icon">⚡</span>
@@ -330,48 +390,51 @@ export default function Profile() {
               </select>
             </div>
 
-            { }
+            {canShowProgress && (
             <div className="form-group">
               <label className="form-label">
                 <span className="label-icon">🎯</span>
                 Mục tiêu
               </label>
               <select
-                value={profile.goal}
+                value={profile.goal || ''}
                 onChange={(e) => setProfile({ ...profile, goal: e.target.value })}
                 className="form-input form-select"
-                disabled={!isEditing}
+                disabled={!isEditing || !isOwnProfile}
               >
                 <option value="Duy trì cân nặng">Duy trì cân nặng</option>
                 <option value="Giảm cân">Giảm cân</option>
                 <option value="Tăng cơ">Tăng cơ</option>
               </select>
             </div>
+            )}
 
-            { }
-            <div className="button-group">
-              {!isEditing ? (
-                <button onClick={() => setIsEditing(true)} className="btn btn-edit">
-                  <span className="btn-icon">✏️</span>
-                  Chỉnh sửa
-                </button>
-              ) : (
-                <>
-                  <button onClick={saveProfile} className="btn btn-save">
-                    <span className="btn-icon">✅</span>
-                    Lưu hồ sơ
-                  </button>
-                  <button onClick={() => setIsEditing(false)} className="btn btn-cancel">
-                    <span className="btn-icon">❌</span>
-                    Hủy
-                  </button>
-                </>
-              )}
-            </div>
+            {isOwnProfile && (
+              <>
+                <div className="button-group">
+                  {!isEditing ? (
+                    <button onClick={() => setIsEditing(true)} className="btn btn-edit">
+                      <span className="btn-icon">✏️</span>
+                      Chỉnh sửa
+                    </button>
+                  ) : (
+                    <>
+                      <button onClick={saveProfile} className="btn btn-save">
+                        <span className="btn-icon">✅</span>
+                        Lưu hồ sơ
+                      </button>
+                      <button onClick={() => setIsEditing(false)} className="btn btn-cancel">
+                        <span className="btn-icon">❌</span>
+                        Hủy
+                      </button>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
 
-        { }
         <div className="profile-right">
           <div className="stats-header">
             <h2 className="stats-title">
@@ -380,7 +443,7 @@ export default function Profile() {
             </h2>
           </div>
 
-          { }
+          {canShowProgress && bmi && (
           <div className="user-stat-card bmi-card">
             <div className="stat-card-header">
               <h3 className="stat-card-title">
@@ -409,8 +472,9 @@ export default function Profile() {
               </div>
             </div>
           </div>
+          )}
 
-          { }
+          {canShowProgress && tdee && (
           <div className="user-stat-card tdee-card">
             <div className="stat-card-header">
               <h3 className="stat-card-title">
@@ -446,30 +510,51 @@ export default function Profile() {
               </div>
             </div>
           </div>
+          )}
 
-          { }
+          {!canShowProgress && (
+            <div className="user-stat-card" style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔒</div>
+              <p style={{ fontSize: '1.1rem', margin: 0 }}>Thông tin tiến độ đã được ẩn</p>
+            </div>
+          )}
+
           <div className="user-info-card">
             <h4 className="info-title">
               <span className="info-icon">📝</span>
               Thông Tin Chi Tiết
             </h4>
             <div className="info-list">
-              <div className="info-item">
-                <span className="info-label">Chiều cao:</span>
-                <span className="info-value">{profile.height} cm</span>
-              </div>
-              <div className="info-item">
-                <span className="info-label">Cân nặng:</span>
-                <span className="info-value">{profile.weight} kg</span>
-              </div>
-              <div className="info-item">
-                <span className="info-label">Môn thể thao:</span>
-                <span className="info-value">{profile.sport}</span>
-              </div>
-              <div className="info-item">
-                <span className="info-label">Mục tiêu:</span>
-                <span className="info-value">{profile.goal}</span>
-              </div>
+              {((isOwnProfile || profile.showEmail) && profile.email) && (
+                <div className="info-item">
+                  <span className="info-label">📧 Email:</span>
+                  <span className="info-value">{profile.email}</span>
+                </div>
+              )}
+              {canShowProgress && profile.height && (
+                <div className="info-item">
+                  <span className="info-label">Chiều cao:</span>
+                  <span className="info-value">{profile.height} cm</span>
+                </div>
+              )}
+              {canShowProgress && profile.weight && (
+                <div className="info-item">
+                  <span className="info-label">Cân nặng:</span>
+                  <span className="info-value">{profile.weight} kg</span>
+                </div>
+              )}
+              {profile.sport && (
+                <div className="info-item">
+                  <span className="info-label">Môn thể thao:</span>
+                  <span className="info-value">{profile.sport}</span>
+                </div>
+              )}
+              {canShowProgress && profile.goal && (
+                <div className="info-item">
+                  <span className="info-label">Mục tiêu:</span>
+                  <span className="info-value">{profile.goal}</span>
+                </div>
+              )}
             </div>
           </div>
 

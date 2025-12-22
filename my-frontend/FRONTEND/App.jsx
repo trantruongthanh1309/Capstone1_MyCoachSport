@@ -14,6 +14,7 @@ import Videos from "./pages/Videos";
 import WorkScheduleManager from "./pages/WorkScheduleManager";
 import Settings from "./pages/Settings";
 import NewsFeed from "./pages/NewsFeed";
+import PrivacyTest from "./pages/PrivacyTest";
 import AdminLayout from "./admin/pages/AdminLayout";
 import { AdminRoute } from "./admin/components/ProtectedRoute";
 import { ToastProvider } from "./contexts/ToastContext";
@@ -48,11 +49,13 @@ export default function App() {
             <Route path="/schedule-manager" element={<WorkScheduleManager />} />
             <Route path="/logs" element={<Logs />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/:userId" element={<Profile />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/social" element={<Social />} />
             <Route path="/newsfeed" element={<NewsFeed />} />
             <Route path="/videos" element={<Videos />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/privacy-test" element={<PrivacyTest />} />
 
             {/* Admin Pages */}
             <Route

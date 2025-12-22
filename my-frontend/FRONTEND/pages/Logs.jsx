@@ -17,11 +17,58 @@ export default function Logs() {
 
   const [mealId, setMealId] = useState("");
   const [workoutId, setWorkoutId] = useState("");
+  const [workouts, setWorkouts] = useState([]);
+  const [meals, setMeals] = useState([]);
+  const [loadingWorkouts, setLoadingWorkouts] = useState(false);
+  const [loadingMeals, setLoadingMeals] = useState(false);
 
   const [showModal, setShowModal] = useState(false);
   const [filter, setFilter] = useState("all");
 
   const API_URL = "/api/logs";
+
+  // Fetch workouts
+  const fetchWorkouts = async () => {
+    try {
+      setLoadingWorkouts(true);
+      const res = await axios.get("/api/meals/workouts", { withCredentials: true });
+      if (Array.isArray(res.data)) {
+        setWorkouts(res.data);
+      }
+    } catch (err) {
+      console.error("Error fetching workouts:", err);
+      toast.error("❌ Không thể tải danh sách bài tập");
+    } finally {
+      setLoadingWorkouts(false);
+    }
+  };
+
+  // Fetch meals
+  const fetchMeals = async () => {
+    try {
+      setLoadingMeals(true);
+      const res = await axios.get("/api/meals/", { withCredentials: true });
+      if (Array.isArray(res.data)) {
+        setMeals(res.data);
+      }
+    } catch (err) {
+      console.error("Error fetching meals:", err);
+      toast.error("❌ Không thể tải danh sách món ăn");
+    } finally {
+      setLoadingMeals(false);
+    }
+  };
+
+  // Fetch workouts/meals when type changes or modal opens
+  useEffect(() => {
+    if (showModal) {
+      if (type === 'workout') {
+        fetchWorkouts();
+      } else if (type === 'meal') {
+        fetchMeals();
+      }
+    }
+  }, [type, showModal]);
 
   const fetchLogs = async () => {
     try {
@@ -101,6 +148,17 @@ export default function Logs() {
     setMealId("");
     setWorkoutId("");
     setShowModal(false);
+  };
+
+  const handleTypeChange = (newType) => {
+    setType(newType);
+    setMealId("");
+    setWorkoutId("");
+    if (newType === 'workout' && workouts.length === 0) {
+      fetchWorkouts();
+    } else if (newType === 'meal' && meals.length === 0) {
+      fetchMeals();
+    }
   };
 
   const filteredLogs = filter === "all" ? logs : logs.filter((l) => l.type === filter);
@@ -234,7 +292,7 @@ export default function Logs() {
                 </div>
                 <div className="input-group">
                   <label className="input-label">🏷️ Loại</label>
-                  <select value={type} onChange={(e) => setType(e.target.value)} className="input-field">
+                  <select value={type} onChange={(e) => handleTypeChange(e.target.value)} className="input-field">
                     <option value="workout">💪 Tập luyện</option>
                     <option value="meal">🍽️ Ăn uống</option>
                     <option value="other">📝 Khác</option>
@@ -245,15 +303,45 @@ export default function Logs() {
               {}
               {type === 'workout' && (
                 <div className="input-group">
-                  <label className="input-label">💪 Workout ID (Tùy chọn)</label>
-                  <input type="number" value={workoutId} onChange={(e) => setWorkoutId(e.target.value)} className="input-field" placeholder="Nhập ID bài tập..." />
+                  <label className="input-label">💪 Chọn bài tập (Tùy chọn)</label>
+                  {loadingWorkouts ? (
+                    <div className="input-field" style={{ padding: '10px', color: '#666' }}>Đang tải...</div>
+                  ) : (
+                    <select 
+                      value={workoutId} 
+                      onChange={(e) => setWorkoutId(e.target.value)} 
+                      className="input-field"
+                    >
+                      <option value="">-- Chọn bài tập --</option>
+                      {workouts.map((workout) => (
+                        <option key={workout.Id} value={workout.Id}>
+                          {workout.Name} {workout.Sport ? `(${workout.Sport})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
               )}
 
               {type === 'meal' && (
                 <div className="input-group">
-                  <label className="input-label">🍽️ Meal ID (Tùy chọn)</label>
-                  <input type="number" value={mealId} onChange={(e) => setMealId(e.target.value)} className="input-field" placeholder="Nhập ID món ăn..." />
+                  <label className="input-label">🍽️ Chọn món ăn (Tùy chọn)</label>
+                  {loadingMeals ? (
+                    <div className="input-field" style={{ padding: '10px', color: '#666' }}>Đang tải...</div>
+                  ) : (
+                    <select 
+                      value={mealId} 
+                      onChange={(e) => setMealId(e.target.value)} 
+                      className="input-field"
+                    >
+                      <option value="">-- Chọn món ăn --</option>
+                      {meals.map((meal) => (
+                        <option key={meal.Id} value={meal.Id}>
+                          {meal.Name} {meal.Kcal ? `(${meal.Kcal} kcal)` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
               )}
 

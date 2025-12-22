@@ -5,6 +5,7 @@ import random
 import re
 from datetime import datetime, timedelta
 from services.email_service import send_otp_email, send_welcome_email
+from utils.rate_limiter import check_rate_limit
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 
@@ -93,6 +94,23 @@ def register():
 
 @auth_bp.route('/verify-register-otp', methods=['POST'])
 def verify_register_otp():
+    # Rate limiting: max 10 requests per 15 minutes per IP
+    ip_address = request.remote_addr or 'unknown'
+    identifier = f"verify-register-otp:{ip_address}"
+    allowed, retry_after = check_rate_limit(identifier, max_requests=10, window_seconds=900)
+    
+    if not allowed:
+        minutes = retry_after // 60
+        seconds = retry_after % 60
+        if minutes > 0:
+            retry_msg = f"{minutes} phút {seconds} giây"
+        else:
+            retry_msg = f"{seconds} giây"
+        return jsonify({
+            "success": False,
+            "error": f"Quá nhiều yêu cầu xác thực. Vui lòng đợi {retry_msg} trước khi thử lại."
+        }), 429
+    
     try:
         data = request.get_json()
         email = data.get('email', '').strip().lower()
@@ -144,6 +162,23 @@ def verify_register_otp():
 
 @auth_bp.route('/forgot-password', methods=['POST'])
 def forgot_password():
+    # Rate limiting: max 3 requests per 15 minutes per IP
+    ip_address = request.remote_addr or 'unknown'
+    identifier = f"forgot-password:{ip_address}"
+    allowed, retry_after = check_rate_limit(identifier, max_requests=3, window_seconds=900)
+    
+    if not allowed:
+        minutes = retry_after // 60
+        seconds = retry_after % 60
+        if minutes > 0:
+            retry_msg = f"{minutes} phút {seconds} giây"
+        else:
+            retry_msg = f"{seconds} giây"
+        return jsonify({
+            "success": False,
+            "error": f"Quá nhiều yêu cầu. Vui lòng đợi {retry_msg} trước khi thử lại."
+        }), 429
+    
     try:
         data = request.get_json()
         email = data.get('email', '').strip().lower()
@@ -185,6 +220,23 @@ def forgot_password():
 
 @auth_bp.route('/verify-otp', methods=['POST'])
 def verify_otp():
+    # Rate limiting: max 10 requests per 15 minutes per IP
+    ip_address = request.remote_addr or 'unknown'
+    identifier = f"verify-otp:{ip_address}"
+    allowed, retry_after = check_rate_limit(identifier, max_requests=10, window_seconds=900)
+    
+    if not allowed:
+        minutes = retry_after // 60
+        seconds = retry_after % 60
+        if minutes > 0:
+            retry_msg = f"{minutes} phút {seconds} giây"
+        else:
+            retry_msg = f"{seconds} giây"
+        return jsonify({
+            "success": False,
+            "error": f"Quá nhiều yêu cầu xác thực. Vui lòng đợi {retry_msg} trước khi thử lại."
+        }), 429
+    
     try:
         data = request.get_json()
         email = data.get('email', '').strip().lower()

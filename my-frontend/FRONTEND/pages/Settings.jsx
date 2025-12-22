@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import "./Settings.css";
 import { useToast } from "../contexts/ToastContext";
+import ConfirmModal from "../components/ConfirmModal";
 
 export default function Settings() {
   const [profile, setProfile] = useState({
@@ -60,6 +61,43 @@ export default function Settings() {
   const autoSaveTimerRef = useRef(null);
   const isInitialLoadRef = useRef(true);
 
+  // Validation functions
+  const validateTitle = (title) => {
+    if (!title || !title.trim()) {
+      return { valid: false, message: 'Vui lòng nhập tiêu đề' };
+    }
+    if (title.trim().length < 3) {
+      return { valid: false, message: 'Tiêu đề phải có ít nhất 3 ký tự' };
+    }
+    if (title.length > 200) {
+      return { valid: false, message: 'Tiêu đề không được quá 200 ký tự' };
+    }
+    return { valid: true };
+  };
+
+  const validateMessage = (message) => {
+    if (!message || !message.trim()) {
+      return { valid: false, message: 'Vui lòng nhập nội dung phản hồi' };
+    }
+    if (message.trim().length < 10) {
+      return { valid: false, message: 'Nội dung phải có ít nhất 10 ký tự' };
+    }
+    if (message.length > 2000) {
+      return { valid: false, message: 'Nội dung không được quá 2000 ký tự' };
+    }
+    return { valid: true };
+  };
+  
+  // Confirm modal states
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    type: 'warning',
+    requireText: null
+  });
+
   useEffect(() => {
     loadSettings();
   }, []);
@@ -111,6 +149,9 @@ export default function Settings() {
       root.style.setProperty('--bg-secondary', '#16213e');
       root.style.setProperty('--text-primary', '#ffffff');
       root.style.setProperty('--text-secondary', '#a0aec0');
+      // Apply to entire app
+      document.querySelector('.app-container')?.classList.add('theme-dark');
+      document.querySelector('.settings-page')?.classList.add('theme-dark');
     };
     
     const applyLightTheme = () => {
@@ -119,6 +160,9 @@ export default function Settings() {
       root.style.setProperty('--bg-secondary', '#f8f9fa');
       root.style.setProperty('--text-primary', '#1f2937');
       root.style.setProperty('--text-secondary', '#6b7280');
+      // Apply to entire app
+      document.querySelector('.app-container')?.classList.remove('theme-dark');
+      document.querySelector('.settings-page')?.classList.remove('theme-dark');
     };
     
     if (theme === 'dark') {
@@ -138,12 +182,11 @@ export default function Settings() {
       applySystemTheme();
       
       // Listen for system theme changes
-      prefersDark.addEventListener('change', applySystemTheme);
-      
-      // Store listener for cleanup
-      if (!window.themeListener) {
-        window.themeListener = applySystemTheme;
+      if (window.themeMediaListener) {
+        prefersDark.removeEventListener('change', window.themeMediaListener);
       }
+      window.themeMediaListener = applySystemTheme;
+      prefersDark.addEventListener('change', applySystemTheme);
     } else {
       applyLightTheme();
     }
@@ -151,6 +194,13 @@ export default function Settings() {
     // Save to localStorage for persistence
     localStorage.setItem('user_theme', theme);
   };
+  
+  // Load theme on mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('user_theme') || 'light';
+    applyTheme(savedTheme);
+    setPreferences(prev => ({ ...prev, theme: savedTheme }));
+  }, []);
 
   const applyLanguage = (language) => {
     // Set language attribute
@@ -301,31 +351,37 @@ export default function Settings() {
     }
   };
 
-  const handleResetSettings = async () => {
-    if (confirm("Bạn có chắc muốn đặt lại tất cả cài đặt về mặc định?")) {
-      try {
-        const response = await fetch(`/api/settings/reset`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+  const handleResetSettings = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Đặt lại cài đặt',
+      message: 'Bạn có chắc muốn đặt lại tất cả cài đặt về mặc định?\n\nTất cả các tùy chọn của bạn sẽ được khôi phục về giá trị ban đầu.',
+      onConfirm: async () => {
+        try {
+          const response = await fetch(`/api/settings/reset`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
 
-        const data = await response.json();
+          const data = await response.json();
 
-        if (!response.ok) {
-          throw new Error(data.error || 'Không thể reset settings');
+          if (!response.ok) {
+            throw new Error(data.error || 'Không thể reset settings');
+          }
+
+          isInitialLoadRef.current = true; // Prevent auto-save after reset
+          await loadSettings();
+          toast.success('✅ Đã đặt lại cài đặt về mặc định!');
+        } catch (err) {
+          console.error('Error resetting settings:', err);
+          toast.error('❌ Không thể đặt lại cài đặt. Vui lòng thử lại.');
         }
-
-        isInitialLoadRef.current = true; // Prevent auto-save after reset
-        await loadSettings();
-        toast.success('✅ Đã đặt lại cài đặt về mặc định!');
-      } catch (err) {
-        console.error('Error resetting settings:', err);
-        toast.error('❌ Không thể đặt lại cài đặt. Vui lòng thử lại.');
-      }
-    }
+      },
+      type: 'warning'
+    });
   };
 
   const handleExportData = async () => {
@@ -406,16 +462,23 @@ export default function Settings() {
 
     try {
       setFeedbackLoading(true);
+      console.log('📤 Sending feedback:', feedbackForm);
+      
       const res = await fetch('/api/feedback', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json; charset=utf-8' 
+        },
         credentials: 'include',
         body: JSON.stringify(feedbackForm)
       });
       
-      const data = await res.json();
+      console.log('📥 Response status:', res.status);
       
-      if (data.success) {
+      const data = await res.json();
+      console.log('📥 Response data:', data);
+      
+      if (res.ok && data.success) {
         toast.success('✅ Gửi feedback thành công! Cảm ơn bạn đã đóng góp.');
         setFeedbackForm({
           type: 'other',
@@ -425,47 +488,52 @@ export default function Settings() {
         });
         fetchMyFeedbacks();
       } else {
-        toast.error(`❌ Lỗi: ${data.error}`);
+        const errorMsg = data.error || 'Không thể gửi feedback. Vui lòng thử lại.';
+        console.error('❌ Error:', errorMsg);
+        toast.error(`❌ ${errorMsg}`);
       }
     } catch (error) {
-      toast.error(`❌ Lỗi: ${error.message}`);
+      console.error('❌ Network error:', error);
+      toast.error(`❌ Lỗi kết nối: ${error.message}`);
     } finally {
       setFeedbackLoading(false);
     }
   };
 
-  const handleDeleteAccount = async () => {
-    if (!confirm("⚠️ CẢNH BÁO: Bạn có chắc chắn muốn xóa tài khoản?\n\nTất cả dữ liệu của bạn sẽ bị xóa vĩnh viễn và không thể khôi phục.\n\nNhập 'XÓA' để xác nhận:")) {
-      return;
-    }
+  const handleDeleteAccount = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: '⚠️ XÓA TÀI KHOẢN',
+      message: 'Bạn có chắc chắn muốn xóa tài khoản?\n\nTất cả dữ liệu của bạn sẽ bị xóa vĩnh viễn và không thể khôi phục.\n\nNhập "XÓA" để xác nhận:',
+      onConfirm: async () => {
+        try {
+          const response = await fetch(`/api/settings/delete-account`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
 
-    const confirmation = prompt("Nhập 'XÓA' để xác nhận xóa tài khoản:");
-    if (confirmation !== "XÓA") {
-      alert("Xác nhận không đúng. Đã hủy xóa tài khoản.");
-      return;
-    }
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Không thể xóa tài khoản');
+          }
 
-    try {
-      const response = await fetch(`/api/settings/delete-account`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Không thể xóa tài khoản');
-      }
-
-      const data = await response.json();
-      alert('Tài khoản đã được xóa thành công. Bạn sẽ được chuyển đến trang đăng nhập.');
-      window.location.href = '/login';
-    } catch (err) {
-      console.error('Error deleting account:', err);
-      alert(`Không thể xóa tài khoản: ${err.message}`);
-    }
+          toast.success('✅ Tài khoản đã được xóa thành công. Bạn sẽ được chuyển đến trang đăng nhập.');
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 2000);
+        } catch (err) {
+          console.error('Error deleting account:', err);
+          toast.error(`❌ Không thể xóa tài khoản: ${err.message}`);
+        }
+      },
+      type: 'danger',
+      requireText: 'XÓA',
+      confirmText: 'Xóa tài khoản',
+      cancelText: 'Hủy'
+    });
   };
 
   if (loading) {
@@ -495,6 +563,17 @@ export default function Settings() {
 
   return (
     <div className="settings-page">
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        type={confirmModal.type}
+        requireText={confirmModal.requireText}
+        confirmText={confirmModal.confirmText}
+        cancelText={confirmModal.cancelText}
+      />
       { }
       <div className="settings-header">
         <div className="header-content">
