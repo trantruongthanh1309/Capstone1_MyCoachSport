@@ -64,34 +64,53 @@ const ImageUploader = ({ onUploadSuccess }) => {
         setUploading(true);
 
         try {
+            console.log('🔄 Starting upload...', {
+                fileName: selectedFile.name,
+                fileSize: selectedFile.size,
+                fileType: selectedFile.type
+            });
+
             const response = await fetch('/api/upload', {
                 method: 'POST',
                 credentials: 'include',
                 body: formData,
+                // Không set Content-Type header, browser sẽ tự động set với boundary cho FormData
             });
 
+            console.log('📥 Upload response status:', response.status, response.statusText);
+
             const data = await response.json();
+            console.log('📥 Upload response data:', data);
 
             if (!response.ok) {
-                throw new Error(data.error || 'Upload thất bại');
+                throw new Error(data.error || `Upload thất bại (${response.status})`);
             }
 
             if (data.url) {
+                console.log('✅ Upload successful, URL:', data.url);
                 if (onUploadSuccess) {
                     onUploadSuccess(data.url);
                 }
                 toast.success('✅ Upload ảnh thành công!');
                 // Reset after successful upload
                 setSelectedFile(null);
+                if (previewUrl) {
+                    URL.revokeObjectURL(previewUrl);
+                }
                 setPreviewUrl(null);
                 if (fileInputRef.current) {
                     fileInputRef.current.value = '';
                 }
             } else {
-                throw new Error('Không nhận được URL ảnh');
+                throw new Error('Không nhận được URL ảnh từ server');
             }
         } catch (err) {
-            console.error("Upload failed:", err);
+            console.error("❌ Upload failed:", err);
+            console.error("Error details:", {
+                message: err.message,
+                stack: err.stack,
+                name: err.name
+            });
             toast.error(`❌ ${err.message || 'Có lỗi xảy ra khi upload ảnh. Vui lòng thử lại.'}`);
         } finally {
             setUploading(false);

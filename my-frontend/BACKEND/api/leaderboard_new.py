@@ -188,8 +188,20 @@ def complete_schedule_item():
         
         # Chỉ chặn nếu ngày ở tương lai (chưa đến)
         # Cho phép complete cho ngày hôm nay hoặc quá khứ
-        if item_date and now.date() < item_date:
-            return jsonify({'error': 'Chưa đến ngày, không thể đánh dấu hoàn thành'}), 400
+        if item_date:
+            if isinstance(item_date, str):
+                from datetime import datetime as dt
+                try:
+                    item_date = dt.strptime(item_date.split()[0], '%Y-%m-%d').date()
+                except:
+                    print(f"⚠️ [COMPLETE] Could not parse date: {item_date}")
+            
+            if hasattr(item_date, 'date'):
+                item_date = item_date.date()
+            
+            if now.date() < item_date:
+                print(f"⚠️ [COMPLETE] Blocked: Future date {item_date} > today {now.date()}")
+                return jsonify({'error': 'Chưa đến ngày, không thể đánh dấu hoàn thành'}), 400
         
         points = 0
         

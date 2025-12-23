@@ -124,6 +124,7 @@ export default function Navbar() {
             { }
             <div className="profile-wrapper" ref={profileWrapperRef} onClick={toggleProfileDropdown}>
               <img
+                key={userData.avatar} // Force re-render khi avatar thay đổi
                 src={userData.avatar}
                 alt="Profile"
                 className="profile-img"
@@ -136,6 +137,7 @@ export default function Navbar() {
               <div className="profile-dropdown" ref={dropdownRef}>
                 <div className="profile-header">
                   <img
+                    key={userData.avatar}
                     src={userData.avatar}
                     alt="Profile"
                     className="profile-dropdown-img"

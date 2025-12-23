@@ -177,7 +177,7 @@ const styles = `
   
   .post-author-name {
     font-weight: 600;
-    color: #050505;
+    color: #050505 !important;
     font-size: 15px;
   }
   
@@ -189,7 +189,7 @@ const styles = `
   .post-content {
     padding: 4px 16px 16px;
     font-size: 15px;
-    color: #050505;
+    color: #050505 !important;
     line-height: 1.5;
     white-space: pre-wrap;
     word-wrap: break-word;
@@ -198,6 +198,7 @@ const styles = `
   
   .post-content p {
     margin: 0 0 8px 0;
+    color: #050505 !important;
   }
   
   .post-content p:last-child {
@@ -209,9 +210,9 @@ const styles = `
     background: #f0f2f5;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     cursor: pointer;
-    overflow: hidden;
+    overflow: visible;
     position: relative;
     min-height: 200px;
   }
@@ -220,25 +221,41 @@ const styles = `
     width: 100%;
     height: auto;
     max-width: 100%;
-    max-height: 1000px;
+    max-height: 2000px;
+    min-height: auto;
     object-fit: contain;
     display: block;
-    image-rendering: auto;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    image-rendering: high-quality;
     -webkit-backface-visibility: hidden;
     -webkit-transform: translateZ(0);
     transform: translateZ(0);
+    backface-visibility: hidden;
   }
   
-  /* Đảm bảo hình ảnh hiển thị đầy đủ trên mọi màn hình */
+  /* Đảm bảo hình ảnh hiển thị đầy đủ và nét trên mọi màn hình */
   @media (min-width: 768px) {
     .post-image {
-      max-height: 1200px;
+      max-height: 2500px;
+      width: 100%;
+    }
+    
+    .post-image-container {
+      overflow: visible;
+      max-height: none;
     }
   }
   
   @media (max-width: 767px) {
     .post-image {
-      max-height: 600px;
+      max-height: 1500px;
+      width: 100%;
+    }
+    
+    .post-image-container {
+      overflow: visible;
+      max-height: none;
     }
   }
   
@@ -490,15 +507,24 @@ function Post({ post, onLike, onComment, onDelete, currentUser, onShare }) {
             src={post.image_url}
             alt={post.content || "Post image"}
             loading="lazy"
+            decoding="async"
+            fetchpriority="high"
             onError={(e) => {
               e.currentTarget.style.display = "none";
               console.error("Failed to load image:", post.image_url);
             }}
             onLoad={(e) => {
-              // Đảm bảo hình ảnh load đầy đủ
+              // Đảm bảo hình ảnh load đầy đủ và hiển thị nét
               const img = e.currentTarget;
               if (img.naturalWidth === 0 || img.naturalHeight === 0) {
                 console.warn("Image loaded but dimensions are 0:", post.image_url);
+              } else {
+                // Đảm bảo hiển thị với kích thước gốc nếu có thể
+                if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+                  // Đặt style để đảm bảo chất lượng
+                  img.style.imageRendering = '-webkit-optimize-contrast';
+                  img.style.imageRendering = 'crisp-edges';
+                }
               }
             }}
           />

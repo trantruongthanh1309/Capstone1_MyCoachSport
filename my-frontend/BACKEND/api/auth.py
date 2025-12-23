@@ -351,6 +351,11 @@ def login():
 
         # Fetch user details to return
         user_info = User.query.get(acc.User_id)
+        
+        # Đảm bảo User.Email đồng bộ với Account.Email
+        if user_info and user_info.Email != acc.Email:
+            user_info.Email = acc.Email
+            db.session.commit()
 
         return jsonify({
             "success": True,
@@ -359,7 +364,7 @@ def login():
             "account_id": acc.Id,
             "role": acc.Role,
             "name": user_info.Name if user_info else "",
-            "email": user_info.Email if user_info else "",
+            "email": acc.Email,  # Luôn dùng email từ Account (email đăng nhập)
             "avatar": user_info.Avatar if user_info else ""
         }), 200
         
@@ -376,24 +381,45 @@ def get_current_user():
     try:
         user_id = session.get('user_id')
         role = session.get('role')
+        account_id = session.get('account_id')
         
         if not user_id:
             return jsonify({"error": "Chưa đăng nhập"}), 401
         
+        # Lấy user từ database
         user = User.query.get(user_id)
         if not user:
             return jsonify({"error": "User không tồn tại"}), 404
+        
+        # Luôn lấy email từ Account table (email dùng để đăng nhập) để đảm bảo đúng
+        # Nếu có account_id, dùng nó để query nhanh hơn
+        if account_id:
+            account = Account.query.get(account_id)
+        else:
+            account = Account.query.filter_by(User_id=user_id).first()
+        
+        email = account.Email if account else (user.Email or "")
+        
+        # Đồng bộ User.Email với Account.Email nếu khác nhau
+        if account and user.Email != account.Email:
+            user.Email = account.Email
+            db.session.commit()
+            print(f"🔄 [AUTH /me] Đã đồng bộ User.Email từ {user.Email} thành {account.Email}")
+        
+        print(f"🔍 [AUTH /me] user_id={user_id}, account_id={account_id}, name={user.Name}, email={email}, role={role}")
         
         return jsonify({
             "success": True,
             "user_id": user_id,
             "name": user.Name,
-            "email": user.Email,
+            "email": email,
             "avatar": user.Avatar,
             "role": role
         }), 200
     except Exception as e:
         import traceback
+        print(f"❌ [AUTH /me ERROR] {str(e)}")
+        traceback.print_exc()
         with open("debug_auth_error.log", "a", encoding="utf-8") as f:
             f.write(f"Error in /me: {str(e)}\n")
             f.write(traceback.format_exc())

@@ -35,7 +35,7 @@ from api.routes.admin_routes.posts_admin_api import posts_admin_bp
 from api.routes.admin_routes.feedback import feedback_bp
 from api.routes.admin_routes.settings_admin_api import settings_admin_bp
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', static_url_path='/static')
 
 setup_logger(app)
 
@@ -126,6 +126,10 @@ def after_request(response):
     """Set charset=utf-8 for all JSON responses"""
     if response.content_type and 'application/json' in response.content_type:
         response.headers['Content-Type'] = 'application/json; charset=utf-8'
+    # Allow CORS for static files
+    if response.content_type and ('image' in response.content_type or 'application/octet-stream' in response.content_type):
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
     return response
 
 app.register_blueprint(logs_bp, url_prefix='/api/logs')

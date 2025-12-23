@@ -214,8 +214,8 @@ export default function Planner() {
     return date.getTime() === today.getTime();
   };
 
-  // Lấy thời gian của slot
-  const getSlotTime = (slot) => {
+  // Lấy khoảng thời gian của slot (start và end)
+  const getSlotTimeRange = (slot) => {
     // Normalize slot name
     let normalizedSlot = slot;
     if (slot && typeof slot === 'string') {
@@ -225,35 +225,44 @@ export default function Planner() {
       else if (normalizedSlot.includes('evening') || normalizedSlot.includes('tối')) normalizedSlot = 'evening';
     }
     
-    // Thời gian của các slot
-    const slotTimes = {
-      'morning': { hour: 7, minute: 0 },      // 07:00
-      'afternoon': { hour: 12, minute: 0 },  // 12:00
-      'evening': { hour: 19, minute: 0 }     // 19:00
+    // Khoảng thời gian của các slot (start hour, start minute, end hour, end minute)
+    const slotTimeRanges = {
+      'morning': { startHour: 6, startMinute: 0, endHour: 10, endMinute: 0 },      // 06:00 - 10:00
+      'afternoon': { startHour: 11, startMinute: 0, endHour: 14, endMinute: 0 },  // 11:00 - 14:00
+      'evening': { startHour: 18, startMinute: 0, endHour: 21, endMinute: 0 }     // 18:00 - 21:00
     };
     
-    return slotTimes[normalizedSlot] || null;
+    return slotTimeRanges[normalizedSlot] || null;
   };
 
-  // Kiểm tra xem slot đã đến chưa (đã đến giờ của slot chưa)
+  // Lấy thời gian của slot (để tương thích với code cũ)
+  const getSlotTime = (slot) => {
+    const timeRange = getSlotTimeRange(slot);
+    if (timeRange) {
+      return { hour: timeRange.startHour, minute: timeRange.startMinute };
+    }
+    return null;
+  };
+
+  // Kiểm tra xem slot đã đến chưa (đã đến khoảng thời gian của slot chưa)
   const isSlotReached = (dateStr, slot) => {
     // Nếu là ngày tương lai, chưa đến
     if (isFutureDate(dateStr)) {
       return false;
     }
     
-    // Nếu là ngày quá khứ, đã đến rồi
+    // Nếu là ngày quá khứ, đã đến rồi (cho phép hoàn thành)
     if (isPastDate(dateStr)) {
       return true;
     }
     
-    // Nếu là hôm nay, check thời gian của slot
+    // Nếu là hôm nay, check khoảng thời gian của slot
     if (!isToday(dateStr)) {
       return false;
     }
     
-    const slotTime = getSlotTime(slot);
-    if (!slotTime) {
+    const timeRange = getSlotTimeRange(slot);
+    if (!timeRange) {
       // Nếu không tìm thấy slot, coi như đã đến (cho phép hoàn thành)
       return true;
     }
@@ -262,14 +271,15 @@ export default function Planner() {
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
     
-    // So sánh thời gian hiện tại với thời gian slot
-    if (currentHour > slotTime.hour) {
-      return true; // Đã đến slot
-    } else if (currentHour === slotTime.hour && currentMinute >= slotTime.minute) {
-      return true; // Đã đến slot (cùng giờ và đã qua phút)
-    }
+    // Tính số phút hiện tại trong ngày
+    const currentMinutes = currentHour * 60 + currentMinute;
+    const startMinutes = timeRange.startHour * 60 + timeRange.startMinute;
+    const endMinutes = timeRange.endHour * 60 + timeRange.endMinute;
     
-    return false; // Chưa đến slot
+    // Cho phép hoàn thành nếu:
+    // 1. Đã đến start time (trong hoặc sau khoảng thời gian)
+    // 2. Hoặc đã qua khoảng thời gian nhưng vẫn trong ngày hôm nay
+    return currentMinutes >= startMinutes;
   };
 
   // Kiểm tra xem slot đã qua chưa trong ngày hôm nay
@@ -279,9 +289,9 @@ export default function Planner() {
       return isPastDate(dateStr);
     }
     
-    // Nếu là hôm nay, check thời gian của slot
-    const slotTime = getSlotTime(slot);
-    if (!slotTime) {
+    // Nếu là hôm nay, check khoảng thời gian của slot
+    const timeRange = getSlotTimeRange(slot);
+    if (!timeRange) {
       // Nếu không tìm thấy slot, dùng logic cũ
       return isPastDate(dateStr);
     }
@@ -290,14 +300,12 @@ export default function Planner() {
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
     
-    // So sánh thời gian hiện tại với thời gian slot
-    if (currentHour > slotTime.hour) {
-      return true; // Đã qua slot
-    } else if (currentHour === slotTime.hour && currentMinute >= slotTime.minute) {
-      return true; // Đã qua slot (cùng giờ nhưng đã qua phút)
-    }
+    // Tính số phút hiện tại trong ngày
+    const currentMinutes = currentHour * 60 + currentMinute;
+    const endMinutes = timeRange.endHour * 60 + timeRange.endMinute;
     
-    return false; // Chưa đến slot
+    // Nếu đã qua khoảng thời gian của slot (sau end time)
+    return currentMinutes > endMinutes;
   };
 
   const sendFeedback = async (itemId, type, rating) => {
@@ -342,7 +350,9 @@ export default function Planner() {
     if (event) {
       event.preventDefault();
       event.stopPropagation();
-      event.stopImmediatePropagation(); // Ngăn các handler khác
+      if (typeof event.stopImmediatePropagation === 'function') {
+        event.stopImmediatePropagation(); // Ngăn các handler khác
+      }
     }
     
     // Kiểm tra scheduleId hợp lệ
@@ -373,26 +383,36 @@ export default function Planner() {
 
       const data = await res.json();
 
-      if (data.success) {
+      console.log('Complete API response:', data);
+      console.log('Response status:', res.status);
+
+      if (data.success || res.ok) {
         toast.success(data.message || 'Đã hoàn thành!');
+        
         // Chỉ update local state, không refresh toàn bộ để tránh regenerate schedule
         setWeeklyPlan(prev => {
           const updated = { ...prev };
+          let found = false;
+          
           Object.keys(updated).forEach(date => {
             if (updated[date]) {
               // Update meal items
-              if (updated[date].meals) {
+              if (updated[date].meals && Array.isArray(updated[date].meals)) {
                 updated[date].meals = updated[date].meals.map(meal => {
                   if (meal.schedule_id === scheduleId) {
+                    console.log('✅ Updating meal to completed:', meal);
+                    found = true;
                     return { ...meal, is_completed: true };
                   }
                   return meal;
                 });
               }
               // Update workout items
-              if (updated[date].workouts) {
+              if (updated[date].workouts && Array.isArray(updated[date].workouts)) {
                 updated[date].workouts = updated[date].workouts.map(workout => {
                   if (workout.schedule_id === scheduleId) {
+                    console.log('✅ Updating workout to completed:', workout);
+                    found = true;
                     return { ...workout, is_completed: true };
                   }
                   return workout;
@@ -400,8 +420,24 @@ export default function Planner() {
               }
             }
           });
+          
+          if (!found) {
+            console.warn('⚠️ Schedule item not found in state for update:', scheduleId);
+          }
+          
           return updated;
         });
+        
+        // Remove khỏi completingIds sau khi update thành công
+        setCompletingIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(scheduleId);
+          return newSet;
+        });
+        
+        // Refresh lại weekly plan để hiển thị trạng thái mới nhất
+        console.log('🔄 Refreshing weekly plan after complete');
+        await fetchWeeklyPlan(weekOffset);
       } else {
         toast.error(data.error || 'Lỗi khi hoàn thành');
         console.error('Complete error:', data);
@@ -632,25 +668,53 @@ export default function Planner() {
                                     : ''
                               }`}
                               onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                e.stopImmediatePropagation();
+                                if (e) {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  if (typeof e.stopImmediatePropagation === 'function') {
+                                    e.stopImmediatePropagation();
+                                  }
+                                }
                                 const slot = mealItem.data?.MealType || mealTimes[idx];
                                 const slotReached = isSlotReached(date, slot);
-                                if (!mealItem.is_completed && mealItem.schedule_id && !completingIds.has(mealItem.schedule_id) && slotReached) {
+                                const slotPassed = isSlotPassed(date, slot);
+                                console.log('🔍 Complete button clicked:', {
+                                  schedule_id: mealItem.schedule_id,
+                                  is_completed: mealItem.is_completed,
+                                  slotReached: slotReached,
+                                  slotPassed: slotPassed,
+                                  date: date,
+                                  slot: slot,
+                                  inCompletingIds: completingIds.has(mealItem.schedule_id)
+                                });
+                                
+                                // Không cho phép hoàn thành nếu đã "Bỏ lỡ"
+                                if (slotPassed && !mealItem.is_completed) {
+                                  toast.error('Đã qua thời gian, không thể hoàn thành');
+                                } else if (!mealItem.is_completed && mealItem.schedule_id && !completingIds.has(mealItem.schedule_id) && slotReached && !slotPassed) {
+                                  console.log('✅ Calling handleComplete');
                                   handleComplete(mealItem.schedule_id, e);
+                                } else if (mealItem.is_completed) {
+                                  toast.info('Món ăn này đã được hoàn thành rồi');
                                 } else if (!mealItem.schedule_id) {
                                   toast.error('Lỗi: Không tìm thấy ID của item');
                                   console.error('Missing schedule_id for meal:', mealItem);
+                                } else if (completingIds.has(mealItem.schedule_id)) {
+                                  toast.info('Đang xử lý...');
                                 } else if (!slotReached) {
                                   if (isFutureDate(date)) {
                                     toast.error('Chưa đến ngày, không thể đánh dấu hoàn thành');
                                   } else {
-                                    toast.error('Chưa đến giờ của bữa ăn này, không thể hoàn thành');
+                                    const timeRange = getSlotTimeRange(slot);
+                                    if (timeRange) {
+                                      toast.error(`Chưa đến giờ. Có thể hoàn thành từ ${timeRange.startHour}:${String(timeRange.startMinute).padStart(2, '0')} trở đi`);
+                                    } else {
+                                      toast.error('Chưa đến giờ của bữa ăn này, không thể hoàn thành');
+                                    }
                                   }
                                 }
                               }}
-                              disabled={mealItem.is_completed || !mealItem.schedule_id || completingIds.has(mealItem.schedule_id) || !isSlotReached(date, mealItem.data?.MealType || mealTimes[idx])}
+                              disabled={mealItem.is_completed || !mealItem.schedule_id || completingIds.has(mealItem.schedule_id) || !isSlotReached(date, mealItem.data?.MealType || mealTimes[idx]) || isSlotPassed(date, mealItem.data?.MealType || mealTimes[idx])}
                               title={
                                 mealItem.is_completed 
                                   ? 'Đã hoàn thành' 
@@ -820,25 +884,53 @@ export default function Planner() {
                                   : ''
                             }`}
                             onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              e.stopImmediatePropagation();
+                              if (e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                if (typeof e.stopImmediatePropagation === 'function') {
+                                  e.stopImmediatePropagation();
+                                }
+                              }
                               const slot = workoutItem.time || 'morning';
                               const slotReached = isSlotReached(date, slot);
-                              if (!workoutItem.is_completed && workoutItem.schedule_id && !completingIds.has(workoutItem.schedule_id) && slotReached) {
+                              const slotPassed = isSlotPassed(date, slot);
+                              console.log('🔍 Complete workout button clicked:', {
+                                schedule_id: workoutItem.schedule_id,
+                                is_completed: workoutItem.is_completed,
+                                slotReached: slotReached,
+                                slotPassed: slotPassed,
+                                date: date,
+                                slot: slot,
+                                inCompletingIds: completingIds.has(workoutItem.schedule_id)
+                              });
+                              
+                              // Không cho phép hoàn thành nếu đã "Bỏ lỡ"
+                              if (slotPassed && !workoutItem.is_completed) {
+                                toast.error('Đã qua thời gian, không thể hoàn thành');
+                              } else if (!workoutItem.is_completed && workoutItem.schedule_id && !completingIds.has(workoutItem.schedule_id) && slotReached && !slotPassed) {
+                                console.log('✅ Calling handleComplete for workout');
                                 handleComplete(workoutItem.schedule_id, e);
+                              } else if (workoutItem.is_completed) {
+                                toast.info('Bài tập này đã được hoàn thành rồi');
                               } else if (!workoutItem.schedule_id) {
                                 toast.error('Lỗi: Không tìm thấy ID của item');
                                 console.error('Missing schedule_id for workout:', workoutItem);
+                              } else if (completingIds.has(workoutItem.schedule_id)) {
+                                toast.info('Đang xử lý...');
                               } else if (!slotReached) {
                                 if (isFutureDate(date)) {
                                   toast.error('Chưa đến ngày, không thể đánh dấu hoàn thành');
                                 } else {
-                                  toast.error('Chưa đến giờ của buổi tập này, không thể hoàn thành');
+                                  const timeRange = getSlotTimeRange(slot);
+                                  if (timeRange) {
+                                    toast.error(`Chưa đến giờ. Có thể hoàn thành từ ${timeRange.startHour}:${String(timeRange.startMinute).padStart(2, '0')} trở đi`);
+                                  } else {
+                                    toast.error('Chưa đến giờ của buổi tập này, không thể hoàn thành');
+                                  }
                                 }
                               }
                             }}
-                            disabled={workoutItem.is_completed || !workoutItem.schedule_id || completingIds.has(workoutItem.schedule_id) || !isSlotReached(date, workoutItem.time || 'morning')}
+                            disabled={workoutItem.is_completed || !workoutItem.schedule_id || completingIds.has(workoutItem.schedule_id) || !isSlotReached(date, workoutItem.time || 'morning') || isSlotPassed(date, workoutItem.time || 'morning')}
                             title={
                               workoutItem.is_completed 
                                 ? 'Đã hoàn thành' 
@@ -975,25 +1067,53 @@ export default function Planner() {
                                   : ''
                             }`}
                             onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              e.stopImmediatePropagation();
+                              if (e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                if (typeof e.stopImmediatePropagation === 'function') {
+                                  e.stopImmediatePropagation();
+                                }
+                              }
                               const slot = workoutItem.time || 'morning';
                               const slotReached = isSlotReached(date, slot);
-                              if (!workoutItem.is_completed && workoutItem.schedule_id && !completingIds.has(workoutItem.schedule_id) && slotReached) {
+                              const slotPassed = isSlotPassed(date, slot);
+                              console.log('🔍 Complete workout button clicked:', {
+                                schedule_id: workoutItem.schedule_id,
+                                is_completed: workoutItem.is_completed,
+                                slotReached: slotReached,
+                                slotPassed: slotPassed,
+                                date: date,
+                                slot: slot,
+                                inCompletingIds: completingIds.has(workoutItem.schedule_id)
+                              });
+                              
+                              // Không cho phép hoàn thành nếu đã "Bỏ lỡ"
+                              if (slotPassed && !workoutItem.is_completed) {
+                                toast.error('Đã qua thời gian, không thể hoàn thành');
+                              } else if (!workoutItem.is_completed && workoutItem.schedule_id && !completingIds.has(workoutItem.schedule_id) && slotReached && !slotPassed) {
+                                console.log('✅ Calling handleComplete for workout');
                                 handleComplete(workoutItem.schedule_id, e);
+                              } else if (workoutItem.is_completed) {
+                                toast.info('Bài tập này đã được hoàn thành rồi');
                               } else if (!workoutItem.schedule_id) {
                                 toast.error('Lỗi: Không tìm thấy ID của item');
                                 console.error('Missing schedule_id for workout:', workoutItem);
+                              } else if (completingIds.has(workoutItem.schedule_id)) {
+                                toast.info('Đang xử lý...');
                               } else if (!slotReached) {
                                 if (isFutureDate(date)) {
                                   toast.error('Chưa đến ngày, không thể đánh dấu hoàn thành');
                                 } else {
-                                  toast.error('Chưa đến giờ của buổi tập này, không thể hoàn thành');
+                                  const timeRange = getSlotTimeRange(slot);
+                                  if (timeRange) {
+                                    toast.error(`Chưa đến giờ. Có thể hoàn thành từ ${timeRange.startHour}:${String(timeRange.startMinute).padStart(2, '0')} trở đi`);
+                                  } else {
+                                    toast.error('Chưa đến giờ của buổi tập này, không thể hoàn thành');
+                                  }
                                 }
                               }
                             }}
-                            disabled={workoutItem.is_completed || !workoutItem.schedule_id || completingIds.has(workoutItem.schedule_id) || !isSlotReached(date, workoutItem.time || 'morning')}
+                            disabled={workoutItem.is_completed || !workoutItem.schedule_id || completingIds.has(workoutItem.schedule_id) || !isSlotReached(date, workoutItem.time || 'morning') || isSlotPassed(date, workoutItem.time || 'morning')}
                             title={
                               workoutItem.is_completed 
                                 ? 'Đã hoàn thành' 
